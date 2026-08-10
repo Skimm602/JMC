@@ -58,43 +58,53 @@ const X_TICKS = [20, 25, 30, 35, 40, 45, 50, 55, 60]
 /* thinned set for narrow screens, where the full set collides */
 const X_TICKS_SM = [20, 30, 40, 45, 60]
 
+/**
+ * Type inside a viewBox scales with the drawing, so a size that reads on a
+ * phone disappears on a desktop and vice versa. These three steps are sized
+ * backwards from the rendered result: the chart is the page's whole argument,
+ * and at the old flat 13 units its axis labels came out around 8.8px on a
+ * desktop — the least legible text on the page, on the one element that has
+ * to be read. Each step targets roughly 11–15px at the widths it covers.
+ */
+const TICK_TYPE = 'text-[17px] max-md:text-[22px] max-sm:text-[30px]'
+
 export default function DeratingCurve({ className = '' }) {
   return (
     <svg
-      viewBox="0 0 900 375"
+      viewBox="0 0 900 418"
       className={className}
       role="img"
       aria-label="Derating curve. JMC inverters hold 100 percent of rated output up to 45 degrees Celsius ambient and 78 percent at 60 degrees. The class average begins derating at 35 degrees and reaches 55 percent at 60 degrees. Cebu's afternoon design condition of 34 degrees falls inside JMC's flat region."
     >
       {/* ------------------------------- grid ------------------------------- */}
-      <g className="stroke-ink/10">
+      <g className="stroke-hush/50">
         {Y_TICKS.map((o) => (
           <line key={o} x1={X0} y1={sy(o)} x2={X1} y2={sy(o)} strokeWidth="1" />
         ))}
       </g>
 
       {/* axes */}
-      <g className="stroke-ink/35" strokeWidth="1.25">
+      <g className="stroke-ink-soft" strokeWidth="1.25">
         <line x1={X0} y1={Y0} x2={X0} y2={Y1} />
         <line x1={X0} y1={Y1} x2={X1} y2={Y1} />
       </g>
 
       {/* y labels */}
-      <g className="fill-ink-faint font-mono text-[13px] max-sm:text-[21px]" textAnchor="end">
+      <g className={`fill-ink-soft font-mono ${TICK_TYPE}`} textAnchor="end">
         {Y_TICKS.map((o) => (
-          <text key={o} x={X0 - 12} y={sy(o) + 4}>
+          <text key={o} x={X0 - 14} y={sy(o) + 6}>
             {o}
           </text>
         ))}
       </g>
 
       {/* x labels — thinned below sm so they never collide */}
-      <g className="fill-ink-faint font-mono text-[13px] max-sm:text-[21px]" textAnchor="middle">
+      <g className={`fill-ink-soft font-mono ${TICK_TYPE}`} textAnchor="middle">
         {X_TICKS.map((t) => (
           <text
             key={t}
             x={sx(t)}
-            y={Y1 + 26}
+            y={Y1 + 30}
             className={X_TICKS_SM.includes(t) ? undefined : 'max-sm:hidden'}
           >
             {t}
@@ -127,7 +137,7 @@ export default function DeratingCurve({ className = '' }) {
           x={sx(DESIGN_POINT)}
           y={Y0 - 10}
           textAnchor="middle"
-          className="fill-hot-600 font-mono text-[12px] font-medium max-sm:text-[20px]"
+          className={`fill-hot-600 font-mono font-medium ${TICK_TYPE}`}
         >
           34 °C
         </text>
@@ -166,16 +176,12 @@ export default function DeratingCurve({ className = '' }) {
             crowds the axis titles or the plotted lines */}
         <text
           x={sx(21)}
-          y={sy(100) + 22}
-          className="fill-cool-700 font-mono text-[13px] font-medium max-sm:text-[21px]"
+          y={sy(100) + 26}
+          className={`fill-cool-700 font-mono font-medium ${TICK_TYPE}`}
         >
           JMC — flat to 45 °C
         </text>
-        <text
-          x={sx(49)}
-          y={sy(64)}
-          className="fill-hot-600 font-mono text-[13px] max-sm:text-[21px]"
-        >
+        <text x={sx(49)} y={sy(64)} className={`fill-hot-600 font-mono ${TICK_TYPE}`}>
           class average
         </text>
       </g>
@@ -183,16 +189,16 @@ export default function DeratingCurve({ className = '' }) {
       {/* axis titles */}
       <text
         x={X0}
-        y={Y1 + 56}
-        className="fill-ink-soft font-mono text-[12px] tracking-[0.14em] uppercase max-sm:text-[20px]"
+        y={Y1 + 72}
+        className={`fill-ink-soft font-mono tracking-[0.14em] uppercase ${TICK_TYPE}`}
       >
         Ambient °C
       </text>
       <text
         x={X0}
-        y={Y0 - 10}
+        y={Y0 - 12}
         textAnchor="start"
-        className="fill-ink-soft font-mono text-[12px] tracking-[0.14em] uppercase max-sm:text-[20px]"
+        className={`fill-ink-soft font-mono tracking-[0.14em] uppercase ${TICK_TYPE}`}
       >
         % rated
       </text>

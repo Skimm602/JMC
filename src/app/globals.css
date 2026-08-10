@@ -1,61 +1,119 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------
-   JMC Solar — "Thermal"
+   JMC Solar — "Clear sky"
 
-   An inverter's whole job is to sit in tropical light and heat and not
-   degrade. So the page is lit rather than dark: the surfaces are the
-   colour of sun on a galvanised-iron roof, and deep shade is the accent.
-   Dense technical reading happens in the shade bands.
+   The resource this company sells against is an open sky, so the page is
+   built from one: white for the glare directly overhead, sky for the
+   working ground, deep blue for the bands where dense technical reading
+   happens. Three tiers, and every surface on the page belongs to one.
 
-   The palette is a thermometer. Cool means nominal, verified, in-spec.
-   Hot means thermal stress, derating, urgency, primary action. There is
-   no third accent, so every coloured thing on the page means something.
+   Two poles, and only two, so every coloured thing still means something:
+
+     blue  — signal. Nominal, in-spec, verified, selected, primary action.
+             This is the brand voice and it does most of the work.
+     warm  — heat. Derating, thermal stress, errors, required fields. Rare
+             by design; it appears only where the physics or the form is
+             actually about something going wrong.
+
+   Keeping the warm pole is what stops the derating curve's two series
+   collapsing into one hue, and stops error states reading as decoration.
 
    Font families resolve to the hashed families next/font generates; the
    CSS variables are attached to <html> in app/layout.jsx.
    ------------------------------------------------------------------ */
 @theme {
   /* Lit surfaces — brightest to most recessed */
-  --color-glare: #eff0ea;
-  --color-sheet: #e2e4dc;
-  --color-sheet-deep: #d3d6cc;
-  --color-sheet-edge: #c1c6b8;
+  --color-glare: #ffffff;
+  --color-sheet: #e2edf9;
+  --color-sheet-deep: #cfe2f4;
+  --color-sheet-edge: #b3d1ea;
 
-  /* Shade — the dark bands, deepest last */
-  --color-shade: #131815;
-  --color-shade-raised: #1c2320;
-  --color-shade-edge: #2f3833;
-  --color-pit: #0c100e;
+  /* Deep blue — the dark bands, deepest last */
+  --color-shade: #0d2949;
+  --color-shade-raised: #143561;
+  --color-shade-edge: #21497e;
+  --color-pit: #081c34;
 
-  /* Ink on lit surfaces */
-  --color-ink: #161a16;
-  --color-ink-soft: #5c635a;
-  --color-ink-faint: #868c82;
+  /* Ink on lit surfaces. Blue-tinted rather than neutral grey, so text sits
+     in the same light as the surfaces instead of on top of them.
+     Two reading tones, not three: a third step light enough to look distinct
+     from --color-ink-soft cannot clear 4.5:1 on --color-sheet. Labels are
+     separated from body by case, tracking and size instead, which is free. */
+  --color-ink: #0b1f38;
+  --color-ink-soft: #4c6484;
 
-  /* Ink on shade */
-  --color-glint: #e8eae3;
-  --color-glint-soft: #9aa396;
-  --color-glint-faint: #6b7468;
+  /* Ink on the deep-blue bands */
+  --color-glint: #e8f1fb;
+  --color-glint-soft: #a2bedc;
 
-  /* Cool pole — nominal, in-spec, verified.
-     600 is the lightest step that clears AA on --color-sheet. */
-  --color-cool-700: #0a4f3c;
-  --color-cool-600: #0e6b52;
-  --color-cool-500: #12876a;
-  --color-cool-400: #17a08f;
+  /* Hairlines. Solid, because six ad-hoc alpha steps read as six weights.
+     Each is the old ink/glint alpha resolved against the band it sits on. */
+  --color-rule: #c2d8ec;
+  /* rule-strong draws the boundary of interactive controls — inputs, the
+     checkbox, the outline button — so it answers to WCAG 1.4.11 and has to
+     clear 3:1 against the surface behind it, not merely look like a border. */
+  --color-rule-strong: #74899f;
+  --color-rule-shade: #22456f;
 
-  /* Hot pole — heat, derating, urgency, primary action.
+  /* Purely decorative: chart gridlines and similar. Anything a reader has to
+     interpret — including the em-dash that means "not included" — belongs to
+     a text tone instead. */
+  --color-hush: #9db6cd;
+
+  /* Blue pole — signal. Brand, primary action, selected state, in-spec.
+     600 is the lightest step that clears AA on --color-sheet; 400 is the
+     step that clears AA on the deep-blue bands. */
+  --color-cool-700: #08416e;
+  --color-cool-600: #0b5c9c;
+  --color-cool-500: #1279c9;
+  --color-cool-400: #4aa9ec;
+
+  /* Warm pole — heat, derating, errors, required fields. Deliberately the
+     minority voice: if this shows up, something is hot or wrong.
      600 clears AA on --color-sheet; 500/400 are graphic weights. */
-  --color-hot-700: #8f2410;
-  --color-hot-600: #b32f16;
-  --color-hot-500: #c4361b;
-  --color-hot-400: #e85c2a;
+  --color-hot-700: #8a2a10;
+  --color-hot-600: #b8391a;
+  --color-hot-500: #d2481f;
+  --color-hot-400: #ef7038;
 
   /* Type */
   --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Display scale. The two steps grow at different rates on purpose: the old
+     pair both grew at 4.4vw, so between roughly 800px and 1350px the page
+     heading and every section heading rendered at the same size and the
+     hierarchy flattened exactly where most desktops sit. */
+  --text-display-1: clamp(2.6rem, 1.6rem + 3.6vw, 4.5rem);
+  --text-display-1--line-height: 0.94;
+  --text-display-1--letter-spacing: -0.025em;
+
+  --text-display-2: clamp(1.9rem, 1.3rem + 2.2vw, 2.9rem);
+  --text-display-2--line-height: 0.98;
+  --text-display-2--letter-spacing: -0.02em;
+
+  --text-display-3: clamp(1.35rem, 1.1rem + 0.9vw, 1.75rem);
+  --text-display-3--line-height: 1.12;
+  --text-display-3--letter-spacing: -0.015em;
+
+  /* The mono micro-label, in one place instead of eight literal values. */
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.45;
+  --text-label--letter-spacing: 0.14em;
+
+  /* Layout. The rail is the page's datum: every band's content starts here,
+     at every width. Previously three components each encoded it differently
+     and the page grew four different left edges above 1348px. */
+  --spacing-rail: 9.5rem;
+  --spacing-gutter: 2.5rem;
+  --spacing-nav: 4.25rem;
+
+  /* Pinned to the rail, but the measure is capped so an ultrawide window
+     lengthens the margin rather than the line. */
+  --container-page: 74rem;
+  --container-measure: 34rem;
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -64,8 +122,9 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* clears the sticky header when jumping to #anchors */
-    scroll-padding-top: 5.5rem;
+    /* clears the fixed header when jumping to #anchors — derived from the
+       header's own height token rather than restating it as a third number */
+    scroll-padding-top: calc(var(--spacing-nav) + 1.25rem);
   }
 
   body {
@@ -87,19 +146,52 @@
     letter-spacing: -0.015em;
   }
 
+  /* The surfaces we did not draw still belong to the design: selection, the
+     caret, the scrollbar and link underlines all ship with browser defaults
+     that match no palette. */
   ::selection {
-    background-color: var(--color-hot-500);
+    background-color: var(--color-cool-600);
     color: var(--color-glare);
   }
 
+  /* The focus ring stays warm on the lit bands. It is the one place a
+     complementary colour earns its keep: a blue ring on blue controls is
+     the hardest indicator to find, and this one appears only on keyboard
+     navigation, so it never competes with the brand. */
   :focus-visible {
     outline: 2px solid var(--color-hot-600);
     outline-offset: 3px;
   }
 
-  /* On shade the hot outline muddies; the cool pole reads cleanly there. */
-  .band-shade :focus-visible {
+  /* On the dark bands the hot outline muddies; the cool pole reads cleanly.
+     .band-pit was missing here, so footer focus rings sat at 3.0:1. */
+  .band-shade :focus-visible,
+  .band-pit :focus-visible {
     outline-color: var(--color-cool-400);
+  }
+
+  input,
+  textarea,
+  select {
+    caret-color: var(--color-hot-600);
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: from-font;
+  }
+
+  /* Numbers in spec tables must align in columns to be comparable at all. */
+  dd,
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @supports (scrollbar-color: auto) {
+    html {
+      scrollbar-color: var(--color-sheet-edge) var(--color-sheet);
+    }
   }
 }
 
@@ -124,6 +216,45 @@
   .band-pit {
     background-color: var(--color-pit);
     color: var(--color-glint);
+  }
+
+  /* The mono micro-label — series names, spec keys, field labels, column
+     heads. It appeared eighteen times as a hand-copied stack of four
+     utilities with three different sizes; one class keeps the register
+     identical everywhere it is used. Colour stays at the call site, because
+     which band it sits on decides that. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    line-height: var(--text-label--line-height);
+    letter-spacing: var(--text-label--letter-spacing);
+    text-transform: uppercase;
+  }
+
+  /* The page's content rail. Every band — header, hero, sections, form,
+     footer — starts at the same x, and the measure is capped so the line
+     never runs the full width of an ultrawide display. */
+  .rail {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  @media (width >= 40rem) {
+    .rail {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .rail {
+      padding-left: var(--spacing-rail);
+      padding-right: var(--spacing-gutter);
+    }
+  }
+
+  .rail-inner {
+    max-width: var(--container-page);
   }
 }
 

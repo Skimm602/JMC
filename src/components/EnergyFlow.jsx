@@ -14,7 +14,7 @@ export default function EnergyFlow({ className = '' }) {
   const DC = 'var(--color-cool-600)'
   const AC = 'var(--color-ink)'
   const HOT = 'var(--color-hot-600)'
-  const STRUCT = 'var(--color-ink-faint)'
+  const STRUCT = 'var(--color-ink-soft)'
 
   const nodes = [
     { x: 90, label: 'Irradiance', sub: '1041 W/m²' },
@@ -153,7 +153,7 @@ export default function EnergyFlow({ className = '' }) {
             x={n.x}
             y="169"
             textAnchor="middle"
-            fill="var(--color-ink-faint)"
+            fill="var(--color-ink-soft)"
             fontFamily="var(--font-plex-mono), monospace"
             fontSize="9.5"
           >

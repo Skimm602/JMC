@@ -5,17 +5,25 @@ import { cx } from './ui.jsx'
 import { AlertIcon, ChevronDownIcon, CheckIcon } from './icons.jsx'
 
 const controlBase =
-  'w-full bg-glare border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint transition-colors duration-200 outline-none'
-
-const controlState = (invalid) =>
-  invalid
-    ? 'border-hot-600 focus:border-hot-600'
-    : 'border-ink/25 hover:border-ink/45 focus:border-cool-600'
+  'w-full bg-glare border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft transition-colors duration-200 outline-none'
 
 /**
- * Label + control + hint/error wrapper. Wires up `htmlFor`, `aria-invalid`
- * and `aria-describedby` from one place so every field stays accessible
- * without repeating the plumbing.
+ * Focus resolves toward ink rather than the cool pole. Cool means verified
+ * and in-spec everywhere else on the page; an empty field that merely has
+ * the caret in it has not been verified of anything.
+ */
+const controlState = (invalid) =>
+  invalid ? 'border-hot-600 focus:border-hot-600' : 'border-rule-strong hover:border-ink-soft focus:border-ink'
+
+/**
+ * Label + control + hint/error wrapper. Wires up `htmlFor`, `aria-invalid`,
+ * `aria-describedby` and the required state from one place so every field
+ * stays accessible without repeating the plumbing.
+ *
+ * The asterisk is decorative and stays `aria-hidden`; `required` is what
+ * actually reaches a screen reader, and it used to be missing entirely — so
+ * the mandatory fields on the form this whole site exists for announced as
+ * optional.
  */
 export function Field({ label, required, hint, error, children, className, span }) {
   const id = useId()
@@ -25,20 +33,20 @@ export function Field({ label, required, hint, error, children, className, span 
 
   return (
     <div className={cx(span === 2 && 'sm:col-span-2', className)}>
-      <label htmlFor={id} className="text-ink mb-2 block font-mono text-[10px] tracking-[0.14em] uppercase">
+      <label htmlFor={id} className="label text-ink mb-2 block">
         {label}
         {required && (
           <span className="text-hot-600 ml-1" aria-hidden="true">
             *
           </span>
         )}
-        {!required && <span className="text-ink-faint ml-1.5">optional</span>}
+        {!required && <span className="text-ink-soft ml-1.5 normal-case">optional</span>}
       </label>
 
-      {children({ id, invalid: Boolean(error), describedBy })}
+      {children({ id, invalid: Boolean(error), describedBy, required: Boolean(required) })}
 
       {hint && !error && (
-        <p id={hintId} className="text-ink-faint mt-2 text-xs leading-relaxed">
+        <p id={hintId} className="text-ink-soft mt-2 text-xs leading-relaxed">
           {hint}
         </p>
       )}
@@ -52,10 +60,12 @@ export function Field({ label, required, hint, error, children, className, span 
   )
 }
 
-export function TextInput({ id, invalid, describedBy, ...rest }) {
+export function TextInput({ id, invalid, describedBy, required, ...rest }) {
   return (
     <input
       id={id}
+      required={required || undefined}
+      aria-required={required || undefined}
       aria-invalid={invalid || undefined}
       aria-describedby={describedBy}
       className={cx(controlBase, controlState(invalid))}
@@ -64,11 +74,13 @@ export function TextInput({ id, invalid, describedBy, ...rest }) {
   )
 }
 
-export function Select({ id, invalid, describedBy, children, ...rest }) {
+export function Select({ id, invalid, describedBy, required, children, ...rest }) {
   return (
     <div className="relative">
       <select
         id={id}
+        required={required || undefined}
+        aria-required={required || undefined}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
         className={cx(controlBase, controlState(invalid), 'appearance-none pr-10')}
@@ -76,7 +88,10 @@ export function Select({ id, invalid, describedBy, children, ...rest }) {
       >
         {children}
       </select>
-      <ChevronDownIcon className="text-ink-faint pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+      <ChevronDownIcon
+        aria-hidden="true"
+        className="text-ink-soft pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2"
+      />
     </div>
   )
 }
@@ -115,7 +130,7 @@ export function Checkbox({ checked, onChange, label, description, name, tone = '
                   : 'border-cool-600 bg-cool-600 text-glare'
                 : error
                   ? 'border-hot-600 bg-glare'
-                  : 'border-ink/35 bg-glare group-hover:border-ink/60',
+                  : 'border-rule-strong bg-glare group-hover:border-ink-soft',
               'peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-hot-600',
             )}
           >

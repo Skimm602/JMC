@@ -22,8 +22,8 @@ const columns = [
 
 export default function Footer() {
   return (
-    <footer id="footer" className="band-pit">
-      <div className="mx-auto max-w-[1180px] px-5 py-20 sm:px-8 lg:mr-auto lg:ml-0 lg:pr-10 lg:pl-[128px]">
+    <footer id="footer" className="band-pit rail">
+      <div className="rail-inner py-20 lg:py-24 xl:py-28">
         <div className="grid gap-14 lg:grid-cols-[1.2fr_2fr]">
           <div>
             <Logo tone="shade" />
@@ -33,11 +33,11 @@ export default function Footer() {
             </p>
             <dl className="mt-7 space-y-2">
               <div className="flex gap-3 text-xs">
-                <dt className="text-glint-faint w-20 shrink-0 font-mono tracking-wide">Trade desk</dt>
+                <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Trade desk</dt>
                 <dd className="text-glint font-mono">+63 32 000 0000</dd>
               </div>
               <div className="flex gap-3 text-xs">
-                <dt className="text-glint-faint w-20 shrink-0 font-mono tracking-wide">Email</dt>
+                <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Email</dt>
                 <dd className="text-glint font-mono">installers@jmcsolar.example</dd>
               </div>
             </dl>
@@ -46,13 +46,13 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {columns.map((col) => (
               <nav key={col.title} aria-label={col.title}>
-                <h3 className="text-glint-faint font-mono text-[10px] tracking-[0.2em] uppercase">{col.title}</h3>
+                <h3 className="label text-glint-soft">{col.title}</h3>
                 <ul className="mt-5 space-y-3">
                   {col.links.map((l) => (
                     <li key={l}>
                       <a
                         href="#top"
-                        className="text-glint-soft hover:text-cool-400 text-sm transition-colors"
+                        className="text-glint-soft hover:text-glint text-sm transition-colors"
                       >
                         {l}
                       </a>
@@ -66,7 +66,7 @@ export default function Footer() {
 
         <Rule tone="shade" className="my-12" />
 
-        <div className="text-glint-faint flex flex-col gap-4 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-glint-soft flex flex-col gap-4 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} JMC Solar. All rights reserved.</p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {['Privacy', 'Terms of sale', 'Cookies', 'Compliance'].map((l) => (

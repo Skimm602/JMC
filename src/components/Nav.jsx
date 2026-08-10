@@ -7,6 +7,7 @@ import { MenuIcon, XIcon } from './icons.jsx'
 
 const links = [
   { label: 'Inverters', href: '#products' },
+  { label: 'Sizing', href: '#sizing' },
   { label: 'Engineering', href: '#why' },
   { label: 'Installer program', href: '#installers' },
   { label: 'Support', href: '#footer' },
@@ -37,65 +38,74 @@ export default function Nav() {
     <header
       className={cx(
         'fixed inset-x-0 top-0 z-50 transition-colors duration-300',
-        scrolled ? 'border-ink/12 bg-glare/90 border-b backdrop-blur-md' : 'border-b border-transparent',
+        scrolled ? 'border-rule bg-glare/90 border-b backdrop-blur-md' : 'border-b border-transparent',
       )}
     >
-      <div className="mx-auto flex h-[68px] max-w-[1180px] items-center justify-between gap-6 px-5 sm:px-8 lg:mx-0 lg:max-w-none lg:pr-10 lg:pl-[128px]">
-        <Logo />
+      {/* Same rail as every band below, so the logo sits on the page datum
+          rather than at the viewport edge. The header used to go full-bleed
+          at lg while the content column stayed centred, which is what put
+          the logo and the hero headline on different axes above 1348px. */}
+      <div className="rail">
+        <div className="rail-inner flex h-nav items-center justify-between gap-6">
+          <Logo />
 
-        <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="group text-ink-soft hover:text-ink relative py-1 text-sm font-medium transition-colors"
-            >
-              {l.label}
-              {/* the rule heats up and grows from the left, matching the button axis */}
-              <span
-                aria-hidden="true"
-                className="bg-hot-600 absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
-              />
-            </a>
-          ))}
-        </nav>
+          <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
+            {links.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="group text-ink-soft hover:text-ink relative py-1 text-sm font-medium transition-colors"
+              >
+                {l.label}
+                {/* the rule grows from the left, matching the button axis */}
+                <span
+                  aria-hidden="true"
+                  className="bg-cool-600 absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
+                />
+              </a>
+            ))}
+          </nav>
 
-        <div className="hidden items-center gap-4 lg:flex">
-          <Button as="a" href="#register" variant="ghost" size="sm">
-            Sign in
-          </Button>
-          <Button as="a" href="#register" size="sm">
-            Create account
-          </Button>
+          <div className="hidden items-center gap-4 lg:flex">
+            <Button as="a" href="#register" variant="ghost" size="sm">
+              Sign in
+            </Button>
+            <Button as="a" href="#register" size="sm">
+              Create account
+            </Button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="text-ink hover:text-ink-soft -mr-2 p-2 transition-colors lg:hidden"
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+          >
+            {open ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="text-ink hover:text-hot-600 -mr-2 p-2 transition-colors lg:hidden"
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-        >
-          {open ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-        </button>
       </div>
 
-      {/* Mobile sheet */}
+      {/* Mobile sheet. `inert` matters as much as the height here: collapsed,
+          the sheet was still only visually hidden, so keyboard users tabbing
+          off the logo landed in four invisible links and a CTA. */}
       <div
         id="mobile-nav"
+        inert={!open}
         className={cx(
-          'border-ink/12 bg-glare/97 overflow-hidden border-t backdrop-blur-md transition-[max-height,opacity] duration-300 lg:hidden',
+          'border-rule bg-glare/97 overflow-hidden border-t backdrop-blur-md transition-[max-height,opacity] duration-300 lg:hidden',
           open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0',
         )}
       >
-        <nav aria-label="Mobile" className="flex flex-col px-5 py-2">
+        <nav aria-label="Mobile" className="rail flex flex-col py-2">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="border-ink/10 text-ink hover:text-hot-600 border-b py-4 text-sm font-medium transition-colors last:border-b-0"
+              className="border-rule text-ink hover:text-ink-soft border-b py-4 text-sm font-medium transition-colors last:border-b-0"
             >
               {l.label}
             </a>

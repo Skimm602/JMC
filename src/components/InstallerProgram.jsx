@@ -32,7 +32,7 @@ function Cell({ value }) {
   if (value === true) return <CheckIcon className="text-cool-600 mx-auto h-4 w-4" aria-label="Included" />
   if (value === false)
     return (
-      <span className="text-ink/25 mx-auto block text-center" aria-label="Not included">
+      <span className="text-ink-soft mx-auto block text-center" aria-label="Not included">
         —
       </span>
     )
@@ -64,7 +64,7 @@ export default function InstallerProgram() {
                 scope="col"
                 className="bg-glare sticky left-0 z-10 w-[38%] pr-4 pb-5 text-left align-bottom"
               >
-                <span className="text-ink-faint font-mono text-[10px] tracking-[0.18em] uppercase">Benefit</span>
+                <span className="label text-ink-soft">Benefit</span>
               </th>
               {TIERS.map((t) => (
                 <th
@@ -72,18 +72,18 @@ export default function InstallerProgram() {
                   scope="col"
                   className={cx(
                     'px-4 pb-5 align-bottom',
-                    t.featured ? 'border-hot-600 border-b-2' : 'border-ink/20 border-b',
+                    t.featured ? 'border-cool-600 border-b-2' : 'border-rule-strong border-b',
                   )}
                 >
                   <span
                     className={cx(
                       'display-wide block text-lg font-semibold',
-                      t.featured ? 'text-hot-600' : 'text-ink',
+                      t.featured ? 'text-cool-600' : 'text-ink',
                     )}
                   >
                     {t.name}
                   </span>
-                  <span className="text-ink-faint mt-2 block font-mono text-[10px] leading-relaxed tracking-wide">
+                  <span className="text-ink-soft mt-2 block font-mono text-[11px] leading-relaxed tracking-wide">
                     {t.req}
                   </span>
                 </th>
@@ -92,10 +92,13 @@ export default function InstallerProgram() {
           </thead>
           <tbody>
             {MATRIX.map(([label, ...values]) => (
-              <tr key={label} className="border-ink/12 border-b">
+              <tr key={label} className="border-rule border-b">
+                {/* The separator stays while the column is stuck, at every
+                    width. Dropping it at sm left the pinned benefit column
+                    floating over the scrolled tiers with no edge. */}
                 <th
                   scope="row"
-                  className="bg-glare border-ink/12 text-ink sticky left-0 z-10 border-r py-3.5 pr-4 text-left text-sm font-normal sm:border-r-0"
+                  className="bg-glare border-rule text-ink sticky left-0 z-10 border-r py-3.5 pr-4 text-left text-sm font-normal"
                 >
                   {label}
                 </th>

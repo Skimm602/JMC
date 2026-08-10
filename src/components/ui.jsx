@@ -12,14 +12,14 @@ export function Eyebrow({ children, className, tone = 'ink' }) {
   return (
     <p
       className={cx(
-        'flex items-center gap-3 font-mono text-[11px] font-medium tracking-[0.24em] uppercase',
+        'label flex items-center gap-3 font-medium',
         tone === 'shade' ? 'text-glint-soft' : 'text-ink-soft',
         className,
       )}
     >
       <span
         aria-hidden="true"
-        className={cx('h-px w-6', tone === 'shade' ? 'bg-cool-400' : 'bg-hot-600')}
+        className={cx('h-px w-6 shrink-0', tone === 'shade' ? 'bg-cool-400' : 'bg-cool-600')}
       />
       {children}
     </p>
@@ -28,12 +28,7 @@ export function Eyebrow({ children, className, tone = 'ink' }) {
 
 export function SectionHeading({ children, className }) {
   return (
-    <h2
-      className={cx(
-        'display-wide text-[clamp(1.9rem,4.4vw,3.25rem)] leading-[0.98] font-semibold text-balance',
-        className,
-      )}
-    >
+    <h2 className={cx('display-wide text-display-2 font-semibold text-balance', className)}>
       {children}
     </h2>
   )
@@ -43,7 +38,7 @@ export function Lede({ children, className, tone = 'ink' }) {
   return (
     <p
       className={cx(
-        'max-w-xl text-base leading-relaxed sm:text-[1.0625rem]',
+        'max-w-measure text-base leading-relaxed sm:text-[1.0625rem]',
         tone === 'shade' ? 'text-glint-soft' : 'text-ink-soft',
         className,
       )}
@@ -65,18 +60,21 @@ const buttonSizes = {
 }
 
 /**
- * Hover travels along the temperature axis rather than just brightening —
- * the micro-interaction means the same thing the palette does.
+ * Only the primary action carries a filled colour, and it carries the blue
+ * pole — the brand voice. Secondary controls resolve toward ink rather than
+ * borrowing a pole for a hover state, and `hot` is kept for an action that
+ * is genuinely about heat or risk rather than for every call to action.
  */
 const buttonVariants = {
-  hot: 'bg-hot-600 text-glare hover:bg-hot-500',
-  outline: 'border border-ink/30 text-ink hover:border-hot-600 hover:text-hot-600',
-  outlineShade: 'border border-glint/25 text-glint hover:border-cool-400 hover:text-cool-400',
-  ghost: 'text-ink-soft hover:text-hot-600',
-  ghostShade: 'text-glint-soft hover:text-cool-400',
+  primary: 'bg-cool-600 text-glare hover:bg-cool-700',
+  hot: 'bg-hot-600 text-glare hover:bg-hot-700',
+  outline: 'border border-rule-strong text-ink hover:border-ink hover:bg-ink/[0.04]',
+  outlineShade: 'border border-rule-shade text-glint hover:border-glint-soft hover:bg-glint/[0.06]',
+  ghost: 'text-ink-soft hover:text-ink',
+  ghostShade: 'text-glint-soft hover:text-glint',
 }
 
-export function Button({ as = 'button', variant = 'hot', size = 'md', className, children, ...rest }) {
+export function Button({ as = 'button', variant = 'primary', size = 'md', className, children, ...rest }) {
   const Tag = as
   return (
     <Tag className={cx(buttonBase, buttonSizes[size], buttonVariants[variant], className)} {...rest}>
@@ -85,21 +83,28 @@ export function Button({ as = 'button', variant = 'hot', size = 'md', className,
   )
 }
 
-/** Link styled as a forward action, with the arrow nudging on hover. */
+/**
+ * Link styled as a forward action. The underline and the arrow carry the
+ * affordance, so a secondary navigation link no longer has to borrow a pole
+ * of a two-colour palette that means something specific elsewhere.
+ */
 export function ArrowLink({ href, children, className, tone = 'ink' }) {
   return (
     <a
       href={href}
       className={cx(
         'group inline-flex items-center gap-2 text-sm font-medium transition-colors',
-        tone === 'shade' ? 'text-cool-400 hover:text-glint' : 'text-cool-600 hover:text-hot-600',
+        tone === 'shade' ? 'text-glint-soft hover:text-glint' : 'text-ink-soft hover:text-ink',
         className,
       )}
     >
-      <span className="border-b border-current/35 pb-px transition-colors group-hover:border-current">
+      <span className="border-b border-current/40 pb-px transition-colors group-hover:border-current">
         {children}
       </span>
-      <ArrowRightIcon className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+      <ArrowRightIcon
+        aria-hidden="true"
+        className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
+      />
     </a>
   )
 }
@@ -109,20 +114,22 @@ export function Rule({ className, tone = 'ink' }) {
   return (
     <div
       aria-hidden="true"
-      className={cx('h-px w-full', tone === 'shade' ? 'bg-glint/15' : 'bg-ink/15', className)}
+      className={cx('h-px w-full', tone === 'shade' ? 'bg-rule-shade' : 'bg-rule', className)}
     />
   )
 }
 
 /**
- * Content band. The left padding at lg clears the fixed section index,
- * which is what gives the page its off-centre axis instead of the usual
- * symmetrically-centred column.
+ * Content band. `rail` puts the content's left edge on the page datum at
+ * every width and caps the measure; `rail-inner` stops the line growing with
+ * the window. Header, hero, form and footer use the same pair, so the page
+ * reads off one axis instead of the four left edges it used to have above
+ * 1348px, where the old centred inner column drifted away from the header.
  */
 export function Section({ id, className, children }) {
   return (
-    <section id={id} className={cx('relative px-5 py-24 sm:px-8 lg:py-32 lg:pr-10 lg:pl-[128px]', className)}>
-      <div className="mx-auto max-w-[1180px]">{children}</div>
+    <section id={id} className={cx('rail relative py-24 lg:py-32 xl:py-40', className)}>
+      <div className="rail-inner">{children}</div>
     </section>
   )
 }

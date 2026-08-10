@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Eyebrow, Rule, SectionHeading, cx } from './ui.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, ShieldIcon, SpinnerIcon, UploadIcon, XIcon } from './icons.jsx'
@@ -82,7 +82,7 @@ const passwordScore = (pw) => {
 
 const STRENGTH = ['', 'Weak', 'Fair', 'Good', 'Strong']
 /** Weak reads hot, strong reads cool — the same axis the rest of the page uses. */
-const STRENGTH_COLOR = ['bg-ink/20', 'bg-hot-600', 'bg-hot-400', 'bg-cool-500', 'bg-cool-600']
+const STRENGTH_COLOR = ['bg-rule', 'bg-hot-600', 'bg-hot-400', 'bg-cool-500', 'bg-cool-600']
 
 /* ------------------------------ document slot ----------------------------- */
 
@@ -103,7 +103,7 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
         <CheckIcon className="text-cool-600 h-4 w-4 shrink-0" strokeWidth={2.4} />
         <span className="min-w-0 flex-1">
           <span className="text-ink block truncate text-xs font-medium">{slot.label}</span>
-          <span className="text-ink-faint block truncate font-mono text-[10px]">
+          <span className="text-ink-soft block truncate font-mono text-[11px]">
             {file.name} · {formatBytes(file.size)}
           </span>
         </span>
@@ -111,7 +111,7 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
           type="button"
           disabled={disabled}
           onClick={() => onRemove(slot.key)}
-          className="text-ink-faint hover:text-hot-600 shrink-0 p-1 transition-colors"
+          className="text-ink-soft hover:text-hot-600 shrink-0 p-1 transition-colors"
           aria-label={`Remove ${slot.label}`}
         >
           <XIcon className="h-3.5 w-3.5" />
@@ -139,7 +139,7 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
             ? 'border-cool-600 bg-cool-600/10'
             : error
               ? 'border-hot-600 bg-glare'
-              : 'border-ink/30 bg-glare hover:border-cool-600 hover:bg-cool-600/[0.05]',
+              : 'border-rule-strong bg-glare hover:border-cool-600 hover:bg-cool-600/[0.05]',
         )}
       >
         <input
@@ -153,19 +153,19 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
           }}
           className="sr-only"
         />
-        <UploadIcon className={cx('h-4 w-4 shrink-0', dragging ? 'text-cool-600' : 'text-ink-faint')} />
+        <UploadIcon className={cx('h-4 w-4 shrink-0', dragging ? 'text-cool-600' : 'text-ink-soft')} />
         <span className="min-w-0 flex-1">
           <span className="text-ink block text-xs font-medium">
             {slot.label}
             {slot.required ? (
               <span className="text-hot-600 ml-1">*</span>
             ) : (
-              <span className="text-ink-faint ml-1.5 font-normal">optional</span>
+              <span className="text-ink-soft ml-1.5 font-normal">optional</span>
             )}
           </span>
-          <span className="text-ink-faint block text-[10px]">{slot.hint}</span>
+          <span className="text-ink-soft block text-[10px]">{slot.hint}</span>
         </span>
-        <span className="text-cool-600 shrink-0 font-mono text-[10px] tracking-[0.12em] uppercase">Attach</span>
+        <span className="text-cool-600 shrink-0 label">Attach</span>
       </label>
       {error && (
         <p role="alert" className="text-hot-600 mt-2 flex items-center gap-1.5 text-xs">
@@ -191,6 +191,14 @@ export default function Registration() {
   const [stepId, setStepId] = useState('account')
   const [visited, setVisited] = useState(['account'])
   const [status, setStatus] = useState('idle')
+  const successRef = useRef(null)
+
+  // Submitting swaps the whole section out. Without moving focus, a keyboard
+  // or screen-reader user got silence after the most consequential action on
+  // the site, with focus stranded on a button that no longer exists.
+  useEffect(() => {
+    if (status === 'done') successRef.current?.focus()
+  }, [status])
 
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -299,13 +307,21 @@ export default function Registration() {
 
   if (status === 'done') {
     return (
-      <section id="register" className="band-sheet px-5 py-28 sm:px-8 lg:py-36 lg:pl-[128px]">
-        <div className="border-ink/15 bg-glare corner-ticks text-ink mx-auto max-w-xl border p-10">
+      /* Same vertical rhythm as the form it replaces, so submitting does not
+         make the page jump. */
+      <section id="register" className="band-sheet rail py-24 lg:py-32 xl:py-40">
+        <div className="border-rule bg-glare corner-ticks text-ink max-w-xl border p-10">
           <span className="border-cool-600 text-cool-600 grid h-12 w-12 place-items-center border">
             <CheckIcon className="h-6 w-6" strokeWidth={2.2} />
           </span>
 
-          <h2 className="display-wide mt-7 text-3xl font-semibold">Application received</h2>
+          <h2
+            ref={successRef}
+            tabIndex={-1}
+            className="display-wide text-display-2 mt-7 font-semibold outline-none"
+          >
+            Application received
+          </h2>
           <p className="text-ink-soft mt-4 leading-relaxed">
             Thanks {form.fullName.split(' ')[0] || 'there'} — your reference is{' '}
             <span className="text-ink font-mono font-medium">JMC-2026-4821</span>. A confirmation is on its way to{' '}
@@ -315,18 +331,18 @@ export default function Registration() {
           <Rule className="my-8" />
 
           <dl className="grid gap-px">
-            <div className="border-ink/12 flex justify-between gap-4 border-b py-2.5 text-sm">
-              <dt className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">Account type</dt>
+            <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
+              <dt className="label text-ink-soft">Account type</dt>
               <dd className="text-ink">{isInstaller ? 'Installer — pending verification' : 'Standard'}</dd>
             </div>
             {isInstaller && (
               <>
-                <div className="border-ink/12 flex justify-between gap-4 border-b py-2.5 text-sm">
-                  <dt className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">Company</dt>
+                <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
+                  <dt className="label text-ink-soft">Company</dt>
                   <dd className="text-ink">{form.company}</dd>
                 </div>
-                <div className="border-ink/12 flex justify-between gap-4 border-b py-2.5 text-sm">
-                  <dt className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">Documents</dt>
+                <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
+                  <dt className="label text-ink-soft">Documents</dt>
                   <dd className="text-ink">{Object.values(docs).filter(Boolean).length} attached</dd>
                 </div>
               </>
@@ -353,8 +369,8 @@ export default function Registration() {
   const pwScore = passwordScore(form.password)
 
   return (
-    <section id="register" className="band-sheet px-5 py-24 sm:px-8 lg:py-32 lg:pr-10 lg:pl-[128px]">
-      <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+    <section id="register" className="band-sheet rail py-24 lg:py-32 xl:py-40">
+      <div className="rail-inner grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
         {/* --------------------------------- aside -------------------------------- */}
         <div className="lg:sticky lg:top-28 lg:self-start">
           <Eyebrow>Create account</Eyebrow>
@@ -366,7 +382,7 @@ export default function Registration() {
 
           <Rule className="my-8" />
 
-          <div className="border-ink/15 flex gap-3 border p-4">
+          <div className="border-rule flex gap-3 border p-4">
             <ShieldIcon className="text-cool-600 h-5 w-5 shrink-0" />
             <p className="text-ink-soft text-xs leading-relaxed">
               Documents are used for trade verification only and are never shared outside JMC. You can request
@@ -379,7 +395,7 @@ export default function Registration() {
         <form
           noValidate
           onSubmit={onSubmit}
-          className="border-ink/15 bg-glare corner-ticks text-ink border p-6 sm:p-9"
+          className="border-rule bg-glare corner-ticks text-ink border p-6 sm:p-9"
         >
           {/* ------------------------------- stepper ------------------------------ */}
           <ol className="mb-8 flex items-center gap-1.5">
@@ -399,22 +415,22 @@ export default function Registration() {
                     <span
                       className={cx(
                         'h-[3px] w-full transition-colors duration-300',
-                        on ? 'bg-hot-600' : done ? 'bg-cool-600' : 'bg-ink/15',
+                        on ? 'bg-cool-600' : done ? 'bg-cool-500' : 'bg-rule',
                       )}
                     />
                     <span className="flex items-center gap-1.5">
                       <span
                         className={cx(
-                          'font-mono text-[10px] tabular-nums',
-                          on ? 'text-hot-600' : done ? 'text-cool-600' : 'text-ink-faint',
+                          'label tabular-nums',
+                          on ? 'text-cool-600' : done ? 'text-cool-500' : 'text-ink-soft',
                         )}
                       >
                         {done ? '✓' : `0${i + 1}`}
                       </span>
                       <span
                         className={cx(
-                          'truncate font-mono text-[10px] tracking-[0.12em] uppercase',
-                          on ? 'text-ink' : 'text-ink-faint',
+                          'label truncate',
+                          on ? 'text-ink' : 'text-ink-soft',
                         )}
                       >
                         {s.label}
@@ -471,12 +487,12 @@ export default function Registration() {
                           key={n}
                           className={cx(
                             'h-1 flex-1 transition-colors duration-300',
-                            n <= pwScore ? STRENGTH_COLOR[pwScore] : 'bg-ink/15',
+                            n <= pwScore ? STRENGTH_COLOR[pwScore] : 'bg-rule',
                           )}
                         />
                       ))}
                     </div>
-                    <span className="text-ink-faint w-14 font-mono text-[10px] tracking-wide uppercase">
+                    <span className="text-ink-soft label w-14">
                       {STRENGTH[pwScore]}
                     </span>
                   </div>
@@ -533,7 +549,7 @@ export default function Registration() {
                 <div
                   className={cx(
                     'border p-5 transition-colors duration-300',
-                    isInstaller ? 'border-hot-600/50 bg-hot-600/[0.06]' : 'border-ink/20 bg-sheet/60',
+                    isInstaller ? 'border-hot-600/50 bg-hot-600/[0.06]' : 'border-rule-strong bg-sheet/60',
                   )}
                 >
                   <Checkbox
@@ -601,8 +617,8 @@ export default function Registration() {
                 </div>
 
                 <fieldset className="mt-7">
-                  <legend className="text-ink mb-4 block font-mono text-[10px] tracking-[0.14em] uppercase">
-                    Certifications held <span className="text-ink-faint">optional</span>
+                  <legend className="text-ink mb-4 block label">
+                    Certifications held <span className="text-ink-soft">optional</span>
                   </legend>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {CERTIFICATIONS.map((c) => (
@@ -619,16 +635,16 @@ export default function Registration() {
                 {/* ---------------------- supporting documents --------------------- */}
                 <div className="mt-8">
                   <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-ink font-mono text-[10px] tracking-[0.14em] uppercase">
+                    <span className="label text-ink">
                       Supporting documents
                     </span>
-                    <span className="text-ink-faint font-mono text-[10px] tabular-nums">
+                    <span className="label text-ink-soft tabular-nums">
                       {attachedRequired}/{requiredDocs.length} required
                     </span>
                   </div>
 
                   {/* progress across the required slots */}
-                  <div className="bg-ink/15 mt-3 h-[3px] w-full">
+                  <div className="bg-rule mt-3 h-[3px] w-full">
                     <div
                       className="bg-cool-600 h-full transition-all duration-500"
                       style={{ width: `${(attachedRequired / requiredDocs.length) * 100}%` }}
@@ -649,7 +665,7 @@ export default function Registration() {
                     ))}
                   </div>
 
-                  <p className="text-ink-faint mt-3 text-xs">PDF, JPG, PNG or DOC — up to 10 MB per document.</p>
+                  <p className="text-ink-soft mt-3 text-xs">PDF, JPG, PNG or DOC — up to 10 MB per document.</p>
 
                   {errors.documents && (
                     <p role="alert" className="text-hot-600 mt-2 flex items-center gap-1.5 text-xs">
@@ -704,20 +720,20 @@ export default function Registration() {
                         ]
                       : []),
                   ].map((group) => (
-                    <div key={group.step} className="border-ink/15 bg-sheet/60 border p-4">
+                    <div key={group.step} className="border-rule bg-sheet/60 border p-4">
                       <div className="flex items-center justify-between gap-4">
-                        <h4 className="text-ink-faint font-mono text-[10px] tracking-[0.16em] uppercase">
+                        <h4 className="label text-ink-soft">
                           {group.title}
                         </h4>
                         <button
                           type="button"
                           onClick={() => setStepId(group.step)}
-                          className="text-cool-600 hover:text-hot-600 text-xs underline underline-offset-2 transition-colors"
+                          className="text-ink-soft hover:text-ink text-xs underline underline-offset-2 transition-colors"
                         >
                           Edit
                         </button>
                       </div>
-                      <dl className="divide-ink/12 mt-3 divide-y">
+                      <dl className="divide-rule mt-3 divide-y">
                         {group.rows.map(([k, v]) => (
                           <div key={k} className="flex justify-between gap-4 py-2">
                             <dt className="text-ink-soft text-xs">{k}</dt>
@@ -752,13 +768,13 @@ export default function Registration() {
             )}
 
             {/* ------------------------------ navigation -------------------------- */}
-            <div className="border-ink/15 mt-10 flex items-center justify-between gap-4 border-t pt-6">
+            <div className="border-rule mt-10 flex items-center justify-between gap-4 border-t pt-6">
               {index > 0 ? (
                 <Button type="button" variant="ghost" onClick={goBack}>
                   Back
                 </Button>
               ) : (
-                <span className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">
+                <span className="label text-ink-soft">
                   Step {index + 1} of {steps.length}
                 </span>
               )}

@@ -11,8 +11,8 @@ export default function Logo({ className = '', compact = false, tone = 'ink' }) 
       <span
         className={`grid h-9 w-9 shrink-0 place-items-center border transition-colors duration-200 ${
           onShade
-            ? 'border-glint/25 group-hover:border-cool-400'
-            : 'border-ink/25 group-hover:border-hot-600'
+            ? 'border-rule-shade group-hover:border-glint-soft'
+            : 'border-rule-strong group-hover:border-ink'
         }`}
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
@@ -20,8 +20,8 @@ export default function Logo({ className = '', compact = false, tone = 'ink' }) 
             d="M3 7.5h9.5L21 17"
             className={
               onShade
-                ? 'stroke-cool-400 transition-colors group-hover:stroke-glint'
-                : 'stroke-ink transition-colors group-hover:stroke-hot-600'
+                ? 'stroke-glint transition-colors'
+                : 'stroke-ink transition-colors'
             }
             strokeWidth="2.1"
             strokeLinecap="square"
@@ -41,7 +41,7 @@ export default function Logo({ className = '', compact = false, tone = 'ink' }) 
           </span>
           <span
             className={`mt-1 block font-mono text-[9px] tracking-[0.3em] uppercase ${
-              onShade ? 'text-glint-faint' : 'text-ink-faint'
+              onShade ? 'text-glint-soft' : 'text-ink-soft'
             }`}
           >
             Solar

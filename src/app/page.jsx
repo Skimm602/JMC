@@ -2,6 +2,7 @@ import Nav from '@/components/Nav.jsx'
 import SectionIndex from '@/components/SectionIndex.jsx'
 import Hero from '@/components/Hero.jsx'
 import Products from '@/components/Products.jsx'
+import Sizing from '@/components/Sizing.jsx'
 import WhyJmc from '@/components/WhyJmc.jsx'
 import InstallerProgram from '@/components/InstallerProgram.jsx'
 import Registration from '@/components/Registration.jsx'
@@ -12,7 +13,7 @@ export default function Home() {
     <>
       <a
         href="#register"
-        className="focus:bg-hot-600 focus:text-glare sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
+        className="focus:bg-cool-600 focus:text-glare sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
       >
         Skip to registration
       </a>
@@ -23,6 +24,7 @@ export default function Home() {
       <main>
         <Hero />
         <Products />
+        <Sizing />
         <WhyJmc />
         <InstallerProgram />
         <Registration />

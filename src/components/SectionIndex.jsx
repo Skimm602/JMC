@@ -19,6 +19,7 @@ import { cx } from './ui.jsx'
 const SECTIONS = [
   { id: 'top', label: 'Overview' },
   { id: 'products', label: 'Range' },
+  { id: 'sizing', label: 'Sizing' },
   { id: 'why', label: 'Engineering', shade: true },
   { id: 'installers', label: 'Program' },
   { id: 'register', label: 'Register' },
@@ -51,44 +52,57 @@ export default function SectionIndex() {
   return (
     <nav
       aria-label="Section index"
-      className="pointer-events-none fixed top-0 left-0 z-40 hidden h-screen w-[88px] flex-col items-center justify-center lg:flex"
+      className="pointer-events-none fixed top-0 left-0 z-40 hidden h-screen w-rail flex-col justify-center lg:flex"
     >
       <span
         aria-hidden="true"
         className={cx(
-          'absolute inset-y-24 left-[35px] w-px transition-colors duration-500',
-          onShade ? 'bg-glint/20' : 'bg-ink/15',
+          'absolute inset-y-24 left-[34px] w-px transition-colors duration-500',
+          onShade ? 'bg-rule-shade' : 'bg-rule',
         )}
       />
 
-      <ol className="pointer-events-auto relative flex flex-col gap-8">
+      {/* The list is pinned to the spine's x rather than centred in the
+          column. Centring made every tick's position depend on how long its
+          own label was, so the ticks sat off the spine — and off the left of
+          the viewport, since the widest label made the list wider than the
+          column. Labels are positioned out of flow for the same reason: they
+          can now appear and disappear without moving a tick. */}
+      <ol className="pointer-events-auto relative flex flex-col gap-8 pl-[34px]">
         {SECTIONS.map((s) => {
           const on = active === s.id
           return (
             <li key={s.id}>
-              <a href={`#${s.id}`} className="group flex items-center gap-4" aria-current={on ? 'page' : undefined}>
+              <a
+                href={`#${s.id}`}
+                className="group relative flex h-4 items-center"
+                aria-current={on ? 'page' : undefined}
+              >
                 {/* tick grows and heats when its section is in view */}
                 <span
                   aria-hidden="true"
                   className={cx(
                     'block h-px transition-all duration-300',
                     on
-                      ? 'bg-hot-600 w-6'
+                      ? 'bg-cool-600 w-6'
                       : onShade
-                        ? 'bg-glint/35 group-hover:bg-glint w-3'
-                        : 'bg-ink/30 group-hover:bg-ink w-3',
+                        ? 'bg-glint/40 group-hover:bg-glint w-3'
+                        : 'bg-ink/40 group-hover:bg-ink w-3',
                   )}
                 />
+                {/* The section you are in stays named. Revealing every label
+                    only on hover made the index unreadable unless you already
+                    knew to point at it. */}
                 <span
                   className={cx(
-                    'font-mono text-[10px] tracking-[0.18em] whitespace-nowrap uppercase transition-all duration-300',
+                    'label absolute left-8 whitespace-nowrap transition-opacity duration-300',
                     on
                       ? onShade
                         ? 'text-glint opacity-100'
                         : 'text-ink opacity-100'
                       : onShade
-                        ? 'text-glint-soft opacity-0 group-hover:opacity-100'
-                        : 'text-ink-soft opacity-0 group-hover:opacity-100',
+                        ? 'text-glint-soft opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
+                        : 'text-ink-soft opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100',
                   )}
                 >
                   {s.label}

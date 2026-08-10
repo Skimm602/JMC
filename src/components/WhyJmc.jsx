@@ -58,11 +58,14 @@ export default function WhyJmc() {
         </Lede>
       </div>
 
+      {/* No scroll reveal on these four. They are the section's substance, and
+          fading body copy in on scroll delays the reading it exists for; the
+          hero's drawn curve is the page's one authored moment. */}
       <div className="mt-20">
         {ARGUMENTS.map((a) => (
           <article
             key={a.title}
-            className="reveal-up group border-glint/15 grid items-baseline gap-x-10 gap-y-4 border-t py-10 last:border-b lg:grid-cols-12"
+            className="border-rule-shade grid items-baseline gap-x-10 gap-y-4 border-t py-10 last:border-b lg:grid-cols-12"
           >
             <p className="lg:col-span-2">
               <span className="text-cool-400 font-mono text-[2.75rem] leading-none font-medium tabular-nums">
@@ -71,7 +74,7 @@ export default function WhyJmc() {
               <span className="text-glint-soft ml-1.5 font-mono text-base">{a.unit}</span>
             </p>
 
-            <h3 className="display-wide text-glint text-xl leading-snug font-semibold lg:col-span-4">{a.title}</h3>
+            <h3 className="display-wide text-display-3 text-glint font-semibold lg:col-span-4">{a.title}</h3>
 
             <p className="text-glint-soft leading-relaxed lg:col-span-6">{a.copy}</p>
           </article>
@@ -81,12 +84,12 @@ export default function WhyJmc() {
       {/* the company's own numbers, as display type rather than small chips */}
       <dl className="mt-20 grid grid-cols-2 gap-x-10 gap-y-10 lg:grid-cols-4">
         {NUMBERS.map((n) => (
-          <div key={n.label} className="border-glint/15 border-t pt-5">
+          <div key={n.label} className="border-rule-shade border-t pt-5">
             <dd className="display-wide text-glint flex items-baseline gap-1 text-[2.5rem] leading-none font-semibold sm:text-5xl">
               {n.value}
               {n.unit && <span className="text-cool-400 text-xl sm:text-2xl">{n.unit}</span>}
             </dd>
-            <dt className="text-glint-faint mt-4 font-mono text-[10px] tracking-[0.18em] uppercase">{n.label}</dt>
+            <dt className="label text-glint-soft mt-4">{n.label}</dt>
           </div>
         ))}
       </dl>

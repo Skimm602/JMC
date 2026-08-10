@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import EnergyFlow from './EnergyFlow.jsx'
 import InverterArt from './InverterArt.jsx'
 import { ArrowLink, Eyebrow, Section, SectionHeading, cx } from './ui.jsx'
@@ -81,52 +81,89 @@ const FAMILIES = [
 export default function Products() {
   const [activeId, setActiveId] = useState('h6')
   const active = FAMILIES.find((f) => f.id === activeId)
+  const tabRefs = useRef([])
+
+  /**
+   * Declaring role="tablist" is a promise that arrow keys move between tabs;
+   * without it a keyboard user has to tab through every family to reach the
+   * panel. Roving tabindex keeps the whole selector a single tab stop.
+   */
+  const onTabKeyDown = (event, i) => {
+    const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[event.key]
+    let next
+    if (step) next = (i + step + FAMILIES.length) % FAMILIES.length
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = FAMILIES.length - 1
+    else return
+
+    event.preventDefault()
+    setActiveId(FAMILIES[next].id)
+    tabRefs.current[next]?.focus()
+  }
 
   return (
-    <Section id="products" className="band-sheet">
-      <div className="max-w-2xl">
+    <Section id="products" className="band-glare">
+      <div className="max-w-measure">
         <Eyebrow>Range</Eyebrow>
         <SectionHeading className="mt-6">One platform, roof to switchboard</SectionHeading>
       </div>
 
-      {/* The schematic is the section's claim, so it leads rather than decorates. */}
-      <div className="reveal-up mt-14 overflow-x-auto pb-2">
+      {/* The schematic is the section's claim, so it leads rather than
+          decorates. It is wider than a phone, so the scroller is focusable
+          and named — otherwise the right half is unreachable by keyboard. */}
+      <div
+        role="group"
+        aria-label="Single-line schematic: array through inverter to loads and grid. Scrollable."
+        tabIndex={0}
+        className="reveal-up border-rule mt-14 overflow-x-auto pb-2 lg:border-0"
+      >
         <EnergyFlow className="h-auto w-[1210px] max-w-none lg:w-full" />
       </div>
 
       <div className="mt-16 grid gap-px lg:grid-cols-[290px_1fr]">
         {/* ------------------------------ selector ----------------------------- */}
-        <div role="tablist" aria-label="Product families" className="border-ink/15 flex flex-col border-t">
-          {FAMILIES.map((f) => {
+        <div
+          role="tablist"
+          aria-label="Product families"
+          aria-orientation="vertical"
+          className="border-rule flex flex-col border-t"
+        >
+          {FAMILIES.map((f, i) => {
             const on = f.id === activeId
             const Icon = f.icon
             return (
               <button
                 key={f.id}
+                id={`tab-${f.id}`}
+                ref={(el) => {
+                  tabRefs.current[i] = el
+                }}
                 role="tab"
                 type="button"
                 aria-selected={on}
                 aria-controls="product-detail"
+                tabIndex={on ? 0 : -1}
+                onKeyDown={(e) => onTabKeyDown(e, i)}
                 onClick={() => setActiveId(f.id)}
                 className={cx(
-                  'group border-ink/15 relative flex items-center gap-4 border-b py-5 pr-3 pl-5 text-left transition-colors duration-200',
-                  on ? 'bg-glare' : 'hover:bg-glare/60',
+                  'group border-rule relative flex items-center gap-4 border-b py-5 pr-3 pl-5 text-left transition-colors duration-200',
+                  on ? 'bg-sheet' : 'hover:bg-sheet/60',
                 )}
               >
-                {/* the marker heats up on the selected family */}
+                {/* the marker takes the signal blue on the selected family */}
                 <span
                   aria-hidden="true"
                   className={cx(
                     'absolute inset-y-0 left-0 w-[3px] transition-colors duration-300',
-                    on ? 'bg-hot-600' : 'bg-transparent group-hover:bg-ink/20',
+                    on ? 'bg-cool-600' : 'bg-transparent group-hover:bg-ink/20',
                   )}
                 />
-                <Icon className={cx('h-6 w-6 shrink-0 transition-colors', on ? 'text-hot-600' : 'text-ink-faint')} />
+                <Icon className={cx('h-6 w-6 shrink-0 transition-colors', on ? 'text-cool-600' : 'text-ink-soft')} />
                 <span className="min-w-0">
                   <span
                     className={cx(
-                      'block font-mono text-[10px] tracking-[0.18em] uppercase transition-colors',
-                      on ? 'text-hot-600' : 'text-ink-faint',
+                      'label block transition-colors',
+                      on ? 'text-cool-600' : 'text-ink-soft',
                     )}
                   >
                     {f.series}
@@ -141,9 +178,7 @@ export default function Products() {
                   </span>
                 </span>
                 {f.featured && (
-                  <span className="text-cool-600 ml-auto shrink-0 font-mono text-[9px] tracking-[0.14em] uppercase">
-                    Flagship
-                  </span>
+                  <span className="label text-cool-600 ml-auto shrink-0">Flagship</span>
                 )}
               </button>
             )
@@ -154,23 +189,24 @@ export default function Products() {
         <div
           id="product-detail"
           role="tabpanel"
+          aria-labelledby={`tab-${active.id}`}
           key={active.id}
-          className="animate-reveal border-ink/15 bg-glare border-t border-b lg:border-l"
+          className="animate-reveal border-rule bg-sheet border-t border-b lg:border-l"
         >
           <div className="grid gap-10 p-7 sm:p-9 lg:grid-cols-[1fr_auto] lg:gap-8">
             <div className="min-w-0">
-              <p className="text-ink-faint font-mono text-[10px] tracking-[0.2em] uppercase">{active.series}</p>
-              <h3 className="display-wide text-ink mt-2.5 text-2xl font-semibold">{active.name}</h3>
-              <p className="text-ink-soft mt-4 max-w-md leading-relaxed">{active.copy}</p>
+              <p className="label text-ink-soft">{active.series}</p>
+              <h3 className="display-wide text-display-3 text-ink mt-2.5 font-semibold">{active.name}</h3>
+              <p className="text-ink-soft max-w-measure mt-4 leading-relaxed">{active.copy}</p>
 
               {/* the datasheet block, set in the mono that matches the body face */}
-              <dl className="border-ink/15 mt-8 border-t">
+              <dl className="border-rule mt-8 border-t">
                 {active.specs.map(([k, v]) => (
                   <div
                     key={k}
-                    className="border-ink/15 flex items-baseline justify-between gap-6 border-b py-3"
+                    className="border-rule flex items-baseline justify-between gap-6 border-b py-3"
                   >
-                    <dt className="text-ink-soft font-mono text-[11px] tracking-[0.12em] uppercase">{k}</dt>
+                    <dt className="label text-ink-soft">{k}</dt>
                     <dd className="text-ink font-mono text-sm font-medium tabular-nums">{v}</dd>
                   </div>
                 ))}
