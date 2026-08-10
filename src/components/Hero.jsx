@@ -1,68 +1,57 @@
-
-import EnergyFlow from './EnergyFlow.jsx'
+import DeratingCurve from './DeratingCurve.jsx'
 import { Button } from './ui.jsx'
-import { BoltIcon } from './icons.jsx'
 
-const telemetry = [
-  { k: 'Fleet output', v: '412.8 MW' },
-  { k: 'Sites online', v: '18,402' },
-  { k: 'Grid events 24h', v: '0' },
-  { k: 'Firmware', v: '4.8.2' },
-]
-
-const ticker = [
-  'S4-5K · 5 kW · 2 MPPT · 98.4%',
-  'S4-10K · 10 kW · 2 MPPT · 98.4%',
-  'H6-8K · 8 kW hybrid · UL 1741-SB',
-  'H6-10K · 10 kW hybrid · η 98.6%',
-  'V-STACK 15 · 15 kWh LFP · 6000 cyc',
-  'M1-800 · 800 W micro · 25 yr',
-  'S4-125K · 125 kW · 6 MPPT · 98.8%',
+/** Reads as the legend of a datasheet figure, because that is what it is. */
+const LEGEND = [
+  {
+    key: 'jmc',
+    mark: 'h-[3px] w-6 bg-cool-600',
+    term: 'JMC H6',
+    detail: '100 % to 45 °C, 78 % at 60 °C',
+  },
+  {
+    key: 'class',
+    mark: 'h-[2px] w-6 bg-hot-500',
+    term: 'Class average',
+    detail: 'derates from 35 °C, 55 % at 60 °C',
+  },
+  {
+    key: 'design',
+    mark: 'h-0 w-6 border-t-2 border-dashed border-hot-600',
+    term: 'Cebu, 14:00',
+    detail: '34 °C mean max — inside the flat region',
+  },
 ]
 
 export default function Hero() {
   return (
-    <section id="top" className="relative overflow-hidden pt-[68px]">
-      <div className="bg-blueprint mask-fade-edges absolute inset-0" aria-hidden="true" />
-      <div className="bloom-solar pointer-events-none absolute -top-32 right-[-14%] h-[680px] w-[680px]" aria-hidden="true" />
-      <div className="bloom-volt pointer-events-none absolute bottom-[-24%] left-[-18%] h-[560px] w-[560px]" aria-hidden="true" />
-
-      <div className="relative px-5 pt-14 sm:px-8 lg:pt-20 lg:pr-10 lg:pl-[128px]">
+    <section id="top" className="band-glare relative pt-[68px]">
+      <div className="px-5 pt-16 pb-20 sm:px-8 lg:pt-24 lg:pb-28 lg:pr-10 lg:pl-[128px]">
         <div className="mx-auto max-w-[1180px]">
-          <div className="grid gap-12 lg:grid-cols-[1fr_230px] lg:gap-16">
-            {/* ------------------------------ headline ----------------------------- */}
-            <div>
-              <div className="border-solar-500/30 bg-solar-500/10 clip-bevel-sm inline-flex items-center gap-2 border px-3 py-1.5">
-                <BoltIcon className="text-solar-400 h-3.5 w-3.5" />
-                <span className="text-solar-300 font-mono text-[11px] tracking-[0.14em] uppercase">
-                  New — H6 hybrid series
-                </span>
-              </div>
-
-              {/* Outlined second line: the type itself carries the design rather
-                  than sitting politely next to a product photo. */}
-              <h1 className="font-display mt-7 text-[clamp(2.75rem,8.5vw,6.75rem)] leading-[0.85] font-bold tracking-[-0.035em] uppercase">
-                <span className="block">Power</span>
-                <span
-                  className="block text-transparent"
-                  style={{ WebkitTextStroke: '1px var(--color-ink-600)' }}
-                  aria-hidden="true"
-                >
-                  Conversion
-                </span>
-                <span className="sr-only">Conversion</span>
-              </h1>
-
-              <p className="font-display mt-5 max-w-lg text-xl leading-snug font-medium sm:text-2xl">
-                built to <span className="text-gradient-solar">outlast the array</span> beneath it.
+          <div className="grid items-start gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            {/* ------------------------------ argument ----------------------------- */}
+            <div className="lg:pt-6">
+              <p className="text-ink-soft flex items-center gap-3 font-mono text-[11px] font-medium tracking-[0.24em] uppercase">
+                <span aria-hidden="true" className="bg-hot-600 h-px w-6" />
+                H6 hybrid series — shipping now
               </p>
 
-              <p className="text-mute mt-6 max-w-lg text-base leading-relaxed">
+              <h1 className="display-wide mt-7 text-[clamp(2.25rem,4.4vw,3.4rem)] leading-[0.95] font-semibold tracking-[-0.02em]">
+                Rated output at 45 °C.
+                <br />
+                <span className="text-hot-600">Not at 25.</span>
+              </h1>
+
+              <p className="text-ink mt-7 max-w-md text-lg leading-snug font-medium">
+                Datasheets are written at 25 °C ambient. Philippine roofs are not.
+              </p>
+
+              <p className="text-ink-soft mt-5 max-w-md text-[0.9375rem] leading-relaxed">
                 Grid-tie, hybrid and storage inverters engineered around the two things installers actually get
                 called back for: thermal headroom and clean commissioning.
               </p>
 
-              <div className="mt-9 flex flex-wrap items-center gap-3">
+              <div className="mt-10 flex flex-wrap items-center gap-3">
                 <Button as="a" href="#register" size="lg">
                   Become a certified installer
                 </Button>
@@ -72,45 +61,33 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* ----------------------------- telemetry ---------------------------- */}
-            <aside className="border-ink-700/70 lg:border-l lg:pl-7">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
-                  <span className="bg-good absolute inline-flex h-full w-full animate-ping rounded-full opacity-70" />
-                  <span className="bg-good relative inline-flex h-1.5 w-1.5 rounded-full" />
-                </span>
-                <span className="text-mute-dim font-mono text-[10px] tracking-[0.2em] uppercase">
-                  Fleet telemetry
-                </span>
+            {/* -------------------------- the figure itself ------------------------ */}
+            <figure className="border-ink/15 bg-sheet corner-ticks text-ink border">
+              {/* title block, the way a drawing carries its conditions */}
+              <div className="border-ink/15 text-ink-soft flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b px-5 py-3 font-mono text-[11px] tracking-[0.12em] uppercase">
+                <span className="text-ink font-medium">Fig. 1 — Output vs. ambient</span>
+                <span>1000 W/m² · DC/AC 1.2 · rev 4.8.2</span>
               </div>
 
-              <dl className="divide-ink-700/60 mt-5 divide-y">
-                {telemetry.map((t) => (
-                  <div key={t.k} className="flex items-baseline justify-between gap-4 py-3">
-                    <dt className="text-mute-dim font-mono text-[10px] tracking-[0.12em] uppercase">{t.k}</dt>
-                    <dd className="font-mono text-sm text-chalk tabular-nums">{t.v}</dd>
-                  </div>
-                ))}
-              </dl>
-            </aside>
+              <div className="px-3 pt-6 pb-2 sm:px-5">
+                <DeratingCurve className="h-auto w-full" />
+              </div>
+
+              <figcaption className="border-ink/15 border-t px-5 py-5">
+                <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                  {LEGEND.map((l) => (
+                    <div key={l.key} className="flex items-baseline gap-3">
+                      <span aria-hidden="true" className={`mt-2 shrink-0 ${l.mark}`} />
+                      <div className="min-w-0">
+                        <dt className="text-ink font-mono text-[11px] tracking-[0.12em] uppercase">{l.term}</dt>
+                        <dd className="text-ink-soft mt-0.5 text-[0.8125rem] leading-snug">{l.detail}</dd>
+                      </div>
+                    </div>
+                  ))}
+                </dl>
+              </figcaption>
+            </figure>
           </div>
-        </div>
-      </div>
-
-      {/* -------------------------- energy flow schematic ------------------------- */}
-      <div className="relative mt-16 overflow-x-auto lg:pl-[128px]">
-        <EnergyFlow className="h-auto w-[1210px] max-w-none lg:w-full" />
-      </div>
-
-      {/* ------------------------------- spec ticker ------------------------------ */}
-      <div className="border-ink-700/60 bg-ink-950/60 relative mt-10 overflow-hidden border-y py-2.5">
-        <div className="animate-ticker flex w-max gap-10" aria-hidden="true">
-          {[...ticker, ...ticker].map((t, i) => (
-            <span key={i} className="text-mute-dim flex items-center gap-10 font-mono text-[11px] whitespace-nowrap">
-              {t}
-              <span className="bg-solar-500/60 h-1 w-1 shrink-0 rounded-full" />
-            </span>
-          ))}
         </div>
       </div>
     </section>

@@ -4,20 +4,23 @@ import { ArrowRightIcon } from './icons.jsx'
 export const cx = (...parts) => parts.filter(Boolean).join(' ')
 
 /**
- * Numbered section label. The `01 /` prefix borrows from engineering
- * drawings — it's the cheapest way to make a marketing page feel like
- * spec documentation rather than a template.
+ * Section label. There is no index number: Range / Engineering / Program /
+ * Register is not a sequence, so numbering it would decorate rather than
+ * inform. The rule carries the eye instead.
  */
-export function Eyebrow({ index, children, className }) {
+export function Eyebrow({ children, className, tone = 'ink' }) {
   return (
     <p
       className={cx(
-        'flex items-center gap-3 font-mono text-xs tracking-[0.22em] text-solar-500 uppercase',
+        'flex items-center gap-3 font-mono text-[11px] font-medium tracking-[0.24em] uppercase',
+        tone === 'shade' ? 'text-glint-soft' : 'text-ink-soft',
         className,
       )}
     >
-      {index && <span className="text-mute-dim">{index}</span>}
-      <span className="h-px w-8 bg-solar-500/50" aria-hidden="true" />
+      <span
+        aria-hidden="true"
+        className={cx('h-px w-6', tone === 'shade' ? 'bg-cool-400' : 'bg-hot-600')}
+      />
       {children}
     </p>
   )
@@ -25,34 +28,55 @@ export function Eyebrow({ index, children, className }) {
 
 export function SectionHeading({ children, className }) {
   return (
-    <h2 className={cx('text-3xl leading-[1.1] font-semibold sm:text-4xl lg:text-5xl', className)}>
+    <h2
+      className={cx(
+        'display-wide text-[clamp(1.9rem,4.4vw,3.25rem)] leading-[0.98] font-semibold text-balance',
+        className,
+      )}
+    >
       {children}
     </h2>
   )
 }
 
-export function Lede({ children, className }) {
-  return <p className={cx('text-mute max-w-xl text-base leading-relaxed sm:text-lg', className)}>{children}</p>
+export function Lede({ children, className, tone = 'ink' }) {
+  return (
+    <p
+      className={cx(
+        'max-w-xl text-base leading-relaxed sm:text-[1.0625rem]',
+        tone === 'shade' ? 'text-glint-soft' : 'text-ink-soft',
+        className,
+      )}
+    >
+      {children}
+    </p>
+  )
 }
+
+/* --------------------------------- button --------------------------------- */
 
 const buttonBase =
-  'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50'
+  'group/btn relative inline-flex items-center justify-center gap-2.5 font-medium tracking-[0.01em] transition-[background-color,color,border-color,transform] duration-200 disabled:cursor-not-allowed disabled:opacity-45 active:translate-y-px'
 
 const buttonSizes = {
-  sm: 'px-4 py-2 text-sm',
-  md: 'px-6 py-3 text-sm',
-  lg: 'px-7 py-3.5 text-base',
+  sm: 'px-4 py-2 text-[0.8125rem]',
+  md: 'px-5 py-2.5 text-sm',
+  lg: 'px-7 py-3.5 text-[0.9375rem]',
 }
 
+/**
+ * Hover travels along the temperature axis rather than just brightening —
+ * the micro-interaction means the same thing the palette does.
+ */
 const buttonVariants = {
-  solar:
-    'clip-bevel-sm bg-solar-500 text-ink-950 hover:bg-solar-400 hover:shadow-[0_0_28px_-4px_rgba(255,176,32,0.55)]',
-  outline:
-    'clip-bevel-sm border border-ink-600 text-chalk hover:border-solar-500/60 hover:bg-ink-800 hover:text-solar-300',
-  ghost: 'text-mute hover:text-chalk',
+  hot: 'bg-hot-600 text-glare hover:bg-hot-500',
+  outline: 'border border-ink/30 text-ink hover:border-hot-600 hover:text-hot-600',
+  outlineShade: 'border border-glint/25 text-glint hover:border-cool-400 hover:text-cool-400',
+  ghost: 'text-ink-soft hover:text-hot-600',
+  ghostShade: 'text-glint-soft hover:text-cool-400',
 }
 
-export function Button({ as = 'button', variant = 'solar', size = 'md', className, children, ...rest }) {
+export function Button({ as = 'button', variant = 'hot', size = 'md', className, children, ...rest }) {
   const Tag = as
   return (
     <Tag className={cx(buttonBase, buttonSizes[size], buttonVariants[variant], className)} {...rest}>
@@ -62,34 +86,42 @@ export function Button({ as = 'button', variant = 'solar', size = 'md', classNam
 }
 
 /** Link styled as a forward action, with the arrow nudging on hover. */
-export function ArrowLink({ href, children, className }) {
+export function ArrowLink({ href, children, className, tone = 'ink' }) {
   return (
     <a
       href={href}
       className={cx(
-        'group text-volt-300 hover:text-solar-400 inline-flex items-center gap-2 text-sm font-medium transition-colors',
+        'group inline-flex items-center gap-2 text-sm font-medium transition-colors',
+        tone === 'shade' ? 'text-cool-400 hover:text-glint' : 'text-cool-600 hover:text-hot-600',
         className,
       )}
     >
-      {children}
+      <span className="border-b border-current/35 pb-px transition-colors group-hover:border-current">
+        {children}
+      </span>
       <ArrowRightIcon className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
     </a>
   )
 }
 
-/** Thin busbar rule used to separate major bands of the page. */
-export function CurrentRule({ className }) {
-  return <div aria-hidden="true" className={cx('rule-current h-px w-full opacity-40', className)} />
+/** Hairline separating blocks within a band. */
+export function Rule({ className, tone = 'ink' }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cx('h-px w-full', tone === 'shade' ? 'bg-glint/15' : 'bg-ink/15', className)}
+    />
+  )
 }
 
 /**
- * Content band. The left padding at lg clears the fixed section-index spine,
+ * Content band. The left padding at lg clears the fixed section index,
  * which is what gives the page its off-centre axis instead of the usual
  * symmetrically-centred column.
  */
 export function Section({ id, className, children }) {
   return (
-    <section id={id} className={cx('relative px-5 py-20 sm:px-8 lg:py-28 lg:pr-10 lg:pl-[128px]', className)}>
+    <section id={id} className={cx('relative px-5 py-24 sm:px-8 lg:py-32 lg:pr-10 lg:pl-[128px]', className)}>
       <div className="mx-auto max-w-[1180px]">{children}</div>
     </section>
   )

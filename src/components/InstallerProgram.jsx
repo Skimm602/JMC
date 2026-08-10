@@ -28,65 +28,62 @@ const DOCUMENTS = [
   'Any PV certifications your team holds',
 ]
 
-function Cell({ value, featured }) {
-  if (value === true)
-    return (
-      <CheckIcon
-        className={cx('mx-auto h-4 w-4', featured ? 'text-solar-400' : 'text-volt-400')}
-        aria-label="Included"
-      />
-    )
+function Cell({ value }) {
+  if (value === true) return <CheckIcon className="text-cool-600 mx-auto h-4 w-4" aria-label="Included" />
   if (value === false)
     return (
-      <span className="text-ink-600 mx-auto block text-center" aria-label="Not included">
+      <span className="text-ink/25 mx-auto block text-center" aria-label="Not included">
         —
       </span>
     )
-  return <span className="block text-center font-mono text-xs text-chalk">{value}</span>
+  return <span className="text-ink block text-center font-mono text-xs">{value}</span>
 }
 
 export default function InstallerProgram() {
   return (
-    <Section id="installers" className="relative overflow-hidden">
-      <div className="bloom-volt pointer-events-none absolute top-[-25%] left-[-12%] h-[480px] w-[480px]" aria-hidden="true" />
-
-      <div className="relative grid gap-8 lg:grid-cols-12">
+    <Section id="installers" className="band-glare">
+      <div className="grid gap-8 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <Eyebrow index="03">Installer program</Eyebrow>
-          <SectionHeading className="mt-5">Built around your crew, not our catalogue</SectionHeading>
+          <Eyebrow>Installer program</Eyebrow>
+          <SectionHeading className="mt-6">Built around your crew, not our catalogue</SectionHeading>
         </div>
         <Lede className="lg:col-span-5 lg:self-end">
           Three tiers, no volume traps. Registration is free — certification is where the margin actually sits.
         </Lede>
       </div>
 
-      {/* ------------------------- comparison matrix ------------------------- */}
-      <div className="relative mt-14 overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+      {/* ------------------------- comparison matrix -------------------------
+          The benefit column stays pinned while the tiers scroll on narrow
+          screens, so a tick is never stranded from the row it belongs to. */}
+      <div className="mt-16 overflow-x-auto">
+        <table className="w-full min-w-[680px] border-collapse text-sm">
           <caption className="sr-only">Benefits included at each installer tier</caption>
           <thead>
             <tr>
-              <th scope="col" className="w-[38%] pb-5 text-left align-bottom">
-                <span className="text-mute-dim font-mono text-[10px] tracking-[0.16em] uppercase">Benefit</span>
+              <th
+                scope="col"
+                className="bg-glare sticky left-0 z-10 w-[38%] pr-4 pb-5 text-left align-bottom"
+              >
+                <span className="text-ink-faint font-mono text-[10px] tracking-[0.18em] uppercase">Benefit</span>
               </th>
               {TIERS.map((t) => (
                 <th
                   key={t.name}
                   scope="col"
                   className={cx(
-                    'border-b-2 px-4 pb-5 align-bottom',
-                    t.featured ? 'border-solar-500' : 'border-ink-700',
+                    'px-4 pb-5 align-bottom',
+                    t.featured ? 'border-hot-600 border-b-2' : 'border-ink/20 border-b',
                   )}
                 >
                   <span
                     className={cx(
-                      'font-display block text-lg font-bold',
-                      t.featured ? 'text-solar-400' : 'text-chalk',
+                      'display-wide block text-lg font-semibold',
+                      t.featured ? 'text-hot-600' : 'text-ink',
                     )}
                   >
                     {t.name}
                   </span>
-                  <span className="text-mute-dim mt-1.5 block font-mono text-[10px] leading-relaxed tracking-wide">
+                  <span className="text-ink-faint mt-2 block font-mono text-[10px] leading-relaxed tracking-wide">
                     {t.req}
                   </span>
                 </th>
@@ -95,16 +92,16 @@ export default function InstallerProgram() {
           </thead>
           <tbody>
             {MATRIX.map(([label, ...values]) => (
-              <tr key={label} className="border-ink-700/50 border-b">
-                <th scope="row" className="py-3.5 pr-4 text-left text-sm font-normal text-chalk/90">
+              <tr key={label} className="border-ink/12 border-b">
+                <th
+                  scope="row"
+                  className="bg-glare border-ink/12 text-ink sticky left-0 z-10 border-r py-3.5 pr-4 text-left text-sm font-normal sm:border-r-0"
+                >
                   {label}
                 </th>
                 {values.map((v, i) => (
-                  <td
-                    key={i}
-                    className={cx('px-4 py-3.5', TIERS[i].featured && 'bg-solar-500/[0.05]')}
-                  >
-                    <Cell value={v} featured={TIERS[i].featured} />
+                  <td key={i} className={cx('px-4 py-3.5', TIERS[i].featured && 'bg-sheet')}>
+                    <Cell value={v} />
                   </td>
                 ))}
               </tr>
@@ -114,19 +111,19 @@ export default function InstallerProgram() {
       </div>
 
       {/* --------------- what to have ready before the form ----------------- */}
-      <div className="border-volt-500/25 bg-volt-500/[0.06] clip-bevel relative mt-12 border p-7">
+      <div className="border-cool-600/35 bg-cool-600/[0.06] mt-14 border p-7">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex gap-4">
-            <InfoIcon className="text-volt-300 mt-0.5 h-5 w-5 shrink-0" />
+            <InfoIcon className="text-cool-600 mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <h3 className="text-base font-semibold text-chalk">Applying as an installer? Have these ready</h3>
-              <p className="text-mute mt-1.5 text-sm">
+              <h3 className="text-ink text-base font-semibold">Applying as an installer? Have these ready</h3>
+              <p className="text-ink-soft mt-2 text-sm">
                 Only needed if you tick the installer box — buyers and homeowners register without any of it.
               </p>
-              <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+              <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
                 {DOCUMENTS.map((d) => (
-                  <li key={d} className="text-mute flex gap-2.5 text-sm">
-                    <span className="bg-volt-400/70 mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" aria-hidden="true" />
+                  <li key={d} className="text-ink-soft flex gap-3 text-sm">
+                    <span aria-hidden="true" className="bg-cool-600 mt-[9px] h-px w-3 shrink-0" />
                     {d}
                   </li>
                 ))}

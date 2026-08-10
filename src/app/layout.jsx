@@ -1,24 +1,33 @@
-import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
+import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
 import './globals.css'
 
-const spaceGrotesk = Space_Grotesk({
+/**
+ * Archivo carries a width axis, which is the whole reason it is here: the
+ * display voice is set expanded and tight-tracked so headings read like
+ * stamping on an equipment nameplate rather than a marketing headline.
+ */
+const archivo = Archivo({
   subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-space-grotesk',
+  axes: ['wdth'],
+  variable: '--font-archivo',
   display: 'swap',
 })
 
-const inter = Inter({
+/**
+ * Plex Sans and Plex Mono share skeletons, so a spec table and the prose
+ * around it read as one document instead of two typefaces in a trenchcoat.
+ */
+const plexSans = IBM_Plex_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
-  variable: '--font-inter',
+  variable: '--font-plex-sans',
   display: 'swap',
 })
 
-const jetbrains = JetBrains_Mono({
+const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-jetbrains',
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-mono',
   display: 'swap',
 })
 
@@ -35,14 +44,14 @@ export const metadata = {
 }
 
 export const viewport = {
-  themeColor: '#070E1B',
+  themeColor: '#E2E4DC',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrains.variable} scroll-smooth`}
+      className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} scroll-smooth`}
     >
       <body>{children}</body>
     </html>

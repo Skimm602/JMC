@@ -12,7 +12,7 @@ export default function Home() {
     <>
       <a
         href="#register"
-        className="focus:bg-solar-500 focus:text-ink-950 sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
+        className="focus:bg-hot-600 focus:text-glare sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
       >
         Skip to registration
       </a>

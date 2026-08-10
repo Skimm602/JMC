@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Button, CurrentRule, Eyebrow, SectionHeading, cx } from './ui.jsx'
+import { Button, Eyebrow, Rule, SectionHeading, cx } from './ui.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, ShieldIcon, SpinnerIcon, UploadIcon, XIcon } from './icons.jsx'
 
@@ -81,7 +81,8 @@ const passwordScore = (pw) => {
 }
 
 const STRENGTH = ['', 'Weak', 'Fair', 'Good', 'Strong']
-const STRENGTH_COLOR = ['bg-ink-600', 'bg-bad', 'bg-warn', 'bg-volt-400', 'bg-good']
+/** Weak reads hot, strong reads cool — the same axis the rest of the page uses. */
+const STRENGTH_COLOR = ['bg-ink/20', 'bg-hot-600', 'bg-hot-400', 'bg-cool-500', 'bg-cool-600']
 
 /* ------------------------------ document slot ----------------------------- */
 
@@ -98,11 +99,11 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
 
   if (file) {
     return (
-      <div className="border-good/40 bg-good/[0.07] clip-bevel-sm flex items-center gap-3 border px-3.5 py-3">
-        <CheckIcon className="text-good h-4 w-4 shrink-0" strokeWidth={2.4} />
+      <div className="border-cool-600/45 bg-cool-600/[0.07] flex items-center gap-3 border px-3.5 py-3">
+        <CheckIcon className="text-cool-600 h-4 w-4 shrink-0" strokeWidth={2.4} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-medium text-chalk">{slot.label}</span>
-          <span className="text-mute-dim block truncate font-mono text-[10px]">
+          <span className="text-ink block truncate text-xs font-medium">{slot.label}</span>
+          <span className="text-ink-faint block truncate font-mono text-[10px]">
             {file.name} · {formatBytes(file.size)}
           </span>
         </span>
@@ -110,7 +111,7 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
           type="button"
           disabled={disabled}
           onClick={() => onRemove(slot.key)}
-          className="text-mute-dim hover:text-bad shrink-0 rounded p-1 transition-colors"
+          className="text-ink-faint hover:text-hot-600 shrink-0 p-1 transition-colors"
           aria-label={`Remove ${slot.label}`}
         >
           <XIcon className="h-3.5 w-3.5" />
@@ -133,12 +134,12 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
           handle(e.dataTransfer?.files)
         }}
         className={cx(
-          'clip-bevel-sm flex cursor-pointer items-center gap-3 border border-dashed px-3.5 py-3 transition-colors duration-200',
+          'flex cursor-pointer items-center gap-3 border border-dashed px-3.5 py-3 transition-colors duration-200',
           dragging
-            ? 'border-solar-500 bg-solar-500/10'
+            ? 'border-cool-600 bg-cool-600/10'
             : error
-              ? 'border-bad/60 bg-ink-900/40'
-              : 'border-ink-600 bg-ink-900/40 hover:border-solar-500/60 hover:bg-ink-900/70',
+              ? 'border-hot-600 bg-glare'
+              : 'border-ink/30 bg-glare hover:border-cool-600 hover:bg-cool-600/[0.05]',
         )}
       >
         <input
@@ -152,22 +153,22 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
           }}
           className="sr-only"
         />
-        <UploadIcon className={cx('h-4 w-4 shrink-0', dragging ? 'text-solar-400' : 'text-mute-dim')} />
+        <UploadIcon className={cx('h-4 w-4 shrink-0', dragging ? 'text-cool-600' : 'text-ink-faint')} />
         <span className="min-w-0 flex-1">
-          <span className="block text-xs font-medium text-chalk">
+          <span className="text-ink block text-xs font-medium">
             {slot.label}
             {slot.required ? (
-              <span className="text-solar-500 ml-1">*</span>
+              <span className="text-hot-600 ml-1">*</span>
             ) : (
-              <span className="text-mute-dim ml-1.5 font-normal">optional</span>
+              <span className="text-ink-faint ml-1.5 font-normal">optional</span>
             )}
           </span>
-          <span className="text-mute-dim block text-[10px]">{slot.hint}</span>
+          <span className="text-ink-faint block text-[10px]">{slot.hint}</span>
         </span>
-        <span className="text-solar-400 shrink-0 font-mono text-[10px] tracking-wide uppercase">Attach</span>
+        <span className="text-cool-600 shrink-0 font-mono text-[10px] tracking-[0.12em] uppercase">Attach</span>
       </label>
       {error && (
-        <p role="alert" className="text-bad mt-1.5 flex items-center gap-1.5 text-xs">
+        <p role="alert" className="text-hot-600 mt-2 flex items-center gap-1.5 text-xs">
           <AlertIcon className="h-3.5 w-3.5 shrink-0" />
           {error}
         </p>
@@ -298,51 +299,48 @@ export default function Registration() {
 
   if (status === 'done') {
     return (
-      <section id="register" className="relative overflow-hidden px-5 py-24 sm:px-8 lg:py-32 lg:pl-[128px]">
-        <div className="bg-blueprint mask-fade-edges absolute inset-0" aria-hidden="true" />
-        <div className="bloom-solar absolute top-0 left-1/2 h-[520px] w-[520px] -translate-x-1/2" aria-hidden="true" />
-
-        <div className="border-ink-700 bg-ink-850/80 clip-bevel relative mx-auto max-w-xl border p-10 text-center backdrop-blur-sm">
-          <span className="border-good/40 bg-good/10 text-good clip-bevel-sm mx-auto grid h-14 w-14 place-items-center border">
-            <CheckIcon className="h-7 w-7" strokeWidth={2.2} />
+      <section id="register" className="band-sheet px-5 py-28 sm:px-8 lg:py-36 lg:pl-[128px]">
+        <div className="border-ink/15 bg-glare corner-ticks text-ink mx-auto max-w-xl border p-10">
+          <span className="border-cool-600 text-cool-600 grid h-12 w-12 place-items-center border">
+            <CheckIcon className="h-6 w-6" strokeWidth={2.2} />
           </span>
 
-          <h2 className="font-display mt-6 text-2xl font-bold">Application received</h2>
-          <p className="text-mute mt-3 text-sm leading-relaxed">
+          <h2 className="display-wide mt-7 text-3xl font-semibold">Application received</h2>
+          <p className="text-ink-soft mt-4 leading-relaxed">
             Thanks {form.fullName.split(' ')[0] || 'there'} — your reference is{' '}
-            <span className="text-solar-400 font-mono">JMC-2026-4821</span>. A confirmation is on its way to{' '}
-            <span className="text-chalk">{form.email}</span>.
+            <span className="text-ink font-mono font-medium">JMC-2026-4821</span>. A confirmation is on its way to{' '}
+            <span className="text-ink">{form.email}</span>.
           </p>
 
-          <CurrentRule className="my-7" />
+          <Rule className="my-8" />
 
-          <dl className="grid gap-3 text-left">
-            <div className="flex justify-between gap-4 text-sm">
-              <dt className="text-mute-dim font-mono text-xs tracking-wide uppercase">Account type</dt>
-              <dd className="text-chalk">{isInstaller ? 'Installer — pending verification' : 'Standard'}</dd>
+          <dl className="grid gap-px">
+            <div className="border-ink/12 flex justify-between gap-4 border-b py-2.5 text-sm">
+              <dt className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">Account type</dt>
+              <dd className="text-ink">{isInstaller ? 'Installer — pending verification' : 'Standard'}</dd>
             </div>
             {isInstaller && (
               <>
-                <div className="flex justify-between gap-4 text-sm">
-                  <dt className="text-mute-dim font-mono text-xs tracking-wide uppercase">Company</dt>
-                  <dd className="text-chalk">{form.company}</dd>
+                <div className="border-ink/12 flex justify-between gap-4 border-b py-2.5 text-sm">
+                  <dt className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">Company</dt>
+                  <dd className="text-ink">{form.company}</dd>
                 </div>
-                <div className="flex justify-between gap-4 text-sm">
-                  <dt className="text-mute-dim font-mono text-xs tracking-wide uppercase">Documents</dt>
-                  <dd className="text-chalk">{Object.values(docs).filter(Boolean).length} attached</dd>
+                <div className="border-ink/12 flex justify-between gap-4 border-b py-2.5 text-sm">
+                  <dt className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">Documents</dt>
+                  <dd className="text-ink">{Object.values(docs).filter(Boolean).length} attached</dd>
                 </div>
               </>
             )}
           </dl>
 
           {isInstaller && (
-            <p className="text-mute border-ink-700 mt-7 border-t pt-6 text-xs leading-relaxed">
+            <p className="text-ink-soft mt-7 text-sm leading-relaxed">
               Trade verification usually takes 1–2 business days. You can sign in and browse at the Registered tier
               in the meantime.
             </p>
           )}
 
-          <Button type="button" variant="outline" onClick={reset} className="mt-8">
+          <Button type="button" variant="outline" onClick={reset} className="mt-9">
             Register another account
           </Button>
         </div>
@@ -355,25 +353,22 @@ export default function Registration() {
   const pwScore = passwordScore(form.password)
 
   return (
-    <section id="register" className="relative overflow-hidden px-5 py-20 sm:px-8 lg:py-28 lg:pr-10 lg:pl-[128px]">
-      <div className="bg-blueprint mask-fade-edges absolute inset-0" aria-hidden="true" />
-      <div className="bloom-solar pointer-events-none absolute top-[-12%] right-[-12%] h-[520px] w-[520px]" aria-hidden="true" />
-
-      <div className="relative mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+    <section id="register" className="band-sheet px-5 py-24 sm:px-8 lg:py-32 lg:pr-10 lg:pl-[128px]">
+      <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
         {/* --------------------------------- aside -------------------------------- */}
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <Eyebrow index="04">Create account</Eyebrow>
-          <SectionHeading className="mt-5">Register once, order from anywhere</SectionHeading>
-          <p className="text-mute mt-5 text-base leading-relaxed">
+          <Eyebrow>Create account</Eyebrow>
+          <SectionHeading className="mt-6">Register once, order from anywhere</SectionHeading>
+          <p className="text-ink-soft mt-6 leading-relaxed">
             One account covers datasheets, firmware, monitoring and ordering. Installers get one extra step that
             unlocks trade pricing and advance-replacement RMA.
           </p>
 
-          <CurrentRule className="my-8" />
+          <Rule className="my-8" />
 
-          <div className="border-ink-700 bg-ink-850/50 clip-bevel-sm flex gap-3 border p-4">
-            <ShieldIcon className="text-volt-300 h-5 w-5 shrink-0" />
-            <p className="text-mute text-xs leading-relaxed">
+          <div className="border-ink/15 flex gap-3 border p-4">
+            <ShieldIcon className="text-cool-600 h-5 w-5 shrink-0" />
+            <p className="text-ink-soft text-xs leading-relaxed">
               Documents are used for trade verification only and are never shared outside JMC. You can request
               deletion at any time.
             </p>
@@ -384,7 +379,7 @@ export default function Registration() {
         <form
           noValidate
           onSubmit={onSubmit}
-          className="border-ink-700 bg-ink-850/70 clip-bevel border p-6 backdrop-blur-sm sm:p-9"
+          className="border-ink/15 bg-glare corner-ticks text-ink border p-6 sm:p-9"
         >
           {/* ------------------------------- stepper ------------------------------ */}
           <ol className="mb-8 flex items-center gap-1.5">
@@ -404,22 +399,22 @@ export default function Registration() {
                     <span
                       className={cx(
                         'h-[3px] w-full transition-colors duration-300',
-                        on ? 'bg-solar-500' : done ? 'bg-solar-500/45' : 'bg-ink-700',
+                        on ? 'bg-hot-600' : done ? 'bg-cool-600' : 'bg-ink/15',
                       )}
                     />
                     <span className="flex items-center gap-1.5">
                       <span
                         className={cx(
                           'font-mono text-[10px] tabular-nums',
-                          on ? 'text-solar-400' : done ? 'text-solar-500/60' : 'text-mute-dim',
+                          on ? 'text-hot-600' : done ? 'text-cool-600' : 'text-ink-faint',
                         )}
                       >
                         {done ? '✓' : `0${i + 1}`}
                       </span>
                       <span
                         className={cx(
-                          'truncate font-mono text-[10px] tracking-[0.1em] uppercase',
-                          on ? 'text-chalk' : 'text-mute-dim',
+                          'truncate font-mono text-[10px] tracking-[0.12em] uppercase',
+                          on ? 'text-ink' : 'text-ink-faint',
                         )}
                       >
                         {s.label}
@@ -476,12 +471,12 @@ export default function Registration() {
                           key={n}
                           className={cx(
                             'h-1 flex-1 transition-colors duration-300',
-                            n <= pwScore ? STRENGTH_COLOR[pwScore] : 'bg-ink-700',
+                            n <= pwScore ? STRENGTH_COLOR[pwScore] : 'bg-ink/15',
                           )}
                         />
                       ))}
                     </div>
-                    <span className="text-mute-dim w-14 font-mono text-[10px] tracking-wide uppercase">
+                    <span className="text-ink-faint w-14 font-mono text-[10px] tracking-wide uppercase">
                       {STRENGTH[pwScore]}
                     </span>
                   </div>
@@ -532,17 +527,17 @@ export default function Registration() {
                   </Field>
                 </div>
 
-                <CurrentRule className="my-7" />
+                <Rule className="my-8" />
 
                 {/* the fork in the flow */}
                 <div
                   className={cx(
-                    'clip-bevel-sm border p-5 transition-colors duration-300',
-                    isInstaller ? 'border-solar-500/45 bg-solar-500/[0.07]' : 'border-ink-600 bg-ink-900/40',
+                    'border p-5 transition-colors duration-300',
+                    isInstaller ? 'border-hot-600/50 bg-hot-600/[0.06]' : 'border-ink/20 bg-sheet/60',
                   )}
                 >
                   <Checkbox
-                    tone="solar"
+                    tone="hot"
                     name="isInstaller"
                     checked={isInstaller}
                     onChange={setIsInstaller}
@@ -551,7 +546,7 @@ export default function Registration() {
                   />
 
                   {isInstaller && (
-                    <p className="animate-reveal border-solar-500/25 text-solar-300 mt-4 flex items-center gap-2 border-t pt-4 font-mono text-[11px] tracking-wide">
+                    <p className="animate-reveal border-hot-600/25 text-hot-600 mt-4 flex items-center gap-2 border-t pt-4 font-mono text-[11px] tracking-wide">
                       <ArrowRightIcon className="h-3.5 w-3.5" />
                       Verification step added to this application
                     </p>
@@ -606,8 +601,8 @@ export default function Registration() {
                 </div>
 
                 <fieldset className="mt-7">
-                  <legend className="mb-3 block text-xs font-medium tracking-wide text-chalk/90">
-                    Certifications held <span className="text-mute-dim font-normal">(optional)</span>
+                  <legend className="text-ink mb-4 block font-mono text-[10px] tracking-[0.14em] uppercase">
+                    Certifications held <span className="text-ink-faint">optional</span>
                   </legend>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {CERTIFICATIONS.map((c) => (
@@ -624,16 +619,18 @@ export default function Registration() {
                 {/* ---------------------- supporting documents --------------------- */}
                 <div className="mt-8">
                   <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-xs font-medium tracking-wide text-chalk/90">Supporting documents</span>
-                    <span className="text-mute-dim font-mono text-[10px] tabular-nums">
+                    <span className="text-ink font-mono text-[10px] tracking-[0.14em] uppercase">
+                      Supporting documents
+                    </span>
+                    <span className="text-ink-faint font-mono text-[10px] tabular-nums">
                       {attachedRequired}/{requiredDocs.length} required
                     </span>
                   </div>
 
                   {/* progress across the required slots */}
-                  <div className="bg-ink-700 mt-2.5 h-[3px] w-full">
+                  <div className="bg-ink/15 mt-3 h-[3px] w-full">
                     <div
-                      className="bg-solar-500 h-full transition-all duration-500"
+                      className="bg-cool-600 h-full transition-all duration-500"
                       style={{ width: `${(attachedRequired / requiredDocs.length) * 100}%` }}
                     />
                   </div>
@@ -652,10 +649,10 @@ export default function Registration() {
                     ))}
                   </div>
 
-                  <p className="text-mute-dim mt-3 text-xs">PDF, JPG, PNG or DOC — up to 10 MB per document.</p>
+                  <p className="text-ink-faint mt-3 text-xs">PDF, JPG, PNG or DOC — up to 10 MB per document.</p>
 
                   {errors.documents && (
-                    <p role="alert" className="text-bad mt-2 flex items-center gap-1.5 text-xs">
+                    <p role="alert" className="text-hot-600 mt-2 flex items-center gap-1.5 text-xs">
                       <AlertIcon className="h-3.5 w-3.5 shrink-0" />
                       {errors.documents}
                     </p>
@@ -667,7 +664,7 @@ export default function Registration() {
             {/* ------------------------------ 04 review --------------------------- */}
             {current.id === 'review' && (
               <div className="animate-reveal">
-                <h3 className="font-display text-lg font-semibold text-chalk">Check before submitting</h3>
+                <h3 className="display-wide text-ink text-xl font-semibold">Check before submitting</h3>
 
                 <div className="mt-6 flex flex-col gap-5">
                   {[
@@ -707,24 +704,24 @@ export default function Registration() {
                         ]
                       : []),
                   ].map((group) => (
-                    <div key={group.step} className="border-ink-700 bg-ink-900/40 clip-bevel-sm border p-4">
+                    <div key={group.step} className="border-ink/15 bg-sheet/60 border p-4">
                       <div className="flex items-center justify-between gap-4">
-                        <h4 className="text-mute-dim font-mono text-[10px] tracking-[0.16em] uppercase">
+                        <h4 className="text-ink-faint font-mono text-[10px] tracking-[0.16em] uppercase">
                           {group.title}
                         </h4>
                         <button
                           type="button"
                           onClick={() => setStepId(group.step)}
-                          className="text-volt-300 hover:text-solar-400 text-xs underline underline-offset-2 transition-colors"
+                          className="text-cool-600 hover:text-hot-600 text-xs underline underline-offset-2 transition-colors"
                         >
                           Edit
                         </button>
                       </div>
-                      <dl className="divide-ink-700/60 mt-3 divide-y">
+                      <dl className="divide-ink/12 mt-3 divide-y">
                         {group.rows.map(([k, v]) => (
                           <div key={k} className="flex justify-between gap-4 py-2">
-                            <dt className="text-mute-dim text-xs">{k}</dt>
-                            <dd className="max-w-[60%] truncate text-right text-xs text-chalk">{v}</dd>
+                            <dt className="text-ink-soft text-xs">{k}</dt>
+                            <dd className="text-ink max-w-[60%] truncate text-right text-xs">{v}</dd>
                           </div>
                         ))}
                       </dl>
@@ -732,7 +729,7 @@ export default function Registration() {
                   ))}
                 </div>
 
-                <CurrentRule className="my-7" />
+                <Rule className="my-8" />
 
                 <div className="flex flex-col gap-4">
                   <Checkbox
@@ -755,13 +752,13 @@ export default function Registration() {
             )}
 
             {/* ------------------------------ navigation -------------------------- */}
-            <div className="border-ink-700/70 mt-9 flex items-center justify-between gap-4 border-t pt-6">
+            <div className="border-ink/15 mt-10 flex items-center justify-between gap-4 border-t pt-6">
               {index > 0 ? (
                 <Button type="button" variant="ghost" onClick={goBack}>
                   Back
                 </Button>
               ) : (
-                <span className="text-mute-dim text-xs">
+                <span className="text-ink-faint font-mono text-[10px] tracking-[0.14em] uppercase">
                   Step {index + 1} of {steps.length}
                 </span>
               )}

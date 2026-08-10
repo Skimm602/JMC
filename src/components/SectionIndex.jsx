@@ -3,21 +3,27 @@
 import { useEffect, useState } from 'react'
 import { cx } from './ui.jsx'
 
-const SECTIONS = [
-  { id: 'top', n: '00', label: 'Overview' },
-  { id: 'products', n: '01', label: 'Range' },
-  { id: 'why', n: '02', label: 'Engineering' },
-  { id: 'installers', n: '03', label: 'Program' },
-  { id: 'register', n: '04', label: 'Register' },
-]
-
 /**
  * The page's spine: a fixed hairline with a node per section, doubling as
- * wayfinding. Replaces the usual centred-section rhythm with an off-centre
- * axis that every band hangs from.
+ * wayfinding. It replaces the usual centred-section rhythm with an
+ * off-centre axis that every band hangs from.
  *
- * Hidden below lg — on narrow screens it would cost more width than it earns.
+ * No index numbers — Range / Engineering / Program / Register is not a
+ * sequence, so numbering it would decorate rather than inform.
+ *
+ * `shade` marks the sections that sit on a dark band, so the spine can
+ * invert with the surface it is currently floating over.
+ *
+ * Hidden below lg, where it would cost more width than it earns.
  */
+const SECTIONS = [
+  { id: 'top', label: 'Overview' },
+  { id: 'products', label: 'Range' },
+  { id: 'why', label: 'Engineering', shade: true },
+  { id: 'installers', label: 'Program' },
+  { id: 'register', label: 'Register' },
+]
+
 export default function SectionIndex() {
   const [active, setActive] = useState('top')
 
@@ -27,7 +33,7 @@ export default function SectionIndex() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Whichever tracked section covers the upper third of the viewport wins.
+        // Whichever tracked section covers most of the upper viewport wins.
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
@@ -40,42 +46,49 @@ export default function SectionIndex() {
     return () => observer.disconnect()
   }, [])
 
+  const onShade = SECTIONS.find((s) => s.id === active)?.shade
+
   return (
     <nav
       aria-label="Section index"
       className="pointer-events-none fixed top-0 left-0 z-40 hidden h-screen w-[88px] flex-col items-center justify-center lg:flex"
     >
-      {/* the spine itself */}
-      <span aria-hidden="true" className="from-ink-700/0 via-ink-600 to-ink-700/0 absolute inset-y-16 left-[43px] w-px bg-gradient-to-b" />
+      <span
+        aria-hidden="true"
+        className={cx(
+          'absolute inset-y-24 left-[35px] w-px transition-colors duration-500',
+          onShade ? 'bg-glint/20' : 'bg-ink/15',
+        )}
+      />
 
-      <ol className="pointer-events-auto relative flex flex-col gap-7">
+      <ol className="pointer-events-auto relative flex flex-col gap-8">
         {SECTIONS.map((s) => {
           const on = active === s.id
           return (
             <li key={s.id}>
-              <a href={`#${s.id}`} className="group flex items-center gap-3" aria-current={on ? 'true' : undefined}>
-                <span
-                  className={cx(
-                    'font-mono text-[9px] tabular-nums transition-colors duration-300',
-                    on ? 'text-solar-400' : 'text-mute-dim/50 group-hover:text-mute',
-                  )}
-                >
-                  {s.n}
-                </span>
+              <a href={`#${s.id}`} className="group flex items-center gap-4" aria-current={on ? 'page' : undefined}>
+                {/* tick grows and heats when its section is in view */}
                 <span
                   aria-hidden="true"
                   className={cx(
-                    'block transition-all duration-300',
+                    'block h-px transition-all duration-300',
                     on
-                      ? 'bg-solar-500 h-2 w-2 shadow-[0_0_12px_2px_rgba(255,176,32,0.6)]'
-                      : 'bg-ink-600 group-hover:bg-mute-dim h-1.5 w-1.5',
+                      ? 'bg-hot-600 w-6'
+                      : onShade
+                        ? 'bg-glint/35 group-hover:bg-glint w-3'
+                        : 'bg-ink/30 group-hover:bg-ink w-3',
                   )}
-                  style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }}
                 />
                 <span
                   className={cx(
-                    'font-mono text-[10px] tracking-[0.16em] whitespace-nowrap uppercase transition-all duration-300',
-                    on ? 'text-chalk opacity-100' : 'text-mute-dim opacity-0 group-hover:opacity-100',
+                    'font-mono text-[10px] tracking-[0.18em] whitespace-nowrap uppercase transition-all duration-300',
+                    on
+                      ? onShade
+                        ? 'text-glint opacity-100'
+                        : 'text-ink opacity-100'
+                      : onShade
+                        ? 'text-glint-soft opacity-0 group-hover:opacity-100'
+                        : 'text-ink-soft opacity-0 group-hover:opacity-100',
                   )}
                 >
                   {s.label}

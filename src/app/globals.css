@@ -1,48 +1,61 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------
-   JMC Solar design tokens
-   Concept: "engineered sunlight" — an instrument-panel navy base with
-   warm solar amber as the energy accent and electric blue for signal.
+   JMC Solar — "Thermal"
 
-   Font families resolve to the hashed families that next/font generates;
-   the CSS variables are attached to <html> in app/layout.jsx.
+   An inverter's whole job is to sit in tropical light and heat and not
+   degrade. So the page is lit rather than dark: the surfaces are the
+   colour of sun on a galvanised-iron roof, and deep shade is the accent.
+   Dense technical reading happens in the shade bands.
+
+   The palette is a thermometer. Cool means nominal, verified, in-spec.
+   Hot means thermal stress, derating, urgency, primary action. There is
+   no third accent, so every coloured thing on the page means something.
+
+   Font families resolve to the hashed families next/font generates; the
+   CSS variables are attached to <html> in app/layout.jsx.
    ------------------------------------------------------------------ */
 @theme {
-  /* Base — deepest to lightest surface elevation */
-  --color-ink-950: #050a14;
-  --color-ink-900: #070e1b;
-  --color-ink-850: #0b1424;
-  --color-ink-800: #111c2f;
-  --color-ink-700: #1a2740;
-  --color-ink-600: #263650;
+  /* Lit surfaces — brightest to most recessed */
+  --color-glare: #eff0ea;
+  --color-sheet: #e2e4dc;
+  --color-sheet-deep: #d3d6cc;
+  --color-sheet-edge: #c1c6b8;
 
-  /* Text */
-  --color-chalk: #f4f8ff;
-  --color-mute: #93a6c4;
-  --color-mute-dim: #6a7d9b;
+  /* Shade — the dark bands, deepest last */
+  --color-shade: #131815;
+  --color-shade-raised: #1c2320;
+  --color-shade-edge: #2f3833;
+  --color-pit: #0c100e;
 
-  /* Solar amber — the accent that carries "energy" */
-  --color-solar-300: #ffd782;
-  --color-solar-400: #ffc24d;
-  --color-solar-500: #ffb020;
-  --color-solar-600: #e8930a;
+  /* Ink on lit surfaces */
+  --color-ink: #161a16;
+  --color-ink-soft: #5c635a;
+  --color-ink-faint: #868c82;
 
-  /* Electric blue — signal, links, secondary CTA */
-  --color-volt-300: #7fb2ff;
-  --color-volt-400: #4d90ff;
-  --color-volt-500: #2b7fff;
-  --color-volt-600: #1560e0;
+  /* Ink on shade */
+  --color-glint: #e8eae3;
+  --color-glint-soft: #9aa396;
+  --color-glint-faint: #6b7468;
 
-  /* Status */
-  --color-good: #34d399;
-  --color-warn: #fbbf24;
-  --color-bad: #fb7185;
+  /* Cool pole — nominal, in-spec, verified.
+     600 is the lightest step that clears AA on --color-sheet. */
+  --color-cool-700: #0a4f3c;
+  --color-cool-600: #0e6b52;
+  --color-cool-500: #12876a;
+  --color-cool-400: #17a08f;
+
+  /* Hot pole — heat, derating, urgency, primary action.
+     600 clears AA on --color-sheet; 500/400 are graphic weights. */
+  --color-hot-700: #8f2410;
+  --color-hot-600: #b32f16;
+  --color-hot-500: #c4361b;
+  --color-hot-400: #e85c2a;
 
   /* Type */
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -51,95 +64,119 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* offset for the sticky header when jumping to #anchors */
+    /* clears the sticky header when jumping to #anchors */
     scroll-padding-top: 5.5rem;
   }
 
   body {
-    background-color: var(--color-ink-900);
-    color: var(--color-chalk);
+    background-color: var(--color-sheet);
+    color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
+  /* Archivo is here for its width axis — the display voice is expanded and
+     tight-tracked so headings read like nameplate stamping. */
   h1,
   h2,
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-variation-settings: 'wdth' 112;
+    letter-spacing: -0.015em;
   }
 
   ::selection {
-    background-color: var(--color-solar-500);
-    color: var(--color-ink-950);
+    background-color: var(--color-hot-500);
+    color: var(--color-glare);
   }
 
-  /* Visible, on-brand focus ring everywhere */
   :focus-visible {
-    outline: 2px solid var(--color-solar-400);
-    outline-offset: 2px;
-    border-radius: 2px;
+    outline: 2px solid var(--color-hot-600);
+    outline-offset: 3px;
+  }
+
+  /* On shade the hot outline muddies; the cool pole reads cleanly there. */
+  .band-shade :focus-visible {
+    outline-color: var(--color-cool-400);
+  }
+}
+
+/* Bands live in the components layer so Tailwind's colour utilities, which
+   sit in the utilities layer, always win over the band's inherited colour. */
+@layer components {
+  .band-glare {
+    background-color: var(--color-glare);
+    color: var(--color-ink);
+  }
+
+  .band-sheet {
+    background-color: var(--color-sheet);
+    color: var(--color-ink);
+  }
+
+  .band-shade {
+    background-color: var(--color-shade);
+    color: var(--color-glint);
+  }
+
+  .band-pit {
+    background-color: var(--color-pit);
+    color: var(--color-glint);
   }
 }
 
 @layer utilities {
-  /* Blueprint grid — the technical substrate behind hero/CTA blocks */
-  .bg-blueprint {
-    background-image:
-      linear-gradient(to right, rgba(147, 166, 196, 0.07) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(147, 166, 196, 0.07) 1px, transparent 1px);
-    background-size: 56px 56px;
+  /* Expanded display width, for headings that need to carry more weight
+     than the base h1–h4 setting. */
+  .display-wide {
+    font-variation-settings: 'wdth' 118;
   }
 
-  /* Fades a grid (or any child bg) out toward the edges */
-  .mask-fade-edges {
-    mask-image: radial-gradient(ellipse 75% 70% at 50% 40%, #000 40%, transparent 100%);
+  .display-narrow {
+    font-variation-settings: 'wdth' 100;
   }
 
-  /* Warm radial bloom used behind product art and section headers */
-  .bloom-solar {
-    background: radial-gradient(
-      circle at center,
-      rgba(255, 176, 32, 0.22) 0%,
-      rgba(255, 176, 32, 0.06) 38%,
-      transparent 70%
-    );
+  /* Corner ticks — the registration marks on a technical drawing. Reserved
+     for the two surfaces that are meant to read as instruments: the hero
+     chart and the registration form. Not a general card treatment. */
+  .corner-ticks {
+    position: relative;
   }
 
-  .bloom-volt {
-    background: radial-gradient(
-      circle at center,
-      rgba(43, 127, 255, 0.2) 0%,
-      rgba(43, 127, 255, 0.05) 40%,
-      transparent 72%
-    );
+  .corner-ticks::before,
+  .corner-ticks::after {
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    pointer-events: none;
+    border-color: currentColor;
+    opacity: 0.45;
   }
 
-  /* Hardware bevel — clipped corner instead of a plain radius.
-     Reads as machined metal rather than generic card. */
-  .clip-bevel {
-    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  .corner-ticks::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid;
+    border-left: 1px solid;
   }
 
-  .clip-bevel-sm {
-    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  .corner-ticks::after {
+    right: -1px;
+    bottom: -1px;
+    border-right: 1px solid;
+    border-bottom: 1px solid;
   }
 
-  /* Hairline that reads as a busbar / current trace */
-  .rule-current {
-    background: linear-gradient(
-      to right,
-      transparent,
-      var(--color-solar-500) 18%,
-      var(--color-volt-500) 62%,
-      transparent
-    );
+  /* Lets a child escape the content column and run to the viewport edge. */
+  .bleed-right {
+    margin-right: calc(50% - 50vw);
   }
 
-  /* Conditional blocks (e.g. the installer panel) slide in rather than snap,
-     so the form doesn't feel like it jumped when a checkbox is ticked. */
+  /* Conditional blocks (the installer panel, a product tab) slide in rather
+     than snap, so the layout doesn't appear to jump. */
   @keyframes reveal {
     from {
       opacity: 0;
@@ -155,21 +192,6 @@
     animation: reveal 0.35s var(--ease-out-expo) both;
   }
 
-  /* Telemetry ticker — duplicated content scrolls by half its width so the
-     loop is seamless. */
-  @keyframes ticker {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  .animate-ticker {
-    animation: ticker 48s linear infinite;
-  }
-
   /* Current travelling along the energy-flow conductors. */
   @keyframes dash {
     to {
@@ -181,20 +203,55 @@
     animation: dash 1.1s linear infinite;
   }
 
-  /* Lets a child escape the content column and run to the viewport edge. */
-  .bleed-right {
-    margin-right: calc(50% - 50vw);
+  /* The page-load moment: the derating curves draw themselves, reference
+     first, then JMC's holding flat above it. */
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
   }
 
-  .text-gradient-solar {
-    background: linear-gradient(100deg, var(--color-solar-300), var(--color-solar-500) 55%, var(--color-solar-600));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .animate-draw {
+    animation: draw 1.15s var(--ease-out-expo) both;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out both;
+  }
+
+  /* Scroll-linked reveals, progressive: browsers without view timelines
+     simply show the content with no JS and no layout cost. */
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal-up {
+        animation: reveal-up linear both;
+        animation-timeline: view();
+        animation-range: entry 5% cover 26%;
+      }
+    }
   }
 }
 
-/* Respect users who don't want motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
