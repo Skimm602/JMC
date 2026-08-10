@@ -40,7 +40,8 @@ export default function Nav() {
         scrolled ? 'border-b border-ink-700/70 bg-ink-900/85 backdrop-blur-xl' : 'border-b border-transparent',
       )}
     >
-      <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between gap-6 px-5 sm:px-8">
+      {/* padded at lg to sit on the same axis as the content, clearing the spine */}
+      <div className="mx-auto flex h-[68px] max-w-[1180px] items-center justify-between gap-6 px-5 sm:px-8 lg:mx-0 lg:max-w-none lg:pr-10 lg:pl-[128px]">
         <Logo />
 
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">

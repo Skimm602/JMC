@@ -77,28 +77,20 @@ export function ArrowLink({ href, children, className }) {
   )
 }
 
-/**
- * Monospace technical data point. Used for ratings, efficiency, MPPT counts —
- * the vocabulary installers actually scan for.
- */
-export function SpecChip({ label, value }) {
-  return (
-    <div className="border-ink-700 bg-ink-850/60 clip-bevel-sm border px-3 py-2">
-      <dt className="text-mute-dim font-mono text-[10px] tracking-[0.16em] uppercase">{label}</dt>
-      <dd className="mt-0.5 font-mono text-sm text-chalk">{value}</dd>
-    </div>
-  )
-}
-
 /** Thin busbar rule used to separate major bands of the page. */
 export function CurrentRule({ className }) {
   return <div aria-hidden="true" className={cx('rule-current h-px w-full opacity-40', className)} />
 }
 
+/**
+ * Content band. The left padding at lg clears the fixed section-index spine,
+ * which is what gives the page its off-centre axis instead of the usual
+ * symmetrically-centred column.
+ */
 export function Section({ id, className, children }) {
   return (
-    <section id={id} className={cx('relative px-5 py-20 sm:px-8 lg:py-28', className)}>
-      <div className="mx-auto max-w-6xl">{children}</div>
+    <section id={id} className={cx('relative px-5 py-20 sm:px-8 lg:py-28 lg:pr-10 lg:pl-[128px]', className)}>
+      <div className="mx-auto max-w-[1180px]">{children}</div>
     </section>
   )
 }

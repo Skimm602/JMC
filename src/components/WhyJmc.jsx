@@ -1,83 +1,95 @@
 import { Eyebrow, Lede, Section, SectionHeading } from './ui.jsx'
-import { ShieldIcon, WrenchIcon, MonitorIcon, BoltIcon, HeadsetIcon, BatteryIcon } from './icons.jsx'
+import { BoltIcon, WrenchIcon, MonitorIcon, HeadsetIcon } from './icons.jsx'
 
-const features = [
+/**
+ * Deliberately laid out as spec-sheet rows rather than a grid of icon cards —
+ * four substantial arguments beat six shallow ones, and the oversized outlined
+ * numerals carry the hierarchy.
+ */
+const ARGUMENTS = [
   {
     icon: BoltIcon,
     title: 'Thermal headroom by default',
-    copy: 'Full rated output held to 45 °C ambient. The derating curve is published, not buried — size once and move on.',
+    copy: 'Full rated output held to 45 °C ambient, and the derating curve is published rather than buried in an appendix. Size the system once and stop re-checking it every heatwave.',
   },
   {
     icon: WrenchIcon,
     title: 'Commissioning in one pass',
-    copy: 'Bluetooth pairing, guided grid-code selection and an auto-generated handover PDF before you leave the roof.',
+    copy: 'Bluetooth pairing, guided grid-code selection and an auto-generated handover PDF before the van doors close. No laptop, no dongle, no second visit for paperwork.',
   },
   {
     icon: MonitorIcon,
-    title: 'Fleet monitoring, not per-site logins',
-    copy: 'Every system you install lands in one dashboard, with alarm routing and a read API for your own tooling.',
-  },
-  {
-    icon: BatteryIcon,
-    title: 'Storage that is already paired',
-    copy: 'V-Stack modules ship pre-matched to H6 firmware, so battery commissioning is a checkbox rather than a project.',
-  },
-  {
-    icon: ShieldIcon,
-    title: '12-year standard warranty',
-    copy: 'Extendable to 20. Advance-replacement units dispatch before the faulty one is collected.',
+    title: 'One dashboard for the whole fleet',
+    copy: 'Every system you commission lands in a single view with alarm routing by site or by crew — not one login per homeowner. There is a read API when you want the data in your own tooling.',
   },
   {
     icon: HeadsetIcon,
     title: 'Engineers on the support line',
-    copy: 'Technical escalation reaches an applications engineer, not a script. Median first-response under four hours.',
+    copy: 'Technical escalation reaches an applications engineer, not a script. Median first response is under four hours, and replacement units dispatch before the faulty one is collected.',
   },
 ]
 
-const numbers = [
-  { value: '2.4 GW', label: 'Shipped capacity' },
-  { value: '41', label: 'Countries served' },
-  { value: '18,400', label: 'Certified installers' },
-  { value: '< 24 h', label: 'RMA response' },
+const NUMBERS = [
+  { value: '2.4', unit: 'GW', label: 'Shipped capacity' },
+  { value: '41', unit: '', label: 'Countries served' },
+  { value: '18.4', unit: 'k', label: 'Certified installers' },
+  { value: '<24', unit: 'h', label: 'RMA response' },
 ]
 
 export default function WhyJmc() {
   return (
     <Section id="why" className="bg-ink-950/50">
-      <div className="max-w-2xl">
-        <Eyebrow index="02">Why JMC</Eyebrow>
-        <SectionHeading className="mt-5">Specified by engineers, judged by installers</SectionHeading>
-        <Lede className="mt-5">
-          Datasheets are easy to win on paper. These are the things that decide whether a fleet stays profitable
-          three summers in.
+      <div className="grid gap-8 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <Eyebrow index="02">Engineering</Eyebrow>
+          <SectionHeading className="mt-5">Specified by engineers, judged by installers</SectionHeading>
+        </div>
+        <Lede className="lg:col-span-5 lg:self-end">
+          Datasheets are easy to win on paper. These are the four things that decide whether a fleet is still
+          profitable three summers in.
         </Lede>
       </div>
 
-      <div className="mt-14 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map(({ icon: Icon, title, copy }) => (
-          <div key={title} className="group relative pl-14">
-            <span className="border-ink-700 bg-ink-850 clip-bevel-sm text-solar-400 group-hover:border-solar-500/50 group-hover:bg-solar-500/10 absolute top-0 left-0 grid h-10 w-10 place-items-center border transition-colors duration-300">
-              <Icon className="h-5 w-5" />
-            </span>
-            <h3 className="text-base font-semibold text-chalk">{title}</h3>
-            <p className="text-mute mt-2 text-sm leading-relaxed">{copy}</p>
-          </div>
-        ))}
+      {/* editorial rows */}
+      <div className="mt-16">
+        {ARGUMENTS.map((a, i) => {
+          const Icon = a.icon
+          return (
+            <article
+              key={a.title}
+              className="group border-ink-700/60 grid items-start gap-x-8 gap-y-4 border-t py-9 last:border-b lg:grid-cols-12"
+            >
+              <div className="flex items-center gap-4 lg:col-span-2">
+                <span
+                  aria-hidden="true"
+                  className="font-display text-4xl font-bold text-transparent transition-all duration-500 group-hover:text-solar-500/20"
+                  style={{ WebkitTextStroke: '1px var(--color-ink-600)' }}
+                >
+                  0{i + 1}
+                </span>
+                <Icon className="text-solar-400/70 h-5 w-5 transition-colors duration-300 group-hover:text-solar-400 lg:hidden" />
+              </div>
+
+              <h3 className="font-display text-lg leading-snug font-semibold text-chalk lg:col-span-4">{a.title}</h3>
+
+              <p className="text-mute text-sm leading-relaxed lg:col-span-6">{a.copy}</p>
+            </article>
+          )
+        })}
       </div>
 
-      {/* numbers band */}
-      <div className="border-ink-700 clip-bevel bg-ink-850/60 mt-16 border">
-        <dl className="divide-ink-700 grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-          {numbers.map((n) => (
-            <div key={n.label} className="px-6 py-7 text-center">
-              <dt className="text-mute-dim order-2 mt-1.5 font-mono text-[10px] tracking-[0.16em] uppercase">
-                {n.label}
-              </dt>
-              <dd className="font-display text-2xl font-bold text-chalk sm:text-3xl">{n.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+      {/* numbers, as display type rather than small chips */}
+      <dl className="divide-ink-700/60 mt-16 grid grid-cols-2 gap-y-8 lg:grid-cols-4 lg:divide-x">
+        {NUMBERS.map((n) => (
+          <div key={n.label} className="lg:px-7 lg:first:pl-0">
+            <dd className="font-display flex items-baseline gap-1 text-4xl leading-none font-bold text-chalk sm:text-5xl">
+              {n.value}
+              {n.unit && <span className="text-solar-500 text-xl sm:text-2xl">{n.unit}</span>}
+            </dd>
+            <dt className="text-mute-dim mt-3 font-mono text-[10px] tracking-[0.16em] uppercase">{n.label}</dt>
+          </div>
+        ))}
+      </dl>
     </Section>
   )
 }

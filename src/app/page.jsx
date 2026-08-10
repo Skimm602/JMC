@@ -1,4 +1,5 @@
 import Nav from '@/components/Nav.jsx'
+import SectionIndex from '@/components/SectionIndex.jsx'
 import Hero from '@/components/Hero.jsx'
 import Products from '@/components/Products.jsx'
 import WhyJmc from '@/components/WhyJmc.jsx'
@@ -17,6 +18,7 @@ export default function Home() {
       </a>
 
       <Nav />
+      <SectionIndex />
 
       <main>
         <Hero />

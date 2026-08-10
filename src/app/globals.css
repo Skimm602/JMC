@@ -155,6 +155,37 @@
     animation: reveal 0.35s var(--ease-out-expo) both;
   }
 
+  /* Telemetry ticker — duplicated content scrolls by half its width so the
+     loop is seamless. */
+  @keyframes ticker {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-ticker {
+    animation: ticker 48s linear infinite;
+  }
+
+  /* Current travelling along the energy-flow conductors. */
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -28;
+    }
+  }
+
+  .animate-dash {
+    animation: dash 1.1s linear infinite;
+  }
+
+  /* Lets a child escape the content column and run to the viewport edge. */
+  .bleed-right {
+    margin-right: calc(50% - 50vw);
+  }
+
   .text-gradient-solar {
     background: linear-gradient(100deg, var(--color-solar-300), var(--color-solar-500) 55%, var(--color-solar-600));
     -webkit-background-clip: text;
