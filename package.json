@@ -1,0 +1,21 @@
+{
+  "name": "jmc",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "JMC Solar — inverter and energy storage systems, with installer partner registration",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

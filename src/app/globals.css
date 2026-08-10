@@ -1,0 +1,176 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------
+   JMC Solar design tokens
+   Concept: "engineered sunlight" — an instrument-panel navy base with
+   warm solar amber as the energy accent and electric blue for signal.
+
+   Font families resolve to the hashed families that next/font generates;
+   the CSS variables are attached to <html> in app/layout.jsx.
+   ------------------------------------------------------------------ */
+@theme {
+  /* Base — deepest to lightest surface elevation */
+  --color-ink-950: #050a14;
+  --color-ink-900: #070e1b;
+  --color-ink-850: #0b1424;
+  --color-ink-800: #111c2f;
+  --color-ink-700: #1a2740;
+  --color-ink-600: #263650;
+
+  /* Text */
+  --color-chalk: #f4f8ff;
+  --color-mute: #93a6c4;
+  --color-mute-dim: #6a7d9b;
+
+  /* Solar amber — the accent that carries "energy" */
+  --color-solar-300: #ffd782;
+  --color-solar-400: #ffc24d;
+  --color-solar-500: #ffb020;
+  --color-solar-600: #e8930a;
+
+  /* Electric blue — signal, links, secondary CTA */
+  --color-volt-300: #7fb2ff;
+  --color-volt-400: #4d90ff;
+  --color-volt-500: #2b7fff;
+  --color-volt-600: #1560e0;
+
+  /* Status */
+  --color-good: #34d399;
+  --color-warn: #fbbf24;
+  --color-bad: #fb7185;
+
+  /* Type */
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* offset for the sticky header when jumping to #anchors */
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background-color: var(--color-ink-900);
+    color: var(--color-chalk);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: var(--color-solar-500);
+    color: var(--color-ink-950);
+  }
+
+  /* Visible, on-brand focus ring everywhere */
+  :focus-visible {
+    outline: 2px solid var(--color-solar-400);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer utilities {
+  /* Blueprint grid — the technical substrate behind hero/CTA blocks */
+  .bg-blueprint {
+    background-image:
+      linear-gradient(to right, rgba(147, 166, 196, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(147, 166, 196, 0.07) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* Fades a grid (or any child bg) out toward the edges */
+  .mask-fade-edges {
+    mask-image: radial-gradient(ellipse 75% 70% at 50% 40%, #000 40%, transparent 100%);
+  }
+
+  /* Warm radial bloom used behind product art and section headers */
+  .bloom-solar {
+    background: radial-gradient(
+      circle at center,
+      rgba(255, 176, 32, 0.22) 0%,
+      rgba(255, 176, 32, 0.06) 38%,
+      transparent 70%
+    );
+  }
+
+  .bloom-volt {
+    background: radial-gradient(
+      circle at center,
+      rgba(43, 127, 255, 0.2) 0%,
+      rgba(43, 127, 255, 0.05) 40%,
+      transparent 72%
+    );
+  }
+
+  /* Hardware bevel — clipped corner instead of a plain radius.
+     Reads as machined metal rather than generic card. */
+  .clip-bevel {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+
+  .clip-bevel-sm {
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+
+  /* Hairline that reads as a busbar / current trace */
+  .rule-current {
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-solar-500) 18%,
+      var(--color-volt-500) 62%,
+      transparent
+    );
+  }
+
+  /* Conditional blocks (e.g. the installer panel) slide in rather than snap,
+     so the form doesn't feel like it jumped when a checkbox is ticked. */
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-reveal {
+    animation: reveal 0.35s var(--ease-out-expo) both;
+  }
+
+  .text-gradient-solar {
+    background: linear-gradient(100deg, var(--color-solar-300), var(--color-solar-500) 55%, var(--color-solar-600));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* Respect users who don't want motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
