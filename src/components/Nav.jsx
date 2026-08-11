@@ -11,18 +11,17 @@ import { ArrowUpRightIcon, ChevronDownIcon, MenuIcon, XIcon } from './icons.jsx'
  * One list drives both the desktop bar and the mobile sheet, so the two can
  * never fall out of order. `dropdown` marks the entry that opens the product
  * menu instead of jumping straight to a section.
- */
-/*
- * Root-relative rather than bare hashes: the bar is in the layout now, so it
- * also renders on /register, where `#sizing` would point at a section that is
- * not on the page. From the home page these still resolve to a same-document
- * scroll, so nothing about that behaviour changes.
+ *
+ * The targets are root-relative rather than bare hashes: the bar is in the
+ * layout now, so it also renders on /register, where `#sizing` would point at
+ * a section that is not on the page. From home they still resolve to a
+ * same-document scroll, so nothing about that behaviour changes.
  */
 const links = [
+  // '/#top' rather than '/': from the form it goes home, and from home it
+  // scrolls back to the hero instead of doing nothing at all.
+  { label: 'Home', href: '/#top' },
   { label: 'Products', dropdown: true },
-  { label: 'Sizing', href: '/#sizing' },
-  { label: 'Engineering', href: '/#why' },
-  { label: 'Installer program', href: '/#installers' },
   { label: 'About', href: '/#about' },
   { label: 'Support', href: '/#footer' },
 ]
@@ -272,7 +271,7 @@ export default function Nav() {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="text-glint hover:text-glint-soft p-2 transition-colors lg:hidden"
+              className="text-glint hover:text-glint-soft ml-auto p-2 transition-colors lg:hidden"
               aria-expanded={open}
               aria-controls="mobile-nav"
               aria-label={open ? 'Close menu' : 'Open menu'}
