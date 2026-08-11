@@ -18,6 +18,7 @@ import { cx } from './ui.jsx'
  */
 const SECTIONS = [
   { id: 'top', label: 'Overview' },
+  { id: 'about', label: 'About', shade: true },
   { id: 'products', label: 'Range' },
   { id: 'sizing', label: 'Sizing' },
   { id: 'why', label: 'Engineering', shade: true },

@@ -101,6 +101,13 @@ export const ArrowRightIcon = (p) => (
   </Svg>
 )
 
+/** Reads as "go somewhere" rather than "next" — used by the header CTA. */
+export const ArrowUpRightIcon = (p) => (
+  <Svg {...p}>
+    <path d="M7 17 17 7M8.5 7H17v8.5" />
+  </Svg>
+)
+
 export const UploadIcon = (p) => (
   <Svg {...p}>
     <path d="M12 16V4M8 8l4-4 4 4" />

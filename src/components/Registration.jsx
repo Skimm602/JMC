@@ -48,6 +48,7 @@ const EMPTY_FORM = {
   phone: '',
   password: '',
   confirm: '',
+  address: '',
   country: '',
   company: '',
   role: '',
@@ -231,9 +232,9 @@ export default function Registration() {
       if (form.confirm !== form.password) e.confirm = 'The two passwords do not match.'
       if (!form.country) e.country = 'Select your country.'
     }
-    if (id === 'org') {
-      if (isInstaller && !form.company.trim()) e.company = 'Required for installer accounts.'
-    }
+    // Nothing on the organisation step blocks progress — company name is
+    // optional for installers as well as homeowners.
+
     if (id === 'verify') {
       if (!form.businessRegNo.trim()) e.businessRegNo = 'Enter your business registration number.'
       if (!form.yearsInstalling) e.yearsInstalling = 'Select your experience level.'
@@ -332,7 +333,7 @@ export default function Registration() {
               <>
                 <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
                   <dt className="label text-ink-soft">Company</dt>
-                  <dd className="text-ink">{form.company}</dd>
+                  <dd className="text-ink">{form.company || '—'}</dd>
                 </div>
                 <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
                   <dt className="label text-ink-soft">Documents</dt>
@@ -504,6 +505,18 @@ export default function Registration() {
                   </div>
                 </div>
 
+                <Field label="Street address" span={2} hint="Optional — where deliveries and paperwork should go.">
+                  {(p) => (
+                    <TextInput
+                      {...p}
+                      value={form.address}
+                      onChange={set('address')}
+                      placeholder="123 Mango Ave, Barangay Kamputhaw, Cebu City"
+                      autoComplete="street-address"
+                    />
+                  )}
+                </Field>
+
                 <Field label="Country / region" required error={errors.country} span={2}>
                   {(p) => (
                     <Select {...p} value={form.country} onChange={set('country')}>
@@ -525,10 +538,8 @@ export default function Registration() {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field
                     label="Company / business name"
-                    required={isInstaller}
-                    error={errors.company}
                     span={2}
-                    hint={isInstaller ? undefined : 'Leave blank if you are registering as a homeowner.'}
+                    hint="Optional — leave blank if you are registering as a homeowner."
                   >
                     {(p) => (
                       <TextInput {...p} value={form.company} onChange={set('company')} placeholder="Dela Cruz Solar Services" autoComplete="organization" />
@@ -673,6 +684,7 @@ export default function Registration() {
                         ['Name', form.fullName],
                         ['Email', form.email],
                         ['Phone', form.phone || '—'],
+                        ['Address', form.address || '—'],
                         ['Country', form.country],
                       ],
                     },

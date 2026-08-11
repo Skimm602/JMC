@@ -170,6 +170,16 @@
     outline-color: var(--color-cool-400);
   }
 
+  /* A lit panel inset into a dark band takes the warm ring back. The cool
+     ring above was tuned for the dark ground, and it drops under 3:1 the
+     moment the control sits on a light surface inside that band. */
+  .band-shade .band-sheet :focus-visible,
+  .band-shade .band-glare :focus-visible,
+  .band-pit .band-sheet :focus-visible,
+  .band-pit .band-glare :focus-visible {
+    outline-color: var(--color-hot-600);
+  }
+
   input,
   textarea,
   select {
@@ -272,6 +282,40 @@
   /* Corner ticks — the registration marks on a technical drawing. Reserved
      for the two surfaces that are meant to read as instruments: the hero
      chart and the registration form. Not a general card treatment. */
+  /**
+   * A corner that curves *into* the shape rather than off it — the join the
+   * hero panel makes with the action block tucked under its left edge.
+   *
+   * One element cannot draw a concave arc with border-radius alone, so the
+   * ::before fills the box, rounds the corner the arc belongs to, and casts a
+   * shadow with enough spread to flood everything outside that rounded box.
+   * The parent clips it back to its own square, which leaves exactly the
+   * quarter nick. Colour and size come in as custom properties so the same
+   * utility serves both sides of the join.
+   */
+  .notch {
+    position: absolute;
+    width: var(--notch-size, 1.75rem);
+    height: var(--notch-size, 1.75rem);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .notch::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: 0 0 0 100vmax var(--notch-color, var(--color-sheet));
+  }
+
+  .notch-tl::before {
+    border-top-left-radius: var(--notch-size, 1.75rem);
+  }
+
+  .notch-tr::before {
+    border-top-right-radius: var(--notch-size, 1.75rem);
+  }
+
   .corner-ticks {
     position: relative;
   }

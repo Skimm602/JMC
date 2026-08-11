@@ -1,54 +1,33 @@
 /**
- * The mark is the derating curve in miniature — flat, then falling away.
- * It is the same idea the hero figure argues at full size, so the identity
- * and the product claim are the same shape.
+ * Two words, one of them boxed. The chip carries the brand name and the plain
+ * word carries the category, so the lockup reads at a glance even at the size
+ * a header gives it — and the filled chip is the brightest object in the bar,
+ * which is what stops the identity dissolving into the row of links.
  */
 export default function Logo({ className = '', compact = false, tone = 'ink' }) {
   const onShade = tone === 'shade'
 
   return (
-    <a href="#top" className={`group inline-flex items-center gap-3 ${className}`}>
+    /* The name is labelled on the link rather than left to the two spans, so
+       `compact` cannot silently shorten it to "VIP" for a screen reader. */
+    <a href="#top" aria-label="VIP Solar — home" className={`group inline-flex items-baseline gap-2 ${className}`}>
       <span
-        className={`grid h-9 w-9 shrink-0 place-items-center border transition-colors duration-200 ${
-          onShade
-            ? 'border-rule-shade group-hover:border-glint-soft'
-            : 'border-rule-strong group-hover:border-ink'
+        className={`font-display display-wide rounded-[0.5rem] px-2.5 py-1 text-[1.0625rem] leading-none font-bold tracking-[0.02em] transition-colors duration-200 ${
+          onShade ? 'bg-glint text-pit group-hover:bg-glare' : 'bg-ink text-glare group-hover:bg-pit'
         }`}
       >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
-          <path
-            d="M3 7.5h9.5L21 17"
-            className={
-              onShade
-                ? 'stroke-glint transition-colors'
-                : 'stroke-ink transition-colors'
-            }
-            strokeWidth="2.1"
-            strokeLinecap="square"
-            strokeLinejoin="miter"
-          />
-        </svg>
+        VIP
       </span>
 
       {!compact && (
-        <span className="leading-none">
-          <span
-            className={`font-display display-wide block text-[1.0625rem] font-bold tracking-[0.04em] ${
-              onShade ? 'text-glint' : 'text-ink'
-            }`}
-          >
-            VIP
-          </span>
-          <span
-            className={`mt-1 block font-mono text-[9px] tracking-[0.3em] uppercase ${
-              onShade ? 'text-glint-soft' : 'text-ink-soft'
-            }`}
-          >
-            Solar
-          </span>
+        <span
+          className={`font-display display-wide text-[1.0625rem] leading-none font-bold tracking-[0.02em] ${
+            onShade ? 'text-glint' : 'text-ink'
+          }`}
+        >
+          Solar
         </span>
       )}
-      <span className="sr-only">VIP Solar — home</span>
     </a>
   )
 }

@@ -1,6 +1,7 @@
 import Nav from '@/components/Nav.jsx'
 import SectionIndex from '@/components/SectionIndex.jsx'
 import Hero from '@/components/Hero.jsx'
+import About from '@/components/About.jsx'
 import Products from '@/components/Products.jsx'
 import Sizing from '@/components/Sizing.jsx'
 import WhyVip from '@/components/WhyVip.jsx'
@@ -23,6 +24,7 @@ export default function Home() {
 
       <main>
         <Hero />
+        <About />
         <Products />
         <Sizing />
         <WhyVip />
