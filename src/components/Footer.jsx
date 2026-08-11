@@ -28,8 +28,8 @@ export default function Footer() {
           <div>
             <Logo tone="shade" />
             <p className="text-glint-soft mt-6 max-w-xs text-sm leading-relaxed">
-              Grid-tie, hybrid and storage inverters for residential and commercial solar. Engineered for the
-              people who have to service them.
+              Grid-tie, hybrid and storage inverters for residential and commercial solar. Engineered for the people who
+              have to service them.
             </p>
             <dl className="mt-7 space-y-2">
               <div className="flex gap-3 text-xs">
@@ -50,10 +50,7 @@ export default function Footer() {
                 <ul className="mt-5 space-y-3">
                   {col.links.map((l) => (
                     <li key={l}>
-                      <a
-                        href="#top"
-                        className="text-glint-soft hover:text-glint text-sm transition-colors"
-                      >
+                      <a href="/" className="text-glint-soft hover:text-glint text-sm transition-colors">
                         {l}
                       </a>
                     </li>
@@ -71,7 +68,7 @@ export default function Footer() {
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {['Privacy', 'Terms of sale', 'Cookies', 'Compliance'].map((l) => (
               <li key={l}>
-                <a href="#top" className="hover:text-glint-soft transition-colors">
+                <a href="/" className="hover:text-glint-soft transition-colors">
                   {l}
                 </a>
               </li>

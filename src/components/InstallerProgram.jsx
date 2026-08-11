@@ -60,10 +60,7 @@ export default function InstallerProgram() {
           <caption className="sr-only">Benefits included at each installer tier</caption>
           <thead>
             <tr>
-              <th
-                scope="col"
-                className="bg-glare sticky left-0 z-10 w-[38%] pr-4 pb-5 text-left align-bottom"
-              >
+              <th scope="col" className="bg-glare sticky left-0 z-10 w-[38%] pr-4 pb-5 text-left align-bottom">
                 <span className="label text-ink-soft">Benefit</span>
               </th>
               {TIERS.map((t) => (
@@ -133,7 +130,7 @@ export default function InstallerProgram() {
               </ul>
             </div>
           </div>
-          <Button as="a" href="#register" className="shrink-0 self-start">
+          <Button as="a" href="/register" className="shrink-0 self-start">
             Start registration
           </Button>
         </div>

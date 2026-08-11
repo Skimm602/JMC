@@ -17,13 +17,12 @@ import { cx } from './ui.jsx'
  * Hidden below lg, where it would cost more width than it earns.
  */
 const SECTIONS = [
-  { id: 'top', label: 'Overview' },
-  { id: 'about', label: 'About', shade: true },
+  { id: 'top', label: 'Overview', shade: true },
   { id: 'products', label: 'Range' },
   { id: 'sizing', label: 'Sizing' },
   { id: 'why', label: 'Engineering', shade: true },
   { id: 'installers', label: 'Program' },
-  { id: 'register', label: 'Register' },
+  { id: 'about', label: 'About', shade: true },
 ]
 
 export default function SectionIndex() {

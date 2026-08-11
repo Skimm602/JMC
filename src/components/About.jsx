@@ -41,8 +41,8 @@ export default function About() {
         </div>
         {/* Example — replace with the real standfirst. */}
         <Lede tone="shade" className="lg:col-span-5 lg:self-end">
-          A short paragraph on who the company is and why it exists. One or two sentences is enough — the detail
-          belongs below.
+          A short paragraph on who the company is and why it exists. One or two sentences is enough — the detail belongs
+          below.
         </Lede>
       </div>
 

@@ -101,23 +101,14 @@ export default function DeratingCurve({ className = '' }) {
       {/* x labels — thinned below sm so they never collide */}
       <g className={`fill-ink-soft font-mono ${TICK_TYPE}`} textAnchor="middle">
         {X_TICKS.map((t) => (
-          <text
-            key={t}
-            x={sx(t)}
-            y={Y1 + 30}
-            className={X_TICKS_SM.includes(t) ? undefined : 'max-sm:hidden'}
-          >
+          <text key={t} x={sx(t)} y={Y1 + 30} className={X_TICKS_SM.includes(t) ? undefined : 'max-sm:hidden'}>
             {t}
           </text>
         ))}
       </g>
 
       {/* ---------------------------- margin band --------------------------- */}
-      <path
-        d={marginBand}
-        className="fill-cool-500/20 animate-fade-in"
-        style={{ animationDelay: '1.25s' }}
-      />
+      <path d={marginBand} className="fill-cool-500/20 animate-fade-in" style={{ animationDelay: '1.25s' }} />
 
       {/* ------------------------- the design condition ---------------------
           The point of the whole figure for a Philippine installer: where
@@ -174,11 +165,7 @@ export default function DeratingCurve({ className = '' }) {
       <g className="animate-fade-in" style={{ animationDelay: '1.6s' }}>
         {/* both callouts sit in the empty half of their own curve, so neither
             crowds the axis titles or the plotted lines */}
-        <text
-          x={sx(21)}
-          y={sy(100) + 26}
-          className={`fill-cool-700 font-mono font-medium ${TICK_TYPE}`}
-        >
+        <text x={sx(21)} y={sy(100) + 26} className={`fill-cool-700 font-mono font-medium ${TICK_TYPE}`}>
           VIP — flat to 45 °C
         </text>
         <text x={sx(49)} y={sy(64)} className={`fill-hot-600 font-mono ${TICK_TYPE}`}>
@@ -187,11 +174,7 @@ export default function DeratingCurve({ className = '' }) {
       </g>
 
       {/* axis titles */}
-      <text
-        x={X0}
-        y={Y1 + 72}
-        className={`fill-ink-soft font-mono tracking-[0.14em] uppercase ${TICK_TYPE}`}
-      >
+      <text x={X0} y={Y1 + 72} className={`fill-ink-soft font-mono tracking-[0.14em] uppercase ${TICK_TYPE}`}>
         Ambient °C
       </text>
       <text

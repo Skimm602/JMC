@@ -17,21 +17,14 @@ export function Eyebrow({ children, className, tone = 'ink' }) {
         className,
       )}
     >
-      <span
-        aria-hidden="true"
-        className={cx('h-px w-6 shrink-0', tone === 'shade' ? 'bg-cool-400' : 'bg-cool-600')}
-      />
+      <span aria-hidden="true" className={cx('h-px w-6 shrink-0', tone === 'shade' ? 'bg-cool-400' : 'bg-cool-600')} />
       {children}
     </p>
   )
 }
 
 export function SectionHeading({ children, className }) {
-  return (
-    <h2 className={cx('display-wide text-display-2 font-semibold text-balance', className)}>
-      {children}
-    </h2>
-  )
+  return <h2 className={cx('display-wide text-display-2 font-semibold text-balance', className)}>{children}</h2>
 }
 
 export function Lede({ children, className, tone = 'ink' }) {
@@ -98,9 +91,7 @@ export function ArrowLink({ href, children, className, tone = 'ink' }) {
         className,
       )}
     >
-      <span className="border-b border-current/40 pb-px transition-colors group-hover:border-current">
-        {children}
-      </span>
+      <span className="border-b border-current/40 pb-px transition-colors group-hover:border-current">{children}</span>
       <ArrowRightIcon
         aria-hidden="true"
         className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
@@ -112,10 +103,7 @@ export function ArrowLink({ href, children, className, tone = 'ink' }) {
 /** Hairline separating blocks within a band. */
 export function Rule({ className, tone = 'ink' }) {
   return (
-    <div
-      aria-hidden="true"
-      className={cx('h-px w-full', tone === 'shade' ? 'bg-rule-shade' : 'bg-rule', className)}
-    />
+    <div aria-hidden="true" className={cx('h-px w-full', tone === 'shade' ? 'bg-rule-shade' : 'bg-rule', className)} />
   )
 }
 

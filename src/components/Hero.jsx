@@ -107,7 +107,7 @@ export default function Hero() {
             eye lands here before anywhere else. */}
         <div className="mt-14 inline-flex w-full sm:w-auto">
           <a
-            href="#register"
+            href="/register"
             className="group/join bg-hot-400 hover:bg-hot-500 flex w-full items-center justify-between gap-6 rounded-[1.75rem] px-7 py-6 transition-colors duration-200 sm:w-auto sm:min-w-[26rem] sm:px-9"
           >
             <span className="text-pit text-lg font-semibold">Become a certified installer</span>

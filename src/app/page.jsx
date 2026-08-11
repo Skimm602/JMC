@@ -1,38 +1,29 @@
-import Nav from '@/components/Nav.jsx'
 import SectionIndex from '@/components/SectionIndex.jsx'
 import Hero from '@/components/Hero.jsx'
-import About from '@/components/About.jsx'
 import Products from '@/components/Products.jsx'
 import Sizing from '@/components/Sizing.jsx'
 import WhyVip from '@/components/WhyVip.jsx'
 import InstallerProgram from '@/components/InstallerProgram.jsx'
-import Registration from '@/components/Registration.jsx'
-import Footer from '@/components/Footer.jsx'
+import About from '@/components/About.jsx'
 
+/**
+ * Registration is its own route now, so the page ends on who the company is
+ * rather than on a form: About closes the argument the hero opens, and the
+ * call to register is a link out of it from every band that earns one.
+ */
 export default function Home() {
   return (
     <>
-      <a
-        href="#register"
-        className="focus:bg-cool-600 focus:text-glare sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
-      >
-        Skip to registration
-      </a>
-
-      <Nav />
       <SectionIndex />
 
-      <main>
+      <main id="content">
         <Hero />
-        <About />
         <Products />
         <Sizing />
         <WhyVip />
         <InstallerProgram />
-        <Registration />
+        <About />
       </main>
-
-      <Footer />
     </>
   )
 }

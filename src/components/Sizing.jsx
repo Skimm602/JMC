@@ -62,8 +62,8 @@ export default function Sizing() {
           <SectionHeading className="mt-6">Size the job before you quote it</SectionHeading>
         </div>
         <Lede className="lg:col-span-5 lg:self-end">
-          Roof and load details in, a starting specification out. Built for the first site visit, when the
-          question is which unit to price rather than which panel to buy.
+          Roof and load details in, a starting specification out. Built for the first site visit, when the question is
+          which unit to price rather than which panel to buy.
         </Lede>
       </div>
 
@@ -80,25 +80,13 @@ export default function Sizing() {
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <Field label="Monthly electricity bill" hint="Average across the last twelve months.">
               {(p) => (
-                <TextInput
-                  {...p}
-                  inputMode="numeric"
-                  value={input.bill}
-                  onChange={set('bill')}
-                  placeholder="₱ 8,500"
-                />
+                <TextInput {...p} inputMode="numeric" value={input.bill} onChange={set('bill')} placeholder="₱ 8,500" />
               )}
             </Field>
 
             <Field label="Usable roof area">
               {(p) => (
-                <TextInput
-                  {...p}
-                  inputMode="numeric"
-                  value={input.area}
-                  onChange={set('area')}
-                  placeholder="64 m²"
-                />
+                <TextInput {...p} inputMode="numeric" value={input.area} onChange={set('area')} placeholder="64 m²" />
               )}
             </Field>
 
@@ -154,10 +142,7 @@ export default function Sizing() {
 
             <dl className="mt-2">
               {READOUT.map((r) => (
-                <div
-                  key={r.key}
-                  className="border-rule-shade flex items-baseline justify-between gap-6 border-b py-4"
-                >
+                <div key={r.key} className="border-rule-shade flex items-baseline justify-between gap-6 border-b py-4">
                   <dt className="label text-glint-soft">{r.label}</dt>
                   <dd className="text-glint-soft flex items-baseline gap-1.5 font-mono text-lg tabular-nums">
                     <span aria-label="No value yet">—</span>
@@ -171,8 +156,8 @@ export default function Sizing() {
           <p className="text-glint-soft flex gap-3 text-xs leading-relaxed">
             <InfoIcon aria-hidden="true" className="text-cool-400 mt-px h-4 w-4 shrink-0" />
             <span>
-              The readout is not connected yet. These are the fields VIP&rsquo;s sizing service will return —
-              no figure is estimated in the browser.
+              The readout is not connected yet. These are the fields VIP&rsquo;s sizing service will return — no figure
+              is estimated in the browser.
             </span>
           </p>
         </div>

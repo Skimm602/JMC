@@ -48,13 +48,11 @@ export default function WhyVip() {
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <Eyebrow tone="shade">Engineering</Eyebrow>
-          <SectionHeading className="text-glint mt-6">
-            Specified by engineers, judged by installers
-          </SectionHeading>
+          <SectionHeading className="text-glint mt-6">Specified by engineers, judged by installers</SectionHeading>
         </div>
         <Lede tone="shade" className="lg:col-span-5 lg:self-end">
-          Datasheets are easy to win on paper. These are the four things that decide whether a fleet is still
-          profitable three summers in.
+          Datasheets are easy to win on paper. These are the four things that decide whether a fleet is still profitable
+          three summers in.
         </Lede>
       </div>
 

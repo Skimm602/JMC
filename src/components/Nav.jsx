@@ -12,13 +12,19 @@ import { ArrowUpRightIcon, ChevronDownIcon, MenuIcon, XIcon } from './icons.jsx'
  * never fall out of order. `dropdown` marks the entry that opens the product
  * menu instead of jumping straight to a section.
  */
+/*
+ * Root-relative rather than bare hashes: the bar is in the layout now, so it
+ * also renders on /register, where `#sizing` would point at a section that is
+ * not on the page. From the home page these still resolve to a same-document
+ * scroll, so nothing about that behaviour changes.
+ */
 const links = [
   { label: 'Products', dropdown: true },
-  { label: 'Sizing', href: '#sizing' },
-  { label: 'Engineering', href: '#why' },
-  { label: 'Installer program', href: '#installers' },
-  { label: 'About', href: '#about' },
-  { label: 'Support', href: '#footer' },
+  { label: 'Sizing', href: '/#sizing' },
+  { label: 'Engineering', href: '/#why' },
+  { label: 'Installer program', href: '/#installers' },
+  { label: 'About', href: '/#about' },
+  { label: 'Support', href: '/#footer' },
 ]
 
 export default function Nav() {
@@ -184,7 +190,7 @@ export default function Nav() {
                           return (
                             <a
                               key={f.id}
-                              href={`#product-${f.id}`}
+                              href={`/#product-${f.id}`}
                               ref={(el) => {
                                 itemRefs.current[i] = el
                               }}
@@ -206,7 +212,7 @@ export default function Nav() {
                         })}
 
                         <a
-                          href="#products"
+                          href="/#products"
                           onClick={() => setProducts(false)}
                           className="border-rule text-ink-soft hover:text-ink mt-1.5 flex items-center justify-between border-t px-3.5 py-3 text-xs font-medium transition-colors"
                         >
@@ -253,7 +259,7 @@ export default function Nav() {
                 Log in
               </Button>
               <a
-                href="#register"
+                href="/register"
                 className="group/cta border-glint-soft/40 hover:border-glint relative flex h-11 items-center gap-3 rounded-full border pr-1.5 pl-5 transition-colors duration-200"
               >
                 <span className="text-glint text-sm font-medium">Create account</span>
@@ -325,7 +331,7 @@ export default function Nav() {
                       return (
                         <a
                           key={f.id}
-                          href={`#product-${f.id}`}
+                          href={`/#product-${f.id}`}
                           onClick={() => {
                             setOpen(false)
                             setMobileProducts(false)
@@ -344,7 +350,7 @@ export default function Nav() {
             ),
           )}
 
-          <Button as="a" href="#register" onClick={() => setOpen(false)} className="mt-4 w-full">
+          <Button as="a" href="/register" onClick={() => setOpen(false)} className="mt-4 w-full">
             Create account
             <ArrowUpRightIcon className="h-4 w-4" />
           </Button>

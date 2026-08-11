@@ -88,13 +88,7 @@ export default function InverterArt({ className = '' }) {
       >
         8.42
       </text>
-      <text
-        x="196"
-        y="300"
-        fill="var(--color-glint-soft)"
-        fontFamily="var(--font-plex-mono), monospace"
-        fontSize="14"
-      >
+      <text x="196" y="300" fill="var(--color-glint-soft)" fontFamily="var(--font-plex-mono), monospace" fontSize="14">
         kW
       </text>
 

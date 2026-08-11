@@ -148,7 +148,7 @@ function LoginPanel({ titleId, onClose }) {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <Checkbox checked={remember} onChange={setRemember} label="Keep me logged in" name="remember" />
               <a
-                href="#footer"
+                href="/#footer"
                 onClick={onClose}
                 className="text-ink-soft hover:text-ink border-b border-current/40 pb-px text-xs font-medium transition-colors hover:border-current"
               >
@@ -187,7 +187,7 @@ function LoginPanel({ titleId, onClose }) {
       <div className="border-rule text-ink-soft border-t px-7 py-5 text-sm">
         No account yet?{' '}
         <a
-          href="#register"
+          href="/register"
           onClick={onClose}
           className="text-ink border-b border-current/40 pb-px font-medium transition-colors hover:border-current"
         >

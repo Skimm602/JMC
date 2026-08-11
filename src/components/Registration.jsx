@@ -309,11 +309,7 @@ export default function Registration() {
             <CheckIcon className="h-6 w-6" strokeWidth={2.2} />
           </span>
 
-          <h2
-            ref={successRef}
-            tabIndex={-1}
-            className="display-wide text-display-2 mt-7 font-semibold outline-none"
-          >
+          <h2 ref={successRef} tabIndex={-1} className="display-wide text-display-2 mt-7 font-semibold outline-none">
             Application received
           </h2>
           <p className="text-ink-soft mt-4 leading-relaxed">
@@ -345,8 +341,8 @@ export default function Registration() {
 
           {isInstaller && (
             <p className="text-ink-soft mt-7 text-sm leading-relaxed">
-              Trade verification usually takes 1–2 business days. You can log in and browse at the Registered tier
-              in the meantime.
+              Trade verification usually takes 1–2 business days. You can log in and browse at the Registered tier in
+              the meantime.
             </p>
           )}
 
@@ -383,8 +379,8 @@ export default function Registration() {
           <Eyebrow>Create account</Eyebrow>
           <SectionHeading className="mt-6">Register once, order from anywhere</SectionHeading>
           <p className="text-ink-soft mt-6 leading-relaxed">
-            One account covers datasheets, firmware, monitoring and ordering. Installers get one extra step that
-            unlocks trade pricing and advance-replacement RMA.
+            One account covers datasheets, firmware, monitoring and ordering. Installers get one extra step that unlocks
+            trade pricing and advance-replacement RMA.
           </p>
 
           <Rule className="my-8" />
@@ -392,18 +388,14 @@ export default function Registration() {
           <div className="border-rule flex gap-3 border p-4">
             <ShieldIcon className="text-cool-600 h-5 w-5 shrink-0" />
             <p className="text-ink-soft text-xs leading-relaxed">
-              Documents are used for trade verification only and are never shared outside VIP. You can request
-              deletion at any time.
+              Documents are used for trade verification only and are never shared outside VIP. You can request deletion
+              at any time.
             </p>
           </div>
         </div>
 
         {/* --------------------------------- form --------------------------------- */}
-        <form
-          noValidate
-          onSubmit={onSubmit}
-          className="border-rule bg-glare corner-ticks text-ink border p-6 sm:p-9"
-        >
+        <form noValidate onSubmit={onSubmit} className="border-rule bg-glare corner-ticks text-ink border p-6 sm:p-9">
           {/* ------------------------------- stepper ------------------------------ */}
           <ol className="mb-8 flex items-center gap-1.5">
             {steps.map((s, i) => {
@@ -434,14 +426,7 @@ export default function Registration() {
                       >
                         {done ? '✓' : `0${i + 1}`}
                       </span>
-                      <span
-                        className={cx(
-                          'label truncate',
-                          on ? 'text-ink' : 'text-ink-soft',
-                        )}
-                      >
-                        {s.label}
-                      </span>
+                      <span className={cx('label truncate', on ? 'text-ink' : 'text-ink-soft')}>{s.label}</span>
                     </span>
                   </button>
                 </li>
@@ -457,31 +442,63 @@ export default function Registration() {
               <div className="animate-reveal grid gap-5 sm:grid-cols-2">
                 <Field label="Full name" required error={errors.fullName} span={2}>
                   {(p) => (
-                    <TextInput {...p} value={form.fullName} onChange={set('fullName')} placeholder="Juan Dela Cruz" autoComplete="name" />
+                    <TextInput
+                      {...p}
+                      value={form.fullName}
+                      onChange={set('fullName')}
+                      placeholder="Juan Dela Cruz"
+                      autoComplete="name"
+                    />
                   )}
                 </Field>
 
                 <Field label="Work email" required error={errors.email}>
                   {(p) => (
-                    <TextInput {...p} type="email" value={form.email} onChange={set('email')} placeholder="you@company.com" autoComplete="email" />
+                    <TextInput
+                      {...p}
+                      type="email"
+                      value={form.email}
+                      onChange={set('email')}
+                      placeholder="you@company.com"
+                      autoComplete="email"
+                    />
                   )}
                 </Field>
 
                 <Field label="Phone" error={errors.phone}>
                   {(p) => (
-                    <TextInput {...p} type="tel" value={form.phone} onChange={set('phone')} placeholder="+63 917 000 0000" autoComplete="tel" />
+                    <TextInput
+                      {...p}
+                      type="tel"
+                      value={form.phone}
+                      onChange={set('phone')}
+                      placeholder="+63 917 000 0000"
+                      autoComplete="tel"
+                    />
                   )}
                 </Field>
 
                 <Field label="Password" required error={errors.password}>
                   {(p) => (
-                    <TextInput {...p} type="password" value={form.password} onChange={set('password')} autoComplete="new-password" />
+                    <TextInput
+                      {...p}
+                      type="password"
+                      value={form.password}
+                      onChange={set('password')}
+                      autoComplete="new-password"
+                    />
                   )}
                 </Field>
 
                 <Field label="Confirm password" required error={errors.confirm}>
                   {(p) => (
-                    <TextInput {...p} type="password" value={form.confirm} onChange={set('confirm')} autoComplete="new-password" />
+                    <TextInput
+                      {...p}
+                      type="password"
+                      value={form.confirm}
+                      onChange={set('confirm')}
+                      autoComplete="new-password"
+                    />
                   )}
                 </Field>
 
@@ -499,9 +516,7 @@ export default function Registration() {
                         />
                       ))}
                     </div>
-                    <span className="text-ink-soft label w-14">
-                      {STRENGTH[pwScore]}
-                    </span>
+                    <span className="text-ink-soft label w-14">{STRENGTH[pwScore]}</span>
                   </div>
                 </div>
 
@@ -542,7 +557,13 @@ export default function Registration() {
                     hint="Optional — leave blank if you are registering as a homeowner."
                   >
                     {(p) => (
-                      <TextInput {...p} value={form.company} onChange={set('company')} placeholder="Dela Cruz Solar Services" autoComplete="organization" />
+                      <TextInput
+                        {...p}
+                        value={form.company}
+                        onChange={set('company')}
+                        placeholder="Dela Cruz Solar Services"
+                        autoComplete="organization"
+                      />
                     )}
                   </Field>
 
@@ -593,7 +614,14 @@ export default function Registration() {
               <div className="animate-reveal">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field label="Business registration no." required error={errors.businessRegNo}>
-                    {(p) => <TextInput {...p} value={form.businessRegNo} onChange={set('businessRegNo')} placeholder="DTI / SEC / EIN" />}
+                    {(p) => (
+                      <TextInput
+                        {...p}
+                        value={form.businessRegNo}
+                        onChange={set('businessRegNo')}
+                        placeholder="DTI / SEC / EIN"
+                      />
+                    )}
                   </Field>
 
                   <Field label="Years installing PV" required error={errors.yearsInstalling}>
@@ -621,16 +649,21 @@ export default function Registration() {
                   </Field>
 
                   <Field label="Primary service area">
-                    {(p) => <TextInput {...p} value={form.serviceArea} onChange={set('serviceArea')} placeholder="Cebu, Bohol, Negros" />}
+                    {(p) => (
+                      <TextInput
+                        {...p}
+                        value={form.serviceArea}
+                        onChange={set('serviceArea')}
+                        placeholder="Cebu, Bohol, Negros"
+                      />
+                    )}
                   </Field>
                 </div>
 
                 {/* ---------------------- supporting documents --------------------- */}
                 <div className="mt-8">
                   <div className="flex items-baseline justify-between gap-4">
-                    <span className="label text-ink">
-                      Supporting documents
-                    </span>
+                    <span className="label text-ink">Supporting documents</span>
                     <span className="label text-ink-soft tabular-nums">
                       {attachedRequired}/{requiredDocs.length} required
                     </span>
@@ -715,9 +748,7 @@ export default function Registration() {
                   ].map((group) => (
                     <div key={group.step} className="border-rule bg-sheet/60 border p-4">
                       <div className="flex items-center justify-between gap-4">
-                        <h4 className="label text-ink-soft">
-                          {group.title}
-                        </h4>
+                        <h4 className="label text-ink-soft">{group.title}</h4>
                         <button
                           type="button"
                           onClick={() => setStepId(group.step)}

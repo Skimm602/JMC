@@ -200,12 +200,7 @@ export default function Products() {
                 />
                 <Icon className={cx('h-6 w-6 shrink-0 transition-colors', on ? 'text-cool-600' : 'text-ink-soft')} />
                 <span className="min-w-0">
-                  <span
-                    className={cx(
-                      'label block transition-colors',
-                      on ? 'text-cool-600' : 'text-ink-soft',
-                    )}
-                  >
+                  <span className={cx('label block transition-colors', on ? 'text-cool-600' : 'text-ink-soft')}>
                     {f.series}
                   </span>
                   <span
@@ -217,9 +212,7 @@ export default function Products() {
                     {f.tagline}
                   </span>
                 </span>
-                {f.featured && (
-                  <span className="label text-cool-600 ml-auto shrink-0">Flagship</span>
-                )}
+                {f.featured && <span className="label text-cool-600 ml-auto shrink-0">Flagship</span>}
               </button>
             )
           })}
@@ -242,10 +235,7 @@ export default function Products() {
               {/* the datasheet block, set in the mono that matches the body face */}
               <dl className="border-rule mt-8 border-t">
                 {active.specs.map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="border-rule flex items-baseline justify-between gap-6 border-b py-3"
-                  >
+                  <div key={k} className="border-rule flex items-baseline justify-between gap-6 border-b py-3">
                     <dt className="label text-ink-soft">{k}</dt>
                     <dd className="text-ink font-mono text-sm font-medium tabular-nums">{v}</dd>
                   </div>
@@ -253,8 +243,8 @@ export default function Products() {
               </dl>
 
               <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
-                <ArrowLink href="#register">Datasheet</ArrowLink>
-                <ArrowLink href="#register">Request a quote</ArrowLink>
+                <ArrowLink href="/register">Datasheet</ArrowLink>
+                <ArrowLink href="/register">Request a quote</ArrowLink>
               </div>
             </div>
 
