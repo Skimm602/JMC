@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import LegalDialog from './LegalDialog.jsx'
+import LoginDialog from './LoginDialog.jsx'
 import { Button, Eyebrow, Rule, SectionHeading, cx } from './ui.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, ShieldIcon, SpinnerIcon, UploadIcon, XIcon } from './icons.jsx'
@@ -28,17 +30,12 @@ const COUNTRIES = [
 
 const ROLES = ['Owner / director', 'Project manager', 'Lead electrician', 'Procurement', 'Homeowner', 'Other']
 
-const CERTIFICATIONS = ['NABCEP', 'MCS', 'CEC Accredited', 'TÜV Rheinland', 'IEC 62446', 'Other / local scheme']
-
 /**
  * Named slots rather than one "drop your files here" bucket. Installers can
- * see exactly which document is missing without reading an error message,
- * which is the whole point of asking for four specific things.
+ * see exactly which document is missing without reading an error message.
  */
 const DOC_SLOTS = [
   { key: 'registration', label: 'Business registration', hint: 'DTI, SEC or equivalent', required: true },
-  { key: 'licence', label: 'Contractor licence', hint: 'Electrical or PV licence', required: true },
-  { key: 'insurance', label: 'Liability insurance', hint: 'Certificate of currency', required: true },
   { key: 'certs', label: 'PV certifications', hint: 'NABCEP, MCS, CEC…', required: false },
 ]
 
@@ -55,8 +52,6 @@ const EMPTY_FORM = {
   company: '',
   role: '',
   businessRegNo: '',
-  licenceNo: '',
-  licenceExpiry: '',
   yearsInstalling: '',
   annualVolume: '',
   serviceArea: '',
@@ -182,7 +177,6 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
 export default function Registration() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [isInstaller, setIsInstaller] = useState(false)
-  const [certs, setCerts] = useState([])
   const [docs, setDocs] = useState({})
   const [docErrors, setDocErrors] = useState({})
   const [terms, setTerms] = useState(false)
@@ -191,6 +185,8 @@ export default function Registration() {
   const [stepId, setStepId] = useState('account')
   const [visited, setVisited] = useState(['account'])
   const [status, setStatus] = useState('idle')
+  const [login, setLogin] = useState(false)
+  const [legalDoc, setLegalDoc] = useState(null)
   const successRef = useRef(null)
 
   // Submitting swaps the whole section out. Without moving focus, a keyboard
@@ -240,10 +236,8 @@ export default function Registration() {
     }
     if (id === 'verify') {
       if (!form.businessRegNo.trim()) e.businessRegNo = 'Enter your business registration number.'
-      if (!form.licenceNo.trim()) e.licenceNo = 'Enter your contractor licence number.'
-      if (!form.licenceExpiry) e.licenceExpiry = 'Enter the licence expiry date.'
       if (!form.yearsInstalling) e.yearsInstalling = 'Select your experience level.'
-      if (attachedRequired < requiredDocs.length) e.documents = 'Attach all three required documents.'
+      if (attachedRequired < requiredDocs.length) e.documents = 'Attach your business registration document.'
     }
     if (id === 'review') {
       if (!terms) e.terms = 'Please accept the terms to continue.'
@@ -293,7 +287,6 @@ export default function Registration() {
   const reset = () => {
     setForm(EMPTY_FORM)
     setIsInstaller(false)
-    setCerts([])
     setDocs({})
     setDocErrors({})
     setTerms(false)
@@ -324,7 +317,7 @@ export default function Registration() {
           </h2>
           <p className="text-ink-soft mt-4 leading-relaxed">
             Thanks {form.fullName.split(' ')[0] || 'there'} — your reference is{' '}
-            <span className="text-ink font-mono font-medium">JMC-2026-4821</span>. A confirmation is on its way to{' '}
+            <span className="text-ink font-mono font-medium">VIP-2026-4821</span>. A confirmation is on its way to{' '}
             <span className="text-ink">{form.email}</span>.
           </p>
 
@@ -351,15 +344,28 @@ export default function Registration() {
 
           {isInstaller && (
             <p className="text-ink-soft mt-7 text-sm leading-relaxed">
-              Trade verification usually takes 1–2 business days. You can sign in and browse at the Registered tier
+              Trade verification usually takes 1–2 business days. You can log in and browse at the Registered tier
               in the meantime.
             </p>
           )}
 
-          <Button type="button" variant="outline" onClick={reset} className="mt-9">
-            Register another account
-          </Button>
+          {/* The account exists now, so the next errand is getting into it —
+              that becomes the primary action, and registering again drops to
+              the quieter one. */}
+          <p className="text-ink-soft mt-9 text-sm leading-relaxed">Click to log in to your new account.</p>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button type="button" size="lg" onClick={() => setLogin(true)}>
+              Log in
+              <ArrowRightIcon className="h-4 w-4" />
+            </Button>
+            <Button type="button" variant="outline" size="lg" onClick={reset}>
+              Register another account
+            </Button>
+          </div>
         </div>
+
+        <LoginDialog open={login} onClose={() => setLogin(false)} />
       </section>
     )
   }
@@ -385,7 +391,7 @@ export default function Registration() {
           <div className="border-rule flex gap-3 border p-4">
             <ShieldIcon className="text-cool-600 h-5 w-5 shrink-0" />
             <p className="text-ink-soft text-xs leading-relaxed">
-              Documents are used for trade verification only and are never shared outside JMC. You can request
+              Documents are used for trade verification only and are never shared outside VIP. You can request
               deletion at any time.
             </p>
           </div>
@@ -579,14 +585,6 @@ export default function Registration() {
                     {(p) => <TextInput {...p} value={form.businessRegNo} onChange={set('businessRegNo')} placeholder="DTI / SEC / EIN" />}
                   </Field>
 
-                  <Field label="Contractor licence no." required error={errors.licenceNo}>
-                    {(p) => <TextInput {...p} value={form.licenceNo} onChange={set('licenceNo')} placeholder="PEE-000000" />}
-                  </Field>
-
-                  <Field label="Licence expiry" required error={errors.licenceExpiry}>
-                    {(p) => <TextInput {...p} type="date" value={form.licenceExpiry} onChange={set('licenceExpiry')} />}
-                  </Field>
-
                   <Field label="Years installing PV" required error={errors.yearsInstalling}>
                     {(p) => (
                       <Select {...p} value={form.yearsInstalling} onChange={set('yearsInstalling')}>
@@ -615,22 +613,6 @@ export default function Registration() {
                     {(p) => <TextInput {...p} value={form.serviceArea} onChange={set('serviceArea')} placeholder="Cebu, Bohol, Negros" />}
                   </Field>
                 </div>
-
-                <fieldset className="mt-7">
-                  <legend className="text-ink mb-4 block label">
-                    Certifications held <span className="text-ink-soft">optional</span>
-                  </legend>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {CERTIFICATIONS.map((c) => (
-                      <Checkbox
-                        key={c}
-                        label={c}
-                        checked={certs.includes(c)}
-                        onChange={(on) => setCerts((prev) => (on ? [...prev, c] : prev.filter((x) => x !== c)))}
-                      />
-                    ))}
-                  </div>
-                </fieldset>
 
                 {/* ---------------------- supporting documents --------------------- */}
                 <div className="mt-8">
@@ -710,10 +692,9 @@ export default function Registration() {
                             title: 'Verification',
                             rows: [
                               ['Business reg.', form.businessRegNo],
-                              ['Licence', form.licenceNo],
-                              ['Expiry', form.licenceExpiry],
                               ['Experience', form.yearsInstalling],
-                              ['Certifications', certs.length ? certs.join(', ') : '—'],
+                              ['Annual volume', form.annualVolume || '—'],
+                              ['Service area', form.serviceArea || '—'],
                               ['Documents', `${Object.values(docs).filter(Boolean).length} attached`],
                             ],
                           },
@@ -757,6 +738,30 @@ export default function Registration() {
                     error={errors.terms}
                     label="I accept the terms of sale and privacy policy"
                   />
+
+                  {/* Below the checkbox rather than inside its label: a link
+                      nested in a <label> toggles the box on the way through,
+                      so opening the document would tick the consent you had
+                      not read yet. */}
+                  <p className="text-ink-soft -mt-1 pl-8 text-xs leading-relaxed">
+                    Read the{' '}
+                    <button
+                      type="button"
+                      onClick={() => setLegalDoc('terms')}
+                      className="text-ink border-b border-current/40 pb-px font-medium transition-colors hover:border-current"
+                    >
+                      terms of sale
+                    </button>{' '}
+                    and the{' '}
+                    <button
+                      type="button"
+                      onClick={() => setLegalDoc('privacy')}
+                      className="text-ink border-b border-current/40 pb-px font-medium transition-colors hover:border-current"
+                    >
+                      privacy policy
+                    </button>
+                    .
+                  </p>
                   <Checkbox
                     checked={updates}
                     onChange={setUpdates}
@@ -802,6 +807,8 @@ export default function Registration() {
           </fieldset>
         </form>
       </div>
+
+      <LegalDialog doc={legalDoc} onSelect={setLegalDoc} onClose={() => setLegalDoc(null)} />
     </section>
   )
 }

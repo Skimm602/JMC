@@ -32,11 +32,11 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata = {
-  title: 'JMC Solar — Inverters & Energy Storage',
+  title: 'VIP Solar — Inverters & Energy Storage',
   description:
-    'JMC Solar engineers grid-tie, hybrid and storage inverters for residential and commercial solar. Join the certified installer program.',
+    'VIP Solar engineers grid-tie, hybrid and storage inverters for residential and commercial solar. Join the certified installer program.',
   openGraph: {
-    title: 'JMC Solar — Inverters & Energy Storage',
+    title: 'VIP Solar — Inverters & Energy Storage',
     description:
       'Grid-tie, hybrid and storage inverters engineered for thermal headroom and clean commissioning.',
     type: 'website',

@@ -1,9 +1,9 @@
 {
-  "name": "jmc",
+  "name": "vip-solar",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "JMC Solar — inverter and energy storage systems, with installer partner registration",
+  "description": "VIP Solar — inverter and energy storage systems, with installer partner registration",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

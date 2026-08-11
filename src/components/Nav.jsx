@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Logo from './Logo.jsx'
+import LoginDialog from './LoginDialog.jsx'
+import { PRODUCT_NAV } from './Products.jsx'
 import { Button, cx } from './ui.jsx'
-import { MenuIcon, XIcon } from './icons.jsx'
+import { ChevronDownIcon, MenuIcon, XIcon } from './icons.jsx'
 
 const links = [
-  { label: 'Inverters', href: '#products' },
   { label: 'Sizing', href: '#sizing' },
   { label: 'Engineering', href: '#why' },
   { label: 'Installer program', href: '#installers' },
@@ -16,6 +17,13 @@ const links = [
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const [login, setLogin] = useState(false)
+  const [products, setProducts] = useState(false)
+  const [mobileProducts, setMobileProducts] = useState(false)
+  const productsRef = useRef(null)
+  const triggerRef = useRef(null)
+  const itemRefs = useRef([])
+  const focusFirstRef = useRef(false)
 
   // The header starts transparent over the hero and only takes a surface
   // once you leave the fold — keeps the first impression uncluttered.
@@ -34,6 +42,57 @@ export default function Nav() {
     }
   }, [open])
 
+  // A menu that stays open when you click elsewhere or scroll away reads as
+  // stuck rather than open. Escape returns focus to the trigger, because that
+  // is where a keyboard user was before the menu took it.
+  useEffect(() => {
+    if (!products) return
+
+    const onPointerDown = (e) => {
+      if (!productsRef.current?.contains(e.target)) setProducts(false)
+    }
+    const onKeyDown = (e) => {
+      if (e.key !== 'Escape') return
+      setProducts(false)
+      triggerRef.current?.focus()
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [products])
+
+  // Focus has to wait for the menu to exist, and an effect is the only point
+  // that is reliably after the commit — a rAF can land either side of it.
+  useEffect(() => {
+    if (products && focusFirstRef.current) itemRefs.current[0]?.focus()
+    focusFirstRef.current = false
+  }, [products])
+
+  /**
+   * Picking the family you are already on leaves the hash unchanged, so no
+   * hashchange fires and the menu appears to do nothing. Saying so explicitly
+   * keeps every item behaving the same way.
+   */
+  const goToFamily = (id) => {
+    if (window.location.hash === `#product-${id}`) {
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
+    }
+  }
+
+  // Down from the trigger goes into the menu; up and down walk it. Without
+  // this the menu is a tab stop that swallows five links.
+  const onMenuKeyDown = (e, i) => {
+    const step = { ArrowDown: 1, ArrowUp: -1 }[e.key]
+    if (!step) return
+    e.preventDefault()
+    const next = (i + step + PRODUCT_NAV.length) % PRODUCT_NAV.length
+    itemRefs.current[next]?.focus()
+  }
+
   return (
     <header
       className={cx(
@@ -50,6 +109,80 @@ export default function Nav() {
           <Logo />
 
           <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
+            <div ref={productsRef} className="relative">
+              <button
+                ref={triggerRef}
+                type="button"
+                aria-expanded={products}
+                aria-controls="products-menu"
+                onClick={() => setProducts((v) => !v)}
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowDown') return
+                  e.preventDefault()
+                  focusFirstRef.current = true
+                  setProducts(true)
+                }}
+                className={cx(
+                  'group relative flex items-center gap-1.5 py-1 text-sm font-medium transition-colors',
+                  products ? 'text-ink' : 'text-ink-soft hover:text-ink',
+                )}
+              >
+                Products
+                <ChevronDownIcon
+                  className={cx('h-3.5 w-3.5 transition-transform duration-200', products && 'rotate-180')}
+                />
+                <span
+                  aria-hidden="true"
+                  className={cx(
+                    'bg-cool-600 absolute -bottom-0.5 left-0 h-px transition-all duration-300 ease-out',
+                    products ? 'w-full' : 'w-0 group-hover:w-full',
+                  )}
+                />
+              </button>
+
+              {products && (
+                <div
+                  id="products-menu"
+                  className="animate-reveal border-rule bg-glare absolute top-full left-0 z-10 mt-4 w-[23rem] border p-1.5"
+                >
+                  {PRODUCT_NAV.map((f, i) => {
+                    const Icon = f.icon
+                    return (
+                      <a
+                        key={f.id}
+                        href={`#product-${f.id}`}
+                        ref={(el) => {
+                          itemRefs.current[i] = el
+                        }}
+                        onClick={() => {
+                          setProducts(false)
+                          goToFamily(f.id)
+                        }}
+                        onKeyDown={(e) => onMenuKeyDown(e, i)}
+                        className="hover:bg-sheet group/item flex items-start gap-3.5 px-3.5 py-3 transition-colors"
+                      >
+                        <Icon className="text-ink-soft group-hover/item:text-cool-600 mt-0.5 h-5 w-5 shrink-0 transition-colors" />
+                        <span className="min-w-0">
+                          <span className="label text-ink-soft block">{f.series}</span>
+                          <span className="text-ink mt-1 block text-sm font-medium">{f.name}</span>
+                          <span className="text-ink-soft mt-0.5 block text-xs">{f.tagline}</span>
+                        </span>
+                      </a>
+                    )
+                  })}
+
+                  <a
+                    href="#products"
+                    onClick={() => setProducts(false)}
+                    className="border-rule text-ink-soft hover:text-ink mt-1.5 flex items-center justify-between border-t px-3.5 py-3 text-xs font-medium transition-colors"
+                  >
+                    See the full range
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </div>
+              )}
+            </div>
+
             {links.map((l) => (
               <a
                 key={l.href}
@@ -67,8 +200,8 @@ export default function Nav() {
           </nav>
 
           <div className="hidden items-center gap-4 lg:flex">
-            <Button as="a" href="#register" variant="ghost" size="sm">
-              Sign in
+            <Button variant="ghost" size="sm" onClick={() => setLogin(true)}>
+              Log in
             </Button>
             <Button as="a" href="#register" size="sm">
               Create account
@@ -95,11 +228,53 @@ export default function Nav() {
         id="mobile-nav"
         inert={!open}
         className={cx(
-          'border-rule bg-glare/97 overflow-hidden border-t backdrop-blur-md transition-[max-height,opacity] duration-300 lg:hidden',
-          open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0',
+          'border-rule bg-glare/97 border-t backdrop-blur-md transition-[max-height,opacity] duration-300 lg:hidden',
+          // The product group can push the sheet past a fixed height, so it
+          // scrolls once open rather than clipping the last link. Closed, it
+          // still has to clip — that is what makes the collapse animate.
+          open
+            ? 'max-h-[calc(100dvh-var(--spacing-nav))] overflow-y-auto opacity-100'
+            : 'max-h-0 overflow-hidden opacity-0',
         )}
       >
         <nav aria-label="Mobile" className="rail flex flex-col py-2">
+          <div className="border-rule border-b">
+            <button
+              type="button"
+              aria-expanded={mobileProducts}
+              onClick={() => setMobileProducts((v) => !v)}
+              className="text-ink hover:text-ink-soft flex w-full items-center justify-between py-4 text-sm font-medium transition-colors"
+            >
+              Products
+              <ChevronDownIcon
+                className={cx('h-4 w-4 transition-transform duration-200', mobileProducts && 'rotate-180')}
+              />
+            </button>
+
+            {mobileProducts && (
+              <div className="animate-reveal pb-3">
+                {PRODUCT_NAV.map((f) => {
+                  const Icon = f.icon
+                  return (
+                    <a
+                      key={f.id}
+                      href={`#product-${f.id}`}
+                      onClick={() => {
+                        setOpen(false)
+                        setMobileProducts(false)
+                        goToFamily(f.id)
+                      }}
+                      className="text-ink-soft hover:text-ink flex items-center gap-3 py-2.5 pl-3 text-sm transition-colors"
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {f.name}
+                    </a>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
           {links.map((l) => (
             <a
               key={l.href}
@@ -110,11 +285,23 @@ export default function Nav() {
               {l.label}
             </a>
           ))}
-          <Button as="a" href="#register" onClick={() => setOpen(false)} className="mt-4 mb-4 w-full">
+          <Button as="a" href="#register" onClick={() => setOpen(false)} className="mt-4 w-full">
             Create account
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOpen(false)
+              setLogin(true)
+            }}
+            className="mt-3 mb-4 w-full"
+          >
+            Log in
           </Button>
         </nav>
       </div>
+
+      <LoginDialog open={login} onClose={() => setLogin(false)} />
     </header>
   )
 }

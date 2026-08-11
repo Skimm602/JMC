@@ -12,7 +12,7 @@ const columns = [
   },
   {
     title: 'Company',
-    links: ['About JMC', 'Manufacturing', 'Careers', 'Newsroom', 'Contact'],
+    links: ['About VIP', 'Manufacturing', 'Careers', 'Newsroom', 'Contact'],
   },
   {
     title: 'Support',
@@ -38,7 +38,7 @@ export default function Footer() {
               </div>
               <div className="flex gap-3 text-xs">
                 <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Email</dt>
-                <dd className="text-glint font-mono">installers@jmcsolar.example</dd>
+                <dd className="text-glint font-mono">installers@vipsolar.example</dd>
               </div>
             </dl>
           </div>
@@ -67,7 +67,7 @@ export default function Footer() {
         <Rule tone="shade" className="my-12" />
 
         <div className="text-glint-soft flex flex-col gap-4 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} JMC Solar. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} VIP Solar. All rights reserved.</p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {['Privacy', 'Terms of sale', 'Cookies', 'Compliance'].map((l) => (
               <li key={l}>

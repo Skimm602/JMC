@@ -12,7 +12,7 @@ export default function InverterArt({ className = '' }) {
   const fins = Array.from({ length: 17 }, (_, i) => 66 + i * 14)
 
   return (
-    <svg viewBox="0 0 360 470" className={className} role="img" aria-label="JMC H6 hybrid inverter, front view">
+    <svg viewBox="0 0 360 470" className={className} role="img" aria-label="VIP H6 hybrid inverter, front view">
       <defs>
         <linearGradient id="chassis" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#3a4552" />
@@ -63,7 +63,7 @@ export default function InverterArt({ className = '' }) {
         fontSize="11"
         letterSpacing="2.4"
       >
-        JMC H6-10K HYBRID
+        VIP H6-10K HYBRID
       </text>
 
       {/* display */}
@@ -156,7 +156,7 @@ export default function InverterArt({ className = '' }) {
         letterSpacing="5"
         opacity="0.85"
       >
-        JMC
+        VIP
       </text>
 
       {/* conduit knockouts on the underside */}

@@ -37,7 +37,7 @@ export default function Logo({ className = '', compact = false, tone = 'ink' }) 
               onShade ? 'text-glint' : 'text-ink'
             }`}
           >
-            JMC
+            VIP
           </span>
           <span
             className={`mt-1 block font-mono text-[9px] tracking-[0.3em] uppercase ${
@@ -48,7 +48,7 @@ export default function Logo({ className = '', compact = false, tone = 'ink' }) 
           </span>
         </span>
       )}
-      <span className="sr-only">JMC Solar — home</span>
+      <span className="sr-only">VIP Solar — home</span>
     </a>
   )
 }

@@ -1,6 +1,6 @@
-# JMC Solar
+# VIP Solar
 
-Marketing site and partner-registration front end for JMC Solar — grid-tie, hybrid
+Marketing site and partner-registration front end for VIP Solar — grid-tie, hybrid
 and storage inverters, plus the installer program sign-up.
 
 ## Stack
@@ -41,7 +41,7 @@ src/
     Hero.jsx               headline, CTAs, spec rail
     InverterArt.jsx        vector product render (no image assets)
     Products.jsx           four product families
-    WhyJmc.jsx             differentiators + numbers band
+    WhyVip.jsx             differentiators + numbers band
     InstallerProgram.jsx   tiers and the "have these ready" prompt
     Registration.jsx       account form + installer verification     [client]
     Footer.jsx             sitemap and contact

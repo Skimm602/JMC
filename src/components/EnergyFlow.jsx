@@ -19,7 +19,7 @@ export default function EnergyFlow({ className = '' }) {
   const nodes = [
     { x: 90, label: 'Irradiance', sub: '1041 W/m²' },
     { x: 355, label: 'Array', sub: '24 × 440 W' },
-    { x: 620, label: 'JMC H6-10K', sub: 'η 98.6%', highlight: true },
+    { x: 620, label: 'VIP H6-10K', sub: 'η 98.6%', highlight: true },
     { x: 885, label: 'Loads', sub: '6.1 kW' },
     { x: 1120, label: 'Grid', sub: 'export 2.1 kW' },
   ]

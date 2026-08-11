@@ -3,7 +3,7 @@ import SectionIndex from '@/components/SectionIndex.jsx'
 import Hero from '@/components/Hero.jsx'
 import Products from '@/components/Products.jsx'
 import Sizing from '@/components/Sizing.jsx'
-import WhyJmc from '@/components/WhyJmc.jsx'
+import WhyVip from '@/components/WhyVip.jsx'
 import InstallerProgram from '@/components/InstallerProgram.jsx'
 import Registration from '@/components/Registration.jsx'
 import Footer from '@/components/Footer.jsx'
@@ -25,7 +25,7 @@ export default function Home() {
         <Hero />
         <Products />
         <Sizing />
-        <WhyJmc />
+        <WhyVip />
         <InstallerProgram />
         <Registration />
       </main>

@@ -171,7 +171,7 @@ export default function Sizing() {
           <p className="text-glint-soft flex gap-3 text-xs leading-relaxed">
             <InfoIcon aria-hidden="true" className="text-cool-400 mt-px h-4 w-4 shrink-0" />
             <span>
-              The readout is not connected yet. These are the fields JMC&rsquo;s sizing service will return —
+              The readout is not connected yet. These are the fields VIP&rsquo;s sizing service will return —
               no figure is estimated in the browser.
             </span>
           </p>

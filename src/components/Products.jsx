@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import EnergyFlow from './EnergyFlow.jsx'
 import InverterArt from './InverterArt.jsx'
 import { ArrowLink, Eyebrow, Section, SectionHeading, cx } from './ui.jsx'
@@ -78,10 +78,50 @@ const FAMILIES = [
   },
 ]
 
+/**
+ * What the header dropdown lists. Derived from FAMILIES rather than restated
+ * so the menu and the section can never disagree about what the range is.
+ */
+export const PRODUCT_NAV = FAMILIES.map(({ id, icon, series, name, tagline }) => ({
+  id,
+  icon,
+  series,
+  name,
+  tagline,
+}))
+
 export default function Products() {
   const [activeId, setActiveId] = useState('h6')
   const active = FAMILIES.find((f) => f.id === activeId)
   const tabRefs = useRef([])
+
+  /**
+   * The header dropdown links to `#product-h6` rather than plain `#products`,
+   * so picking a family from the menu lands on that family instead of dumping
+   * you at the top of the range to find it again. No element carries that id,
+   * which is deliberate — the browser does nothing with the hash and we do the
+   * selecting and the scrolling ourselves. It also makes the choice a real URL
+   * someone can send to a colleague.
+   */
+  useEffect(() => {
+    const fromHash = () => {
+      const match = /^#product-([\w-]+)$/.exec(window.location.hash)
+      if (!match) return
+      if (!FAMILIES.some((f) => f.id === match[1])) return
+
+      setActiveId(match[1])
+      const section = document.getElementById('products')
+      if (!section) return
+      // An explicit behaviour overrides the stylesheet's reduced-motion reset,
+      // so the preference has to be read back here.
+      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      section.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' })
+    }
+
+    fromHash()
+    window.addEventListener('hashchange', fromHash)
+    return () => window.removeEventListener('hashchange', fromHash)
+  }, [])
 
   /**
    * Declaring role="tablist" is a promise that arrow keys move between tabs;

@@ -4,9 +4,9 @@ import { Button } from './ui.jsx'
 /** Reads as the legend of a datasheet figure, because that is what it is. */
 const LEGEND = [
   {
-    key: 'jmc',
+    key: 'vip',
     mark: 'h-[3px] w-6 bg-cool-600',
-    term: 'JMC H6',
+    term: 'VIP H6',
     detail: '100 % to 45 °C, 78 % at 60 °C',
   },
   {

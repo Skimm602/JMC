@@ -42,7 +42,7 @@ const NUMBERS = [
   { value: '<24', unit: 'h', label: 'RMA response' },
 ]
 
-export default function WhyJmc() {
+export default function WhyVip() {
   return (
     <Section id="why" className="band-shade">
       <div className="grid gap-8 lg:grid-cols-12">

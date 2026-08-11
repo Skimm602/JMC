@@ -4,7 +4,7 @@
  * Every inverter datasheet contains a derating curve and almost every
  * manufacturer buries it in an appendix, because it is the chart that shows
  * what the hardware actually does once a roof gets hot. Putting it in the
- * hero is the whole argument: JMC holds rated output to 45 °C while the
+ * hero is the whole argument: VIP holds rated output to 45 °C while the
  * class average has already started giving power back at 35 °C.
  *
  * The vertical marker is the point of the chart for a Philippine installer —
@@ -28,7 +28,7 @@ const sx = (t) => X0 + ((t - T_MIN) / (T_MAX - T_MIN)) * (X1 - X0)
 const sy = (o) => Y1 - ((o - O_MIN) / (O_MAX - O_MIN)) * (Y1 - Y0)
 
 /* [ambient °C, % of rated output] */
-const JMC = [
+const VIP = [
   [20, 100],
   [45, 100],
   [60, 78],
@@ -74,7 +74,7 @@ export default function DeratingCurve({ className = '' }) {
       viewBox="0 0 900 418"
       className={className}
       role="img"
-      aria-label="Derating curve. JMC inverters hold 100 percent of rated output up to 45 degrees Celsius ambient and 78 percent at 60 degrees. The class average begins derating at 35 degrees and reaches 55 percent at 60 degrees. Cebu's afternoon design condition of 34 degrees falls inside JMC's flat region."
+      aria-label="Derating curve. VIP inverters hold 100 percent of rated output up to 45 degrees Celsius ambient and 78 percent at 60 degrees. The class average begins derating at 35 degrees and reaches 55 percent at 60 degrees. Cebu's afternoon design condition of 34 degrees falls inside VIP's flat region."
     >
       {/* ------------------------------- grid ------------------------------- */}
       <g className="stroke-hush/50">
@@ -144,7 +144,7 @@ export default function DeratingCurve({ className = '' }) {
       </g>
 
       {/* ------------------------------ curves ------------------------------ */}
-      {/* class average first, then JMC drawing over it holding flat */}
+      {/* class average first, then VIP drawing over it holding flat */}
       <path
         d={line(CLASS_AVG)}
         pathLength="1"
@@ -158,7 +158,7 @@ export default function DeratingCurve({ className = '' }) {
         style={{ animationDelay: '0.15s' }}
       />
       <path
-        d={line(JMC)}
+        d={line(VIP)}
         pathLength="1"
         fill="none"
         strokeWidth="3"
@@ -179,7 +179,7 @@ export default function DeratingCurve({ className = '' }) {
           y={sy(100) + 26}
           className={`fill-cool-700 font-mono font-medium ${TICK_TYPE}`}
         >
-          JMC — flat to 45 °C
+          VIP — flat to 45 °C
         </text>
         <text x={sx(49)} y={sy(64)} className={`fill-hot-600 font-mono ${TICK_TYPE}`}>
           class average
