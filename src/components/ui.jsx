@@ -81,10 +81,11 @@ export function Button({ as = 'button', variant = 'primary', size = 'md', classN
  * affordance, so a secondary navigation link no longer has to borrow a pole
  * of a two-colour palette that means something specific elsewhere.
  */
-export function ArrowLink({ href, children, className, tone = 'ink' }) {
+export function ArrowLink({ href, children, className, tone = 'ink', ...rest }) {
   return (
     <a
       href={href}
+      {...rest}
       className={cx(
         'group inline-flex items-center gap-2 text-sm font-medium transition-colors',
         tone === 'shade' ? 'text-glint-soft hover:text-glint' : 'text-ink-soft hover:text-ink',

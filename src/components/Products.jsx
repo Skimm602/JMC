@@ -2,79 +2,110 @@
 
 import { useEffect, useRef, useState } from 'react'
 import EnergyFlow from './EnergyFlow.jsx'
-import InverterArt from './InverterArt.jsx'
 import { ArrowLink, Eyebrow, Section, SectionHeading, cx } from './ui.jsx'
-import { GridTieIcon, HybridIcon, BatteryIcon, MicroIcon } from './icons.jsx'
+import { GridTieIcon, HybridIcon, BatteryIcon } from './icons.jsx'
 
+/**
+ * The range as HYXiPOWER actually publishes it. Every number here is read off
+ * the manufacturer's datasheet rather than the product page — the pages round
+ * and occasionally contradict the PDF, and the PDF is what an installer will
+ * be holding when something does not match on site.
+ *
+ * `datasheet` and `manual` point at HYXiPOWER's own files rather than copies
+ * hosted here, so a revision upstream cannot leave this page quietly serving
+ * last year's specification.
+ */
 const FAMILIES = [
   {
-    id: 's4',
-    icon: GridTieIcon,
-    series: 'S4 Series',
-    name: 'Grid-tie string inverters',
-    tagline: 'The volume workhorse',
-    art: true,
-    copy: 'Single- and three-phase units with a wide MPPT window, sized for everything from a shaded terrace roof to a 125 kW commercial run. The one your crew will fit most weeks.',
-    specs: [
-      ['Power range', '3 – 125 kW'],
-      ['Phases', '1φ / 3φ'],
-      ['MPPT trackers', '2 – 6'],
-      ['Peak efficiency', '98.4 %'],
-      ['Max DC input', '1100 V'],
-      ['Enclosure', 'IP66'],
-    ],
-  },
-  {
-    id: 'h6',
+    id: 'h-ls',
     icon: HybridIcon,
-    series: 'H6 Series',
-    name: 'Hybrid inverters',
-    tagline: 'Storage-ready conversion',
+    series: 'H-LS Series',
+    models: 'HYX-H6K-LS · HYX-H8K-LS',
+    name: 'Low-voltage hybrid inverter',
+    tagline: '48 V battery, single-phase',
     featured: true,
-    art: true,
-    copy: 'Sub-10 ms islanding, so backup transfer never trips sensitive loads. Pre-paired with V-Stack firmware — battery commissioning becomes a checkbox rather than a project.',
+    photo: '/products/h6-8k-ls.png',
+    copy: 'Starts making power at 60 V, so the array is working at dawn and still working under cloud. Two AC outputs split critical loads from the rest, up to six units run in parallel, and the 90 – 280 V grid window covers provincial supply that a narrower inverter would trip on.',
     specs: [
-      ['Power range', '4 – 12 kW'],
-      ['Battery voltage', '48 V DC'],
-      ['Backup transfer', '< 10 ms'],
-      ['Peak efficiency', '98.6 %'],
-      ['Standard', 'UL 1741-SB'],
-      ['Enclosure', 'IP65'],
+      ['Rated output', '6.0 / 8.0 kW'],
+      ['Battery voltage', '48 V · 40 – 60 V'],
+      ['Max charge / discharge', '125 / 165 A'],
+      ['MPPT', '2 × 1 string · 60 – 450 V'],
+      ['Grid range', '90 – 280 V'],
+      ['Max efficiency', '97.0 %'],
+      ['Switch time', '20 ms'],
+      ['Enclosure', 'IP66 · 16 kg'],
+      ['Warranty', '5 yr'],
     ],
+    datasheet: 'https://webfile.hyxipower.com/soft/20260513/HYX-H(6-8)K-LS_Datasheet_V1.3-20260402_EN.pdf',
+    manual: 'https://webfile.hyxipower.com/soft/20260618/UM_HYX-H(6-8)K-LS_User-Manual_V1.2-20260608_EN.pdf',
   },
   {
-    id: 'vstack',
+    id: 'h-hs',
+    icon: GridTieIcon,
+    series: 'H-HS Series',
+    models: 'HYX-H6K-HS · HYX-H8K-HS',
+    name: 'High-voltage hybrid inverter',
+    tagline: 'High-voltage storage, single-phase',
+    photo: '/products/h6-8k-hs.png',
+    copy: 'The high-voltage half of the same platform: a 80 – 490 V battery bus, 200 % DC oversizing and sub-10 ms transfer. AFCI detection reaches 300 m of string and shuts down in half a second, which is the part that matters on a roof nobody can reach quickly.',
+    specs: [
+      ['Rated output', '6.0 / 8.0 kW'],
+      ['Max apparent power', '6.6 / 8.8 kVA'],
+      ['Max PV input', '12.0 / 16.0 kW'],
+      ['Battery voltage', '80 – 490 V · LiFePO₄'],
+      ['Max charge / discharge', '35 A · 8.0 kW'],
+      ['Max efficiency', '98.6 %'],
+      ['Switch time', '< 10 ms'],
+      ['Enclosure', 'IP65 · 20 kg'],
+    ],
+    datasheet: 'https://webfile.hyxipower.com/soft/20250226/DS_HYX-H(3-8)K-HS_Datasheet_V1.2-2024_EN.pdf',
+    manual: 'https://webfile.hyxipower.com/soft/20250226/UM_HYX-H(3-8)K-HS_User-Manual_V1.4-202407_EN(AU)1.pdf',
+  },
+  {
+    id: 'e-h3',
     icon: BatteryIcon,
-    series: 'V-Stack',
-    name: 'Battery storage',
-    tagline: 'Stack it as the job grows',
-    art: false,
-    copy: 'LFP modules in 5 kWh steps to 40 kWh. Same connector set and same commissioning app as the inverters, so nothing about the install is a separate skill.',
+    series: 'E-H3 Series',
+    models: 'HYX-E50-H3 · HYX-E100-H3',
+    name: 'High-voltage battery',
+    tagline: 'Wall or floor, stacks to 20 kWh',
+    photo: '/products/e50-100-h3.png',
+    copy: 'LiFePO₄ packs with the breaker, fuse and cell-temperature sensing already inside, so the install is a mount and a pair of cables rather than a cabinet build. Wall-mounted where there is wall, floor-mounted where there is not.',
     specs: [
-      ['Capacity', '5 – 40 kWh'],
-      ['Chemistry', 'LFP'],
-      ['Cycle life', '6000 @ 80% DoD'],
-      ['Round-trip', '96 %'],
-      ['Modularity', '5 kWh steps'],
-      ['Warranty', '10 yr'],
+      ['Usable capacity', '4.6 / 9.36 kWh'],
+      ['Total capacity', '5.12 / 10.4 kWh'],
+      ['Nominal voltage', '102.4 / 208 V'],
+      ['Cell type', 'LiFePO₄'],
+      ['Cycle life', '> 6000 · 70 % EOL'],
+      ['Max charge / discharge', '30 A · 60 A for 10 s'],
+      ['Enclosure', 'IP65'],
+      ['Weight', '56 / 105 kg'],
     ],
+    datasheet:
+      'https://webfile.hyxipower.com/soft/20260123/DS_HYX-E(50-100)-H3_Datasheet_V1.5-20260120_EN-(Preliminary).pdf',
+    manual: 'https://webfile.hyxipower.com/soft/20260429/UM_HYX-E(50-100)-H3_User-manual_V1.6-20260427_EN.pdf',
   },
   {
-    id: 'm1',
-    icon: MicroIcon,
-    series: 'M1 Series',
-    name: 'Microinverters',
-    tagline: 'For roofs that fight back',
-    art: false,
-    copy: 'Panel-level conversion with per-module reporting. The retrofit answer when the geometry is awkward enough that string design stops being worth the argument.',
+    id: 'e-l',
+    icon: BatteryIcon,
+    series: 'E-L Series',
+    models: 'HYX-E160-L',
+    name: 'Low-voltage battery',
+    tagline: '16 kWh a unit, wheel it in',
+    photo: '/products/e160-l.png',
+    copy: '314 Ah at 51.2 V in a cabinet one person can move on its own wheels, and fifteen of them in parallel if the load asks for it. The commercial answer where a stack of small wall units would be fifteen sets of terminations to inspect.',
     specs: [
-      ['Output', '400 – 800 W'],
-      ['Panels per unit', '1 – 2'],
-      ['Peak efficiency', '97.2 %'],
-      ['Monitoring', 'Per-panel'],
-      ['Enclosure', 'IP67'],
-      ['Warranty', '25 yr'],
+      ['Rated energy', '16.07 kWh'],
+      ['Rated voltage', '51.2 V DC'],
+      ['Rated capacity', '314 Ah'],
+      ['Continuous charge / discharge', '157 A'],
+      ['Max charge / discharge', '200 A'],
+      ['Cycle life', '6000 · 90 % DoD, 80 % SOH'],
+      ['Parallel', 'Up to 15 units · 241 kWh'],
+      ['Weight', '130 kg'],
     ],
+    datasheet: 'https://webfile.hyxipower.com/soft/20260416/HYX-E160-L_Datasheet_V1.0-20260123_EN.pdf',
+    manual: 'https://webfile.hyxipower.com/soft/20260513/UM_HYX-E160-L_User-manual_V1.0-20260330_EN.pdf',
   },
 ]
 
@@ -91,12 +122,12 @@ export const PRODUCT_NAV = FAMILIES.map(({ id, icon, series, name, tagline }) =>
 }))
 
 export default function Products() {
-  const [activeId, setActiveId] = useState('h6')
+  const [activeId, setActiveId] = useState('h-ls')
   const active = FAMILIES.find((f) => f.id === activeId)
   const tabRefs = useRef([])
 
   /**
-   * The header dropdown links to `#product-h6` rather than plain `#products`,
+   * The header dropdown links to `#product-h-ls` rather than plain `#products`,
    * so picking a family from the menu lands on that family instead of dumping
    * you at the top of the range to find it again. No element carries that id,
    * which is deliberate — the browser does nothing with the hash and we do the
@@ -230,6 +261,10 @@ export default function Products() {
             <div className="min-w-0">
               <p className="label text-ink-soft">{active.series}</p>
               <h3 className="display-wide text-display-3 text-ink mt-2.5 font-semibold">{active.name}</h3>
+              {/* The model numbers are what gets typed into a quote request, so
+                  they are set in the mono face and given their own line rather
+                  than buried in the prose. */}
+              <p className="text-ink-soft mt-2 font-mono text-sm">{active.models}</p>
               <p className="text-ink-soft max-w-measure mt-4 leading-relaxed">{active.copy}</p>
 
               {/* the datasheet block, set in the mono that matches the body face */}
@@ -242,17 +277,29 @@ export default function Products() {
                 ))}
               </dl>
 
+              {/* Two of these leave the site and one does not, so the two that
+                  do say where they go. Manufacturer files open in their own tab
+                  rather than replacing a page someone was reading. */}
               <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
-                <ArrowLink href="/register">Datasheet</ArrowLink>
+                <ArrowLink href={active.datasheet} target="_blank" rel="noopener noreferrer">
+                  Datasheet (PDF)
+                </ArrowLink>
+                <ArrowLink href={active.manual} target="_blank" rel="noopener noreferrer">
+                  User manual (PDF)
+                </ArrowLink>
                 <ArrowLink href="/register">Request a quote</ArrowLink>
               </div>
             </div>
 
-            {active.art && (
-              <div className="hidden shrink-0 items-start justify-center lg:flex">
-                <InverterArt className="h-auto w-[168px] xl:w-[196px]" />
-              </div>
-            )}
+            {/* The photograph is the manufacturer's own, on transparency, so it
+                sits on the sheet without carrying a white box of its own. */}
+            <div className="hidden shrink-0 items-start justify-center lg:flex">
+              <img
+                src={active.photo}
+                alt={`${active.series} — ${active.name}`}
+                className="h-auto w-[196px] object-contain xl:w-[232px]"
+              />
+            </div>
           </div>
         </div>
       </div>
