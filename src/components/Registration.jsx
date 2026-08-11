@@ -6,6 +6,8 @@ import LoginDialog from './LoginDialog.jsx'
 import { Button, Eyebrow, Rule, SectionHeading, cx } from './ui.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, ShieldIcon, SpinnerIcon, UploadIcon, XIcon } from './icons.jsx'
+import { signUp } from '@/app/actions/auth'
+import { submitVerification } from '@/app/actions/verification'
 
 /* ------------------------------ configuration ----------------------------- */
 
@@ -186,6 +188,8 @@ export default function Registration() {
   const [stepId, setStepId] = useState('account')
   const [visited, setVisited] = useState(['account'])
   const [status, setStatus] = useState('idle')
+  const [submitError, setSubmitError] = useState('')
+  const [verificationNote, setVerificationNote] = useState('')
   const [login, setLogin] = useState(false)
   const [legalDoc, setLegalDoc] = useState(null)
   const successRef = useRef(null)
@@ -265,7 +269,7 @@ export default function Registration() {
     if (prev) setStepId(prev.id)
   }
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
     // Re-check every step, not just the visible one.
     const all = steps.reduce((acc, s) => ({ ...acc, ...validateStep(s.id) }), {})
@@ -275,8 +279,54 @@ export default function Registration() {
       if (broken) setStepId(broken.id)
       return
     }
+
+    setSubmitError('')
+    setVerificationNote('')
     setStatus('submitting')
-    setTimeout(() => setStatus('done'), 900)
+
+    const signUpData = new FormData()
+    signUpData.set('email', form.email.trim())
+    signUpData.set('password', form.password)
+    signUpData.set('customer_type', isInstaller ? 'installer' : 'individual')
+    signUpData.set('full_name', form.fullName.trim())
+    if (form.company.trim()) signUpData.set('company_name', form.company.trim())
+
+    const signUpResult = await signUp(signUpData)
+
+    if (signUpResult.error) {
+      setSubmitError(signUpResult.error)
+      setStatus('idle')
+      setStepId('account')
+      return
+    }
+
+    if (isInstaller) {
+      if (!signUpResult.hasSession) {
+        // No session yet (email confirmation required) — verification docs
+        // need an authenticated user, so they can't be uploaded until the
+        // installer confirms their email and logs in.
+        setVerificationNote(
+          'Confirm your email, then log in to finish submitting your verification documents.',
+        )
+      } else {
+        const verifyData = new FormData()
+        verifyData.set('business_registration_number', form.businessRegNo.trim())
+        verifyData.set('years_installing', form.yearsInstalling)
+        if (form.annualVolume) verifyData.set('annual_install_volume', form.annualVolume)
+        if (form.serviceArea.trim()) verifyData.set('primary_service_area', form.serviceArea.trim())
+        verifyData.set('business_registration', docs.registration)
+        if (docs.certs) verifyData.set('pv_certification', docs.certs)
+
+        const verifyResult = await submitVerification(verifyData)
+        if (verifyResult.error) {
+          setVerificationNote(
+            `Your account was created, but the verification documents could not be submitted: ${verifyResult.error} You can resubmit them after logging in.`,
+          )
+        }
+      }
+    }
+
+    setStatus('done')
   }
 
   const pickDoc = (key, file, error) => {
@@ -313,10 +363,19 @@ export default function Registration() {
             Application received
           </h2>
           <p className="text-ink-soft mt-4 leading-relaxed">
-            Thanks {form.fullName.split(' ')[0] || 'there'} — your reference is{' '}
-            <span className="text-ink font-mono font-medium">VIP-2026-4821</span>. A confirmation is on its way to{' '}
-            <span className="text-ink">{form.email}</span>.
+            Thanks {form.fullName.split(' ')[0] || 'there'} — your account has been created. A confirmation is on its
+            way to <span className="text-ink">{form.email}</span>.
           </p>
+
+          {verificationNote && (
+            <p
+              role="status"
+              className="border-hot-600/40 bg-hot-600/[0.06] text-ink mt-5 flex items-start gap-2.5 border px-3.5 py-3 text-xs leading-relaxed"
+            >
+              <AlertIcon className="text-hot-600 mt-px h-3.5 w-3.5 shrink-0" />
+              {verificationNote}
+            </p>
+          )}
 
           <Rule className="my-8" />
 
@@ -433,6 +492,16 @@ export default function Registration() {
               )
             })}
           </ol>
+
+          {submitError && (
+            <p
+              role="alert"
+              className="border-hot-600/40 bg-hot-600/[0.06] text-hot-600 mb-6 flex items-start gap-2.5 border px-3.5 py-3 text-xs leading-relaxed"
+            >
+              <AlertIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+              {submitError}
+            </p>
+          )}
 
           <fieldset disabled={status === 'submitting'} className="contents">
             <legend className="sr-only">{current.label}</legend>
