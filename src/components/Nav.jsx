@@ -107,7 +107,10 @@ export default function Nav() {
        belongs to. Scroll only deepens it and draws the rule. */
     <header
       className={cx(
-        'fixed inset-x-0 top-0 z-50 transition-colors duration-300',
+        // overflow-x-clip, not hidden: the shelf runs past the right edge on
+        // purpose, and clip is the one that contains it without also cutting
+        // off the product menu hanging below the bar.
+        'fixed inset-x-0 top-0 z-50 overflow-x-clip transition-colors duration-300',
         scrolled ? 'border-rule-shade bg-pit/95 border-b backdrop-blur-md' : 'bg-pit border-b border-transparent',
       )}
     >
@@ -117,22 +120,26 @@ export default function Nav() {
           the logo and the hero headline on different axes above 1348px. */}
       <div className="rail">
         <div className="rail-inner">
-          <div className="flex h-nav items-center justify-between gap-6">
+          <div className="flex h-nav items-center gap-6">
             <Logo tone="shade" />
 
-            <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
+            {/* The links sit as one group toward the action rather than spread
+                across the bar: the eye runs logo → menu → the thing to press,
+                and the empty span after the mark is what keeps the identity
+                from being read as the first menu item. */}
+            <nav aria-label="Main" className="mr-8 ml-auto hidden items-center gap-8 lg:flex">
               {links.map((l) =>
                 !l.dropdown ? (
                   <a
                     key={l.href}
                     href={l.href}
-                    className="group text-glint-soft hover:text-glint relative py-1 text-sm font-medium transition-colors"
+                    className="group text-glint hover:text-glint-soft relative py-1 text-sm transition-colors"
                   >
                     {l.label}
                     {/* the rule grows from the left, matching the button axis */}
                     <span
                       aria-hidden="true"
-                      className="bg-cool-400 absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
+                      className="bg-glint-soft absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
                     />
                   </a>
                 ) : (
@@ -150,8 +157,8 @@ export default function Nav() {
                         setProducts(true)
                       }}
                       className={cx(
-                        'group relative flex items-center gap-1.5 py-1 text-sm font-medium transition-colors',
-                        products ? 'text-glint' : 'text-glint-soft hover:text-glint',
+                        'group relative flex items-center gap-1.5 py-1 text-sm transition-colors',
+                        products ? 'text-glint-soft' : 'text-glint hover:text-glint-soft',
                       )}
                     >
                       {l.label}
@@ -161,7 +168,7 @@ export default function Nav() {
                       <span
                         aria-hidden="true"
                         className={cx(
-                          'bg-cool-400 absolute -bottom-0.5 left-0 h-px transition-all duration-300 ease-out',
+                          'bg-glint-soft absolute -bottom-0.5 left-0 h-px transition-all duration-300 ease-out',
                           products ? 'w-full' : 'w-0 group-hover:w-full',
                         )}
                       />
@@ -213,18 +220,41 @@ export default function Nav() {
               )}
             </nav>
 
-            {/* The action is a raised block on the bar rather than a bare
-                label: it steps one surface up from the pit so it reads as the
-                one thing in the row you can press, and the ringed arrow keeps
-                the weight graphic instead of filling the whole pill with a
-                pole colour that would then have to mean something. */}
-            <div className="hidden items-center gap-4 lg:flex">
-              <Button variant="ghostShade" size="sm" onClick={() => setLogin(true)}>
+            {/* The bar's own ground drops around the action instead of the
+                action being drawn on top of it: the shelf carries the dark
+                past the bar's bottom edge and the panel below tucks under it.
+                A square step would read as a mistake, so the join is filleted
+                — the same concave corner the hero panel already makes with the
+                block under its left edge, pointed the other way.
+
+                It belongs to the fold. Once you scroll, the bar has to be a
+                bar and nothing else, or a dark tongue hangs over the page for
+                the rest of the document. */}
+            <div className="relative hidden items-center gap-4 lg:flex">
+              <div
+                aria-hidden="true"
+                className={cx(
+                  'bg-pit absolute -top-3 -bottom-12 -left-5 -right-[100vw] rounded-bl-[1.75rem] transition-opacity duration-300',
+                  scrolled ? 'opacity-0' : 'opacity-100',
+                )}
+              />
+              {/* Sits directly under the bar's bottom edge, immediately left of
+                  the shelf, and fills everything but the quarter it rounds off. */}
+              <div
+                aria-hidden="true"
+                style={{ '--notch-color': 'var(--color-pit)' }}
+                className={cx(
+                  'notch notch-tr top-[calc(100%+0.75rem)] right-[calc(100%+1.25rem)] transition-opacity duration-300',
+                  scrolled ? 'opacity-0' : 'opacity-100',
+                )}
+              />
+
+              <Button variant="ghostShade" size="sm" className="relative" onClick={() => setLogin(true)}>
                 Log in
               </Button>
               <a
                 href="#register"
-                className="group/cta bg-shade-raised hover:bg-shade-edge border-rule-shade hover:border-glint-soft/60 flex h-11 items-center gap-3 rounded-full border pr-1.5 pl-5 transition-colors duration-200"
+                className="group/cta border-glint-soft/40 hover:border-glint relative flex h-11 items-center gap-3 rounded-full border pr-1.5 pl-5 transition-colors duration-200"
               >
                 <span className="text-glint text-sm font-medium">Create account</span>
                 <span className="border-glint-soft/50 group-hover/cta:border-glint grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-colors duration-200">

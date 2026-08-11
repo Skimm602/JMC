@@ -30,7 +30,21 @@ export default function Hero() {
        the content is inset into it as a lit panel. The frame is what makes the
        bar and the page read as one shape rather than a strip laid over a page
        that happens to start underneath it. */
-    <section id="top" className="band-pit rail relative pt-nav">
+    <section id="top" className="band-pit rail relative isolate pt-nav">
+      {/* The ground is a photograph of the thing being sold, held down under a
+          scrim so it stays ground rather than becoming the subject: the panel
+          on top of it carries the argument and has to keep its contrast. The
+          scrim is opaque enough that every text tone on this band measures the
+          same as it did on flat pit, so nothing here depends on where the sun
+          happens to fall in the frame. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden">
+        <img src="/hero-array.jpg" alt="" fetchPriority="high" className="h-full w-full object-cover object-center" />
+        <div className="bg-pit/88 absolute inset-0" />
+        {/* Deepens toward the fold so the band hands off to the sheet below it
+            without a visible seam. */}
+        <div className="from-pit/60 absolute inset-0 bg-gradient-to-b via-transparent to-[var(--color-pit)]" />
+      </div>
+
       <div className="rail-inner pt-5 pb-16 lg:pt-7 lg:pb-20 xl:pt-9 xl:pb-24">
         {/* ------------------------------ lit panel ---------------------------- */}
         {/* The two-column split waits for xl. Between lg and xl the figure was
@@ -60,8 +74,8 @@ export default function Hero() {
               </p>
 
               <p className="text-ink-soft max-w-measure mt-5 text-[0.9375rem] leading-relaxed">
-                Grid-tie, hybrid and storage inverters engineered around the two things installers actually get
-                called back for: thermal headroom and clean commissioning.
+                Grid-tie, hybrid and storage inverters engineered around the two things installers actually get called
+                back for: thermal headroom and clean commissioning.
               </p>
 
               <div className="mt-10 flex flex-wrap items-center gap-3">
