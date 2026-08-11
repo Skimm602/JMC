@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
-import { Button, Eyebrow, cx } from './ui.jsx'
-import { Checkbox, Field, TextInput } from './form.jsx'
-import { AlertIcon, SpinnerIcon, XIcon } from './icons.jsx'
+import { useEffect, useId, useRef } from 'react'
+import LoginForm from './LoginForm.jsx'
+import { Eyebrow, cx } from './ui.jsx'
+import { XIcon } from './icons.jsx'
 
 /**
  * Logging in and opening an account are different errands. Registration is a
@@ -61,34 +61,6 @@ export default function LoginDialog({ open, onClose }) {
 }
 
 function LoginPanel({ titleId, onClose }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(true)
-  const [errors, setErrors] = useState({})
-  const [status, setStatus] = useState('idle')
-  const noticeRef = useRef(null)
-
-  useEffect(() => {
-    if (status === 'notice') noticeRef.current?.focus()
-  }, [status])
-
-  const onSubmit = (event) => {
-    event.preventDefault()
-    const found = {}
-    if (!email.trim()) found.email = 'Enter your email address.'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) found.email = 'That address looks incomplete.'
-    if (!password) found.password = 'Enter your password.'
-
-    setErrors(found)
-    if (Object.keys(found).length) {
-      requestAnimationFrame(() => document.querySelector('dialog[open] [aria-invalid="true"]')?.focus())
-      return
-    }
-
-    setStatus('submitting')
-    setTimeout(() => setStatus('notice'), 900)
-  }
-
   return (
     <div className="animate-reveal flex max-h-[calc(100dvh-2rem)] flex-col">
       <div className="border-rule flex items-start justify-between gap-6 border-b px-7 py-6">
@@ -108,81 +80,10 @@ function LoginPanel({ titleId, onClose }) {
         </button>
       </div>
 
-      <form onSubmit={onSubmit} className="min-h-0 flex-1 overflow-y-auto px-7 py-7">
-        <fieldset disabled={status === 'submitting'} className="contents">
-          <legend className="sr-only">Log in to your VIP account</legend>
-
-          <div className="grid gap-5">
-            <Field label="Email" required error={errors.email}>
-              {(p) => (
-                <TextInput
-                  {...p}
-                  type="email"
-                  value={email}
-                  autoFocus
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
-                  }}
-                  placeholder="you@company.com"
-                  autoComplete="email"
-                />
-              )}
-            </Field>
-
-            <Field label="Password" required error={errors.password}>
-              {(p) => (
-                <TextInput
-                  {...p}
-                  type="password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
-                  }}
-                  autoComplete="current-password"
-                />
-              )}
-            </Field>
-
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <Checkbox checked={remember} onChange={setRemember} label="Keep me logged in" name="remember" />
-              <a
-                href="/#footer"
-                onClick={onClose}
-                className="text-ink-soft hover:text-ink border-b border-current/40 pb-px text-xs font-medium transition-colors hover:border-current"
-              >
-                Forgot password?
-              </a>
-            </div>
-          </div>
-
-          {/* Nothing is authenticating yet, so the form says so instead of
-              faking a session. Same posture as the sizing panel. */}
-          {status === 'notice' && (
-            <p
-              ref={noticeRef}
-              tabIndex={-1}
-              role="status"
-              className="border-rule bg-sheet text-ink-soft animate-reveal mt-6 flex items-start gap-2.5 border px-3.5 py-3 text-xs leading-relaxed"
-            >
-              <AlertIcon className="mt-px h-3.5 w-3.5 shrink-0" />
-              Account services are not connected yet. Registered installers will be emailed as soon as log-in opens.
-            </p>
-          )}
-
-          <Button type="submit" size="lg" className="mt-7 w-full" disabled={status === 'submitting'}>
-            {status === 'submitting' ? (
-              <>
-                <SpinnerIcon className="h-4 w-4" />
-                Checking…
-              </>
-            ) : (
-              'Log in'
-            )}
-          </Button>
-        </fieldset>
-      </form>
+      {/* Same form as /login, so a fix to either one is a fix to both. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-7 py-7">
+        <LoginForm autoFocus onDone={onClose} />
+      </div>
 
       <div className="border-rule text-ink-soft border-t px-7 py-5 text-sm">
         No account yet?{' '}

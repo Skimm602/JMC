@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import LegalDialog from './LegalDialog.jsx'
-import LoginDialog from './LoginDialog.jsx'
 import { Button, Eyebrow, Rule, SectionHeading, cx } from './ui.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, ShieldIcon, SpinnerIcon, UploadIcon, XIcon } from './icons.jsx'
@@ -189,17 +189,8 @@ export default function Registration() {
   const [visited, setVisited] = useState(['account'])
   const [status, setStatus] = useState('idle')
   const [submitError, setSubmitError] = useState('')
-  const [verificationNote, setVerificationNote] = useState('')
-  const [login, setLogin] = useState(false)
   const [legalDoc, setLegalDoc] = useState(null)
-  const successRef = useRef(null)
-
-  // Submitting swaps the whole section out. Without moving focus, a keyboard
-  // or screen-reader user got silence after the most consequential action on
-  // the site, with focus stranded on a button that no longer exists.
-  useEffect(() => {
-    if (status === 'done') successRef.current?.focus()
-  }, [status])
+  const router = useRouter()
 
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -281,7 +272,6 @@ export default function Registration() {
     }
 
     setSubmitError('')
-    setVerificationNote('')
     setStatus('submitting')
 
     const signUpData = new FormData()
@@ -300,14 +290,17 @@ export default function Registration() {
       return
     }
 
+    // Whether the documents still have to be sent decides which notice the
+    // log-in page shows, and a redirect cannot carry state, so it travels as
+    // a query parameter.
+    let unfinishedVerification = false
+
     if (isInstaller) {
       if (!signUpResult.hasSession) {
         // No session yet (email confirmation required) — verification docs
         // need an authenticated user, so they can't be uploaded until the
         // installer confirms their email and logs in.
-        setVerificationNote(
-          'Confirm your email, then log in to finish submitting your verification documents.',
-        )
+        unfinishedVerification = true
       } else {
         const verifyData = new FormData()
         verifyData.set('business_registration_number', form.businessRegNo.trim())
@@ -318,112 +311,23 @@ export default function Registration() {
         if (docs.certs) verifyData.set('pv_certification', docs.certs)
 
         const verifyResult = await submitVerification(verifyData)
-        if (verifyResult.error) {
-          setVerificationNote(
-            `Your account was created, but the verification documents could not be submitted: ${verifyResult.error} You can resubmit them after logging in.`,
-          )
-        }
+        if (verifyResult.error) unfinishedVerification = true
       }
     }
 
-    setStatus('done')
+    /* The account exists now, and an account nobody has logged into is a dead
+       end — so registration hands straight over to the log-in page rather than
+       stopping on a receipt. `status` is left at 'submitting' on purpose: the
+       navigation is the completion, and re-enabling the button first would
+       invite a second signup with the same address. */
+    const query = unfinishedVerification ? '?registered=1&verify=1' : '?registered=1'
+    router.push(`/login${query}`)
   }
 
   const pickDoc = (key, file, error) => {
     setDocs((d) => ({ ...d, [key]: file ?? undefined }))
     setDocErrors((d) => ({ ...d, [key]: error ?? undefined }))
     if (file && errors.documents) setErrors((e) => ({ ...e, documents: undefined }))
-  }
-
-  const reset = () => {
-    setForm(EMPTY_FORM)
-    setIsInstaller(false)
-    setDocs({})
-    setDocErrors({})
-    setTerms(false)
-    setErrors({})
-    setStepId('account')
-    setVisited(['account'])
-    setStatus('idle')
-  }
-
-  /* -------------------------------- success ------------------------------- */
-
-  if (status === 'done') {
-    return (
-      /* Same vertical rhythm as the form it replaces, so submitting does not
-         make the page jump. */
-      <section id="register" className="band-sheet rail py-24 lg:py-32 xl:py-40">
-        <div className="border-rule bg-glare corner-ticks text-ink max-w-xl border p-10">
-          <span className="border-cool-600 text-cool-600 grid h-12 w-12 place-items-center border">
-            <CheckIcon className="h-6 w-6" strokeWidth={2.2} />
-          </span>
-
-          <h2 ref={successRef} tabIndex={-1} className="display-wide text-display-2 mt-7 font-semibold outline-none">
-            Application received
-          </h2>
-          <p className="text-ink-soft mt-4 leading-relaxed">
-            Thanks {form.fullName.split(' ')[0] || 'there'} — your account has been created. A confirmation is on its
-            way to <span className="text-ink">{form.email}</span>.
-          </p>
-
-          {verificationNote && (
-            <p
-              role="status"
-              className="border-hot-600/40 bg-hot-600/[0.06] text-ink mt-5 flex items-start gap-2.5 border px-3.5 py-3 text-xs leading-relaxed"
-            >
-              <AlertIcon className="text-hot-600 mt-px h-3.5 w-3.5 shrink-0" />
-              {verificationNote}
-            </p>
-          )}
-
-          <Rule className="my-8" />
-
-          <dl className="grid gap-px">
-            <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
-              <dt className="label text-ink-soft">Account type</dt>
-              <dd className="text-ink">{isInstaller ? 'Installer — pending verification' : 'Standard'}</dd>
-            </div>
-            {isInstaller && (
-              <>
-                <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
-                  <dt className="label text-ink-soft">Company</dt>
-                  <dd className="text-ink">{form.company || '—'}</dd>
-                </div>
-                <div className="border-rule flex justify-between gap-4 border-b py-2.5 text-sm">
-                  <dt className="label text-ink-soft">Documents</dt>
-                  <dd className="text-ink">{Object.values(docs).filter(Boolean).length} attached</dd>
-                </div>
-              </>
-            )}
-          </dl>
-
-          {isInstaller && (
-            <p className="text-ink-soft mt-7 text-sm leading-relaxed">
-              Trade verification usually takes 1–2 business days. You can log in and browse at the Registered tier in
-              the meantime.
-            </p>
-          )}
-
-          {/* The account exists now, so the next errand is getting into it —
-              that becomes the primary action, and registering again drops to
-              the quieter one. */}
-          <p className="text-ink-soft mt-9 text-sm leading-relaxed">Click to log in to your new account.</p>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button type="button" size="lg" onClick={() => setLogin(true)}>
-              Log in
-              <ArrowRightIcon className="h-4 w-4" />
-            </Button>
-            <Button type="button" variant="outline" size="lg" onClick={reset}>
-              Register another account
-            </Button>
-          </div>
-        </div>
-
-        <LoginDialog open={login} onClose={() => setLogin(false)} />
-      </section>
-    )
   }
 
   /* --------------------------------- form -------------------------------- */

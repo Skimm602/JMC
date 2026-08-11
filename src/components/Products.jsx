@@ -201,7 +201,6 @@ export default function Products() {
         >
           {FAMILIES.map((f, i) => {
             const on = f.id === activeId
-            const Icon = f.icon
             return (
               <button
                 key={f.id}
@@ -229,18 +228,29 @@ export default function Products() {
                     on ? 'bg-cool-600' : 'bg-transparent group-hover:bg-ink/20',
                   )}
                 />
-                <Icon className={cx('h-6 w-6 shrink-0 transition-colors', on ? 'text-cool-600' : 'text-ink-soft')} />
+                {/* The unit itself rather than a glyph for its category: these
+                    are four objects an installer recognises on sight, and a
+                    thumbnail says which one faster than any label can. */}
+                <img
+                  src={f.photo}
+                  alt=""
+                  loading="lazy"
+                  className={cx(
+                    'h-12 w-12 shrink-0 object-contain transition-opacity duration-200',
+                    on ? 'opacity-100' : 'opacity-65 group-hover:opacity-100',
+                  )}
+                />
                 <span className="min-w-0">
-                  <span className={cx('label block transition-colors', on ? 'text-cool-600' : 'text-ink-soft')}>
-                    {f.series}
-                  </span>
                   <span
                     className={cx(
-                      'mt-1 block text-sm font-medium transition-colors',
+                      'block font-mono text-[0.8125rem] font-medium transition-colors',
                       on ? 'text-ink' : 'text-ink-soft',
                     )}
                   >
-                    {f.tagline}
+                    {f.models}
+                  </span>
+                  <span className={cx('mt-1 block text-sm transition-colors', on ? 'text-cool-600' : 'text-ink-soft')}>
+                    {f.name}
                   </span>
                 </span>
                 {f.featured && <span className="label text-cool-600 ml-auto shrink-0">Flagship</span>}
@@ -258,13 +268,15 @@ export default function Products() {
           className="animate-reveal border-rule bg-sheet border-t border-b lg:border-l"
         >
           <div className="grid gap-10 p-7 sm:p-9 lg:grid-cols-[1fr_auto] lg:gap-8">
-            <div className="min-w-0">
+            <div className="order-2 min-w-0 lg:order-1">
               <p className="label text-ink-soft">{active.series}</p>
-              <h3 className="display-wide text-display-3 text-ink mt-2.5 font-semibold">{active.name}</h3>
-              {/* The model numbers are what gets typed into a quote request, so
-                  they are set in the mono face and given their own line rather
-                  than buried in the prose. */}
-              <p className="text-ink-soft mt-2 font-mono text-sm">{active.models}</p>
+              {/* The model number is the heading, not a footnote to it: it is
+                  what goes on the quote, the permit and the wall, and what
+                  someone is checking this page against. */}
+              <h3 className="display-wide text-display-3 text-ink mt-2.5 font-semibold text-balance">
+                {active.models}
+              </h3>
+              <p className="text-cool-600 mt-2 text-sm font-medium">{active.name}</p>
               <p className="text-ink-soft max-w-measure mt-4 leading-relaxed">{active.copy}</p>
 
               {/* the datasheet block, set in the mono that matches the body face */}
@@ -292,12 +304,15 @@ export default function Products() {
             </div>
 
             {/* The photograph is the manufacturer's own, on transparency, so it
-                sits on the sheet without carrying a white box of its own. */}
-            <div className="hidden shrink-0 items-start justify-center lg:flex">
+                sits on the sheet without carrying a white box of its own. It
+                leads on a phone and sits beside the specification on a desk —
+                the picture is half of what someone came to this panel for, so
+                it is not the thing that gets dropped on a narrow screen. */}
+            <div className="order-1 flex shrink-0 items-start justify-center lg:order-2">
               <img
                 src={active.photo}
-                alt={`${active.series} — ${active.name}`}
-                className="h-auto w-[196px] object-contain xl:w-[232px]"
+                alt={`${active.models} — ${active.name}`}
+                className="h-auto w-[190px] object-contain sm:w-[220px] lg:w-[196px] xl:w-[232px]"
               />
             </div>
           </div>
