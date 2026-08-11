@@ -13,11 +13,11 @@ import { ArrowUpRightIcon, ChevronDownIcon, MenuIcon, XIcon } from './icons.jsx'
  * menu instead of jumping straight to a section.
  */
 const links = [
-  { label: 'About', href: '#about' },
   { label: 'Products', dropdown: true },
   { label: 'Sizing', href: '#sizing' },
   { label: 'Engineering', href: '#why' },
   { label: 'Installer program', href: '#installers' },
+  { label: 'About', href: '#about' },
   { label: 'Support', href: '#footer' },
 ]
 
