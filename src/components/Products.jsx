@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import EnergyFlow from './EnergyFlow.jsx'
 import { ArrowLink, Eyebrow, Section, SectionHeading, cx } from './ui.jsx'
-import { GridTieIcon, HybridIcon, BatteryIcon } from './icons.jsx'
 
 /**
  * The range as HYXiPOWER actually publishes it. Every number here is read off
@@ -18,7 +17,6 @@ import { GridTieIcon, HybridIcon, BatteryIcon } from './icons.jsx'
 const FAMILIES = [
   {
     id: 'h-ls',
-    icon: HybridIcon,
     series: 'H-LS Series',
     models: 'HYX-H6K-LS · HYX-H8K-LS',
     name: 'Low-voltage hybrid inverter',
@@ -42,7 +40,6 @@ const FAMILIES = [
   },
   {
     id: 'h-hs',
-    icon: GridTieIcon,
     series: 'H-HS Series',
     models: 'HYX-H6K-HS · HYX-H8K-HS',
     name: 'High-voltage hybrid inverter',
@@ -64,7 +61,6 @@ const FAMILIES = [
   },
   {
     id: 'e-h3',
-    icon: BatteryIcon,
     series: 'E-H3 Series',
     models: 'HYX-E50-H3 · HYX-E100-H3',
     name: 'High-voltage battery',
@@ -87,7 +83,6 @@ const FAMILIES = [
   },
   {
     id: 'e-l',
-    icon: BatteryIcon,
     series: 'E-L Series',
     models: 'HYX-E160-L',
     name: 'Low-voltage battery',
@@ -113,12 +108,12 @@ const FAMILIES = [
  * What the header dropdown lists. Derived from FAMILIES rather than restated
  * so the menu and the section can never disagree about what the range is.
  */
-export const PRODUCT_NAV = FAMILIES.map(({ id, icon, series, name, tagline }) => ({
+export const PRODUCT_NAV = FAMILIES.map(({ id, series, models, name, photo }) => ({
   id,
-  icon,
   series,
+  models,
   name,
-  tagline,
+  photo,
 }))
 
 export default function Products() {

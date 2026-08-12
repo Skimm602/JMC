@@ -60,7 +60,13 @@ export function Field({ label, required, hint, error, children, className, span 
   )
 }
 
-export function TextInput({ id, invalid, describedBy, required, ...rest }) {
+/**
+ * `className` is merged rather than spread over the base: passing one through
+ * `...rest` would land after the base string and replace the control's entire
+ * appearance, which is a silent way to lose the border, the focus state and
+ * the padding all at once.
+ */
+export function TextInput({ id, invalid, describedBy, required, className, ...rest }) {
   return (
     <input
       id={id}
@@ -68,8 +74,8 @@ export function TextInput({ id, invalid, describedBy, required, ...rest }) {
       aria-required={required || undefined}
       aria-invalid={invalid || undefined}
       aria-describedby={describedBy}
-      className={cx(controlBase, controlState(invalid))}
       {...rest}
+      className={cx(controlBase, controlState(invalid), className)}
     />
   )
 }

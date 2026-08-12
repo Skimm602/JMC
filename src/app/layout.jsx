@@ -1,6 +1,4 @@
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
-import Nav from '@/components/Nav.jsx'
-import Footer from '@/components/Footer.jsx'
 import './globals.css'
 
 /**
@@ -48,25 +46,18 @@ export const viewport = {
   themeColor: '#0d2949',
 }
 
+/**
+ * Everything shared by every document and nothing else: the fonts, the sheet
+ * the palette is built on, and the two elements a layout is not allowed to
+ * skip. The public site's header and footer moved down into `(site)`, because
+ * /admin is not the public site — it is a back office that happens to be
+ * served from the same origin, and it has no business wearing the marketing
+ * chrome or linking back into it.
+ */
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} scroll-smooth`}>
-      {/* The bar and the footer belong to every route now that registration
-          has one of its own, so they live here rather than being composed into
-          each page and drifting apart. The skip link lands on the page's own
-          content, which is the only thing that differs between them. */}
-      <body>
-        <a
-          href="#content"
-          className="focus:bg-cool-600 focus:text-glare sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
-        >
-          Skip to content
-        </a>
-
-        <Nav />
-        {children}
-        <Footer />
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

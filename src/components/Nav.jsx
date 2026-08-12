@@ -184,31 +184,37 @@ export default function Nav() {
                         id="products-menu"
                         className="animate-reveal border-rule bg-glare absolute top-full left-0 z-10 mt-4 w-[23rem] overflow-hidden rounded-[1.25rem] border p-1.5"
                       >
-                        {PRODUCT_NAV.map((f, i) => {
-                          const Icon = f.icon
-                          return (
-                            <a
-                              key={f.id}
-                              href={`/#product-${f.id}`}
-                              ref={(el) => {
-                                itemRefs.current[i] = el
-                              }}
-                              onClick={() => {
-                                setProducts(false)
-                                goToFamily(f.id)
-                              }}
-                              onKeyDown={(e) => onMenuKeyDown(e, i)}
-                              className="hover:bg-sheet group/item flex items-start gap-3.5 rounded-[0.875rem] px-3.5 py-3 transition-colors"
-                            >
-                              <Icon className="text-ink-soft group-hover/item:text-cool-600 mt-0.5 h-5 w-5 shrink-0 transition-colors" />
-                              <span className="min-w-0">
-                                <span className="label text-ink-soft block">{f.series}</span>
-                                <span className="text-ink mt-1 block text-sm font-medium">{f.name}</span>
-                                <span className="text-ink-soft mt-0.5 block text-xs">{f.tagline}</span>
+                        {/* Same three things the range section leads with —
+                            the unit, its model number, what it is — so the
+                            menu and the page name the products identically. */}
+                        {PRODUCT_NAV.map((f, i) => (
+                          <a
+                            key={f.id}
+                            href={`/#product-${f.id}`}
+                            ref={(el) => {
+                              itemRefs.current[i] = el
+                            }}
+                            onClick={() => {
+                              setProducts(false)
+                              goToFamily(f.id)
+                            }}
+                            onKeyDown={(e) => onMenuKeyDown(e, i)}
+                            className="hover:bg-sheet group/item flex items-center gap-3.5 rounded-[0.875rem] px-3.5 py-3 transition-colors"
+                          >
+                            <img
+                              src={f.photo}
+                              alt=""
+                              loading="lazy"
+                              className="h-11 w-11 shrink-0 object-contain opacity-80 transition-opacity group-hover/item:opacity-100"
+                            />
+                            <span className="min-w-0">
+                              <span className="text-ink block font-mono text-[0.8125rem] font-medium">{f.models}</span>
+                              <span className="text-ink-soft group-hover/item:text-cool-600 mt-1 block text-sm transition-colors">
+                                {f.name}
                               </span>
-                            </a>
-                          )
-                        })}
+                            </span>
+                          </a>
+                        ))}
 
                         <a
                           href="/#products"
@@ -325,24 +331,24 @@ export default function Nav() {
 
                 {mobileProducts && (
                   <div className="animate-reveal pb-3">
-                    {PRODUCT_NAV.map((f) => {
-                      const Icon = f.icon
-                      return (
-                        <a
-                          key={f.id}
-                          href={`/#product-${f.id}`}
-                          onClick={() => {
-                            setOpen(false)
-                            setMobileProducts(false)
-                            goToFamily(f.id)
-                          }}
-                          className="text-glint-soft hover:text-glint flex items-center gap-3 py-2.5 pl-3 text-sm transition-colors"
-                        >
-                          <Icon className="h-4 w-4 shrink-0" />
-                          {f.name}
-                        </a>
-                      )
-                    })}
+                    {PRODUCT_NAV.map((f) => (
+                      <a
+                        key={f.id}
+                        href={`/#product-${f.id}`}
+                        onClick={() => {
+                          setOpen(false)
+                          setMobileProducts(false)
+                          goToFamily(f.id)
+                        }}
+                        className="hover:bg-glint/[0.06] flex items-center gap-3 rounded-[0.875rem] py-2.5 pr-2 pl-2 transition-colors"
+                      >
+                        <img src={f.photo} alt="" loading="lazy" className="h-9 w-9 shrink-0 object-contain" />
+                        <span className="min-w-0">
+                          <span className="text-glint block font-mono text-xs font-medium">{f.models}</span>
+                          <span className="text-glint-soft mt-0.5 block text-xs">{f.name}</span>
+                        </span>
+                      </a>
+                    ))}
                   </div>
                 )}
               </div>
