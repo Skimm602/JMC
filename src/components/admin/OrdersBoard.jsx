@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Rule, cx } from '../ui.jsx'
-import { AlertIcon, CheckIcon, FileIcon, SpinnerIcon } from '../icons.jsx'
-import { approveOrder, rejectOrder } from '@/app/actions/orders'
+import { AlertIcon, FileIcon, SpinnerIcon } from '../icons.jsx'
+import { setOrderStatus } from '@/app/actions/orders'
 
 const when = (iso) =>
   iso
@@ -22,81 +22,100 @@ const peso = (n) =>
 
 const STATUS_TONE = {
   pending: 'border-rule-strong bg-sheet text-ink-soft',
-  approved: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
-  rejected: 'border-hot-600/45 bg-hot-600/[0.06] text-hot-700',
+  pending_bank_transfer: 'border-rule-strong bg-sheet text-ink-soft',
+  paid: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
+  processing: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
+  shipped: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
+  completed: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
+  cancelled: 'border-hot-600/45 bg-hot-600/[0.06] text-hot-700',
+}
+
+/** What an admin may move an order to, from where it is now. */
+const NEXT_STATUSES = {
+  pending: ['cancelled'],
+  pending_bank_transfer: ['cancelled'],
+  paid: ['processing', 'shipped', 'completed', 'cancelled'],
+  processing: ['shipped', 'completed', 'cancelled'],
+  shipped: ['completed', 'cancelled'],
+  completed: [],
+  cancelled: [],
+}
+
+const STATUS_LABEL = {
+  pending: 'pending',
+  pending_bank_transfer: 'pending (bank transfer)',
+  paid: 'paid',
+  processing: 'processing',
+  shipped: 'shipped',
+  completed: 'completed',
+  cancelled: 'cancelled',
 }
 
 function StatusChip({ status }) {
   return (
     <span className={cx('label inline-flex items-center border px-2 py-1', STATUS_TONE[status] ?? STATUS_TONE.pending)}>
-      {status}
+      {STATUS_LABEL[status] ?? status}
     </span>
   )
 }
 
 /* ---------------------------------- order --------------------------------- */
 
-function Order({ order, onReviewed }) {
-  const [reason, setReason] = useState('')
-  const [rejecting, setRejecting] = useState(false)
+function Order({ order, onChanged }) {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
 
   const items = order.order_items ?? []
-  const total = items.reduce((sum, i) => sum + (Number(i.unit_price) || 0) * i.quantity, 0)
   const busy = status !== 'idle'
-  const open = order.status === 'pending'
+  const options = NEXT_STATUSES[order.status] ?? []
+  const customer = order.customer
 
-  const approve = async () => {
-    setStatus('approving')
+  const move = async (nextStatus) => {
+    setStatus(nextStatus)
     setError('')
-    const result = await approveOrder(order.id)
+    const result = await setOrderStatus(order.id, nextStatus)
+    setStatus('idle')
     if (result?.error) {
       setError(result.error)
-      setStatus('idle')
       return
     }
-    onReviewed()
-  }
-
-  const reject = async () => {
-    if (!reason.trim()) {
-      setError('Say why. The customer is told this, and "rejected" on its own is not something anyone can act on.')
-      return
-    }
-    setStatus('rejecting')
-    setError('')
-    const result = await rejectOrder(order.id, reason.trim())
-    if (result?.error) {
-      setError(result.error)
-      setStatus('idle')
-      return
-    }
-    onReviewed()
+    onChanged()
   }
 
   return (
-    <article className={cx('border-rule bg-glare border p-6 sm:p-8', open && 'corner-ticks')}>
+    <article className={cx('border-rule bg-glare border p-6 sm:p-8', options.length > 0 && 'corner-ticks')}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="label text-ink-soft">{order.reference}</p>
-          <h2 className="display-wide text-display-3 text-ink mt-2 font-semibold">{order.customer_name}</h2>
+          <p className="text-ink-soft font-mono text-xs">{order.id}</p>
+          <h2 className="display-wide text-display-3 text-ink mt-2 font-semibold">
+            {customer?.full_name || 'Unknown customer'}
+          </h2>
           <p className="text-ink-soft mt-1.5 text-sm">
-            {[order.customer_email, order.customer_phone].filter(Boolean).join(' · ') || 'No contact details'}
+            {[customer?.email, customer?.phone].filter(Boolean).join(' · ') || 'No contact details'}
           </p>
         </div>
         <div className="text-right">
           <StatusChip status={order.status} />
-          <p className="text-ink-soft mt-2 text-xs">{when(order.placed_at)}</p>
+          <p className="text-ink-soft mt-2 text-xs">{when(order.created_at)}</p>
         </div>
       </div>
 
       <Rule className="my-6" />
 
-      <table className="w-full border-collapse text-left">
+      <div className="flex flex-wrap items-center gap-4 text-xs">
+        <span className="label text-ink-soft">
+          Payment — <span className="text-ink font-medium">{order.payment_method ?? '—'}</span>
+        </span>
+        {order.payment_reference && (
+          <span className="label text-ink-soft font-mono">Ref {order.payment_reference}</span>
+        )}
+        {order.paid_at && <span className="label text-ink-soft">Paid {when(order.paid_at)}</span>}
+      </div>
+
+      <table className="mt-5 w-full border-collapse text-left">
         <thead>
           <tr className="border-rule border-b">
-            <th className="label text-ink-soft pb-2 font-medium">Model</th>
+            <th className="label text-ink-soft pb-2 font-medium">Product</th>
             <th className="label text-ink-soft pb-2 text-right font-medium">Qty</th>
             <th className="label text-ink-soft pb-2 text-right font-medium">Unit</th>
             <th className="label text-ink-soft pb-2 text-right font-medium">Line</th>
@@ -112,45 +131,29 @@ function Order({ order, onReviewed }) {
           ) : (
             items.map((item) => (
               <tr key={item.id} className="border-rule border-b last:border-b-0">
-                <td className="py-2.5">
-                  <span className="text-ink block font-mono text-xs font-medium">{item.model}</span>
-                  {item.description && <span className="text-ink-soft block text-xs">{item.description}</span>}
-                </td>
+                <td className="text-ink py-2.5 text-sm">{item.products?.name ?? 'Deleted product'}</td>
                 <td className="text-ink py-2.5 text-right font-mono text-sm tabular-nums">{item.quantity}</td>
                 <td className="text-ink-soft py-2.5 text-right font-mono text-xs tabular-nums">
-                  {peso(item.unit_price)}
+                  {peso(item.price_at_purchase)}
                 </td>
                 <td className="text-ink py-2.5 text-right font-mono text-sm tabular-nums">
-                  {item.unit_price == null ? '—' : peso(Number(item.unit_price) * item.quantity)}
+                  {peso(Number(item.price_at_purchase) * item.quantity)}
                 </td>
               </tr>
             ))
           )}
         </tbody>
-        {items.some((i) => i.unit_price != null) && (
-          <tfoot>
-            <tr>
-              <td colSpan={3} className="label text-ink-soft pt-3 text-right">
-                Total
-              </td>
-              <td className="text-ink pt-3 text-right font-mono text-sm font-semibold tabular-nums">{peso(total)}</td>
-            </tr>
-          </tfoot>
-        )}
+        <tfoot>
+          <tr>
+            <td colSpan={3} className="label text-ink-soft pt-3 text-right">
+              Total
+            </td>
+            <td className="text-ink pt-3 text-right font-mono text-sm font-semibold tabular-nums">
+              {peso(order.total)}
+            </td>
+          </tr>
+        </tfoot>
       </table>
-
-      {order.notes && (
-        <p className="border-rule bg-sheet/60 text-ink-soft mt-5 border px-4 py-3 text-xs leading-relaxed">
-          {order.notes}
-        </p>
-      )}
-
-      {order.status === 'rejected' && order.rejection_reason && (
-        <div className="border-hot-600/30 bg-hot-600/[0.05] mt-5 border p-4">
-          <h3 className="label text-hot-700">Reason given</h3>
-          <p className="text-ink mt-2 text-xs leading-relaxed">{order.rejection_reason}</p>
-        </div>
-      )}
 
       {error && (
         <p
@@ -162,67 +165,31 @@ function Order({ order, onReviewed }) {
         </p>
       )}
 
-      {open && (
+      {options.length > 0 && (
         <>
           <Rule className="my-6" />
-
-          {!rejecting ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={approve} disabled={busy}>
-                {status === 'approving' ? (
-                  <>
-                    <SpinnerIcon className="h-4 w-4" />
-                    Approving…
-                  </>
-                ) : (
-                  <>
-                    <CheckIcon className="h-4 w-4" strokeWidth={2.2} />
-                    Approve order
-                  </>
-                )}
-              </Button>
-              <Button variant="ghost" onClick={() => setRejecting(true)} disabled={busy}>
-                Reject
-              </Button>
-              <p className="text-ink-soft ml-auto text-xs">Approving takes these quantities out of stock.</p>
-            </div>
-          ) : (
-            <div className="animate-reveal">
-              <label htmlFor={`reason-${order.id}`} className="label text-ink mb-2 block">
-                Reason for rejection
-                <span className="text-hot-600 ml-1" aria-hidden="true">
-                  *
-                </span>
-              </label>
-              <textarea
-                id={`reason-${order.id}`}
-                rows={3}
-                value={reason}
-                autoFocus
-                onChange={(e) => {
-                  setReason(e.target.value)
-                  if (error) setError('')
-                }}
-                placeholder="The H8K-LS is on back order until the 20th — we can ship the H6K-LS now instead."
-                className="bg-glare border-rule-strong text-ink placeholder:text-ink-soft hover:border-ink-soft focus:border-ink w-full resize-y border px-3.5 py-2.5 text-sm transition-colors outline-none"
-              />
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Button variant="hot" onClick={reject} disabled={busy}>
-                  {status === 'rejecting' ? (
+          <div className="flex flex-wrap items-center gap-3">
+            {options
+              .filter((s) => s !== 'cancelled')
+              .map((s) => (
+                <Button key={s} onClick={() => move(s)} disabled={busy}>
+                  {status === s ? (
                     <>
                       <SpinnerIcon className="h-4 w-4" />
-                      Rejecting…
+                      Marking {STATUS_LABEL[s]}…
                     </>
                   ) : (
-                    'Confirm rejection'
+                    `Mark ${STATUS_LABEL[s]}`
                   )}
                 </Button>
-                <Button variant="ghost" onClick={() => setRejecting(false)} disabled={busy}>
-                  Back
-                </Button>
-              </div>
-            </div>
-          )}
+              ))}
+            <Button variant="ghost" onClick={() => move('cancelled')} disabled={busy}>
+              {status === 'cancelled' ? 'Cancelling…' : 'Cancel order'}
+            </Button>
+            {order.status === 'paid' && (
+              <p className="text-ink-soft ml-auto text-xs">Moving this off "paid" takes its quantities out of stock.</p>
+            )}
+          </div>
         </>
       )}
     </article>
@@ -232,15 +199,17 @@ function Order({ order, onReviewed }) {
 /* --------------------------------- screen --------------------------------- */
 
 const FILTERS = [
-  { id: 'pending', label: 'Awaiting review' },
-  { id: 'approved', label: 'Approved' },
-  { id: 'rejected', label: 'Rejected' },
+  { id: 'paid', label: 'Awaiting fulfilment' },
+  { id: 'processing', label: 'Processing' },
+  { id: 'shipped', label: 'Shipped' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
   { id: 'all', label: 'All' },
 ]
 
 export default function OrdersBoard({ orders }) {
   const router = useRouter()
-  const [filter, setFilter] = useState('pending')
+  const [filter, setFilter] = useState('paid')
 
   const counts = useMemo(
     () =>
@@ -279,16 +248,16 @@ export default function OrdersBoard({ orders }) {
           <div className="border-rule bg-glare flex flex-col items-center border border-dashed px-6 py-20 text-center">
             <FileIcon className="text-hush h-8 w-8" />
             <p className="text-ink mt-5 font-medium">
-              {filter === 'pending' ? 'Nothing awaiting review' : 'Nothing here'}
+              {filter === 'paid' ? 'Nothing awaiting fulfilment' : 'Nothing here'}
             </p>
             <p className="text-ink-soft max-w-measure mt-2 text-sm leading-relaxed">
               {orders.length === 0
-                ? 'No orders have been placed yet. Nothing on the public site creates one — add a row to the orders table in Supabase to try this page out.'
+                ? 'No orders have been placed yet. Checkout writes here once a customer pays via GCash, QR Ph, or PesoNet.'
                 : 'Every order in this state has been dealt with.'}
             </p>
           </div>
         ) : (
-          shown.map((order) => <Order key={order.id} order={order} onReviewed={() => router.refresh()} />)
+          shown.map((order) => <Order key={order.id} order={order} onChanged={() => router.refresh()} />)
         )}
       </div>
     </>

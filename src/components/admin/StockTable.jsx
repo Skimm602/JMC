@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, cx } from '../ui.jsx'
-import { AlertIcon, CheckIcon, SpinnerIcon } from '../icons.jsx'
-import { setStockBulk } from '@/app/actions/catalogue'
+import { AlertIcon, CheckIcon, SpinnerIcon, XIcon } from '../icons.jsx'
+import { createProduct, deleteProduct, setStockBulk } from '@/app/actions/catalogue'
 
 /** Below this, the row starts saying so rather than waiting to be read. */
 const LOW = 3
@@ -12,36 +12,202 @@ const LOW = 3
 const when = (iso) =>
   iso ? new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'
 
+const peso = (n) =>
+  n == null ? '—' : new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(n))
+
+/* -------------------------------- add product ------------------------------ */
+
+const EMPTY_FORM = { name: '', retail_price: '', installer_price: '', stock_quantity: '0', image_url: '' }
+
+function AddProduct({ onAdded }) {
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [status, setStatus] = useState('idle')
+  const [error, setError] = useState('')
+
+  const field = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setStatus('saving')
+    setError('')
+
+    const result = await createProduct(form)
+    setStatus('idle')
+
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+
+    setForm(EMPTY_FORM)
+    setOpen(false)
+    onAdded()
+  }
+
+  if (!open) {
+    return (
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        Add product
+      </Button>
+    )
+  }
+
+  return (
+    <form onSubmit={submit} className="border-rule bg-glare animate-reveal grid gap-3 border p-5 sm:grid-cols-2">
+      <label className="grid gap-1.5 sm:col-span-2">
+        <span className="label text-ink-soft">Name</span>
+        <input
+          required
+          value={form.name}
+          onChange={field('name')}
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        />
+      </label>
+      <label className="grid gap-1.5">
+        <span className="label text-ink-soft">Retail price</span>
+        <input
+          required
+          inputMode="decimal"
+          value={form.retail_price}
+          onChange={field('retail_price')}
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        />
+      </label>
+      <label className="grid gap-1.5">
+        <span className="label text-ink-soft">Installer price (optional)</span>
+        <input
+          inputMode="decimal"
+          value={form.installer_price}
+          onChange={field('installer_price')}
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        />
+      </label>
+      <label className="grid gap-1.5">
+        <span className="label text-ink-soft">Starting stock</span>
+        <input
+          inputMode="numeric"
+          value={form.stock_quantity}
+          onChange={field('stock_quantity')}
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        />
+      </label>
+      <label className="grid gap-1.5">
+        <span className="label text-ink-soft">Image URL (optional)</span>
+        <input
+          value={form.image_url}
+          onChange={field('image_url')}
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        />
+      </label>
+
+      {error && (
+        <p role="alert" className="text-hot-600 sm:col-span-2 flex items-start gap-1.5 text-xs leading-relaxed">
+          <AlertIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+          {error}
+        </p>
+      )}
+
+      <div className="flex items-center gap-3 sm:col-span-2">
+        <Button size="sm" disabled={status === 'saving'}>
+          {status === 'saving' ? (
+            <>
+              <SpinnerIcon className="h-3.5 w-3.5" />
+              Adding…
+            </>
+          ) : (
+            'Add to catalogue'
+          )}
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={status === 'saving'}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+/* ---------------------------------- remove --------------------------------- */
+
+function RemoveProduct({ product, onRemoved }) {
+  const [confirming, setConfirming] = useState(false)
+  const [status, setStatus] = useState('idle')
+  const [error, setError] = useState('')
+
+  const remove = async () => {
+    setStatus('removing')
+    setError('')
+    const result = await deleteProduct(product.id)
+    setStatus('idle')
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    setConfirming(false)
+    onRemoved(result.deactivated ? `${product.name} has order history — deactivated instead of deleted.` : null)
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        aria-label={`Remove ${product.name}`}
+        className="text-ink-soft hover:text-hot-600 p-1.5 transition-colors"
+      >
+        <XIcon className="h-4 w-4" />
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-2">
+      {error && (
+        <p role="alert" className="text-hot-600 text-xs">
+          {error}
+        </p>
+      )}
+      <Button variant="hot" size="sm" onClick={remove} disabled={status === 'removing'}>
+        {status === 'removing' ? <SpinnerIcon className="h-3.5 w-3.5" /> : 'Remove'}
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => setConfirming(false)} disabled={status === 'removing'}>
+        Keep
+      </Button>
+    </div>
+  )
+}
+
+/* --------------------------------- screen --------------------------------- */
+
 /**
- * The stock count.
+ * The catalogue: stock counts edited as a sheet and saved in one press (not
+ * row by row — counting stock is one walk down the shelves), plus adding and
+ * removing products.
  *
- * Edited as a sheet and saved in one press, not row by row. Counting stock is
- * one walk down the shelves, and a page that demanded a save after every
- * number would be a page that gets half-filled and abandoned.
- *
- * Rows that have not been touched are not sent at all, so a save is only ever
- * as large as the change.
+ * Rows that have not been touched are not sent at all, so a save is only
+ * ever as large as the change.
  */
 export default function StockTable({ products }) {
   const router = useRouter()
-  const [draft, setDraft] = useState(() => Object.fromEntries(products.map((p) => [p.model, String(p.stock ?? 0)])))
+  const [draft, setDraft] = useState(() => Object.fromEntries(products.map((p) => [p.id, String(p.stock_quantity ?? 0)])))
   const [status, setStatus] = useState('idle')
   const [failure, setFailure] = useState('')
+  const [notice, setNotice] = useState('')
   const [saved, setSaved] = useState(0)
 
   const dirty = useMemo(
-    () => products.filter((p) => draft[p.model] !== String(p.stock ?? 0)),
+    () => products.filter((p) => draft[p.id] !== String(p.stock_quantity ?? 0)),
     [products, draft],
   )
 
   const invalid = useMemo(
-    () => dirty.filter((p) => !/^\d+$/.test(String(draft[p.model] ?? '').trim())),
+    () => dirty.filter((p) => !/^\d+$/.test(String(draft[p.id] ?? '').trim())),
     [dirty, draft],
   )
 
-  const set = (model) => (e) => {
+  const set = (id) => (e) => {
     const { value } = e.target
-    setDraft((d) => ({ ...d, [model]: value }))
+    setDraft((d) => ({ ...d, [id]: value }))
     setSaved(0)
     setFailure('')
   }
@@ -52,7 +218,7 @@ export default function StockTable({ products }) {
     setStatus('saving')
     setFailure('')
 
-    const result = await setStockBulk(dirty.map((p) => ({ model: p.model, stock: Number(draft[p.model]) })))
+    const result = await setStockBulk(dirty.map((p) => ({ id: p.id, stock: Number(draft[p.id]) })))
     setStatus('idle')
 
     if (result?.error) {
@@ -61,29 +227,43 @@ export default function StockTable({ products }) {
     }
 
     if (result.failed?.length) {
-      setFailure(result.failed.map((f) => `${f.model}: ${f.error}`).join(' · '))
+      setFailure(result.failed.map((f) => `${f.id}: ${f.error}`).join(' · '))
       return
     }
 
     setSaved(dirty.length)
-    // The row values this page compares against are server-rendered, so they
-    // have to come back changed or every row would still read as dirty.
     router.refresh()
   }
 
   const revert = () => {
-    setDraft(Object.fromEntries(products.map((p) => [p.model, String(p.stock ?? 0)])))
+    setDraft(Object.fromEntries(products.map((p) => [p.id, String(p.stock_quantity ?? 0)])))
     setFailure('')
     setSaved(0)
   }
 
+  const refresh = (message) => {
+    setNotice(message ?? '')
+    router.refresh()
+  }
+
   return (
     <>
-      <div className="border-rule bg-glare mt-8 overflow-x-auto border">
-        <table className="w-full min-w-[40rem] border-collapse text-left">
+      <div className="mt-8">
+        <AddProduct onAdded={() => refresh('Product added.')} />
+      </div>
+
+      {notice && (
+        <p className="border-cool-600/40 bg-cool-600/[0.06] text-ink animate-reveal mt-4 flex items-center gap-2.5 border px-3.5 py-3 text-sm">
+          <CheckIcon className="text-cool-600 h-4 w-4 shrink-0" strokeWidth={2.2} />
+          {notice}
+        </p>
+      )}
+
+      <div className="border-rule bg-glare mt-4 overflow-x-auto border">
+        <table className="w-full min-w-[44rem] border-collapse text-left">
           <thead>
             <tr className="border-rule border-b">
-              {['Product', 'Model', 'Series', 'Last updated', 'In stock'].map((head) => (
+              {['Product', 'Retail price', 'Last updated', 'In stock', ''].map((head) => (
                 <th key={head} className={cx('label text-ink-soft px-4 py-3 font-medium', head === 'In stock' && 'text-right')}>
                   {head}
                 </th>
@@ -99,38 +279,38 @@ export default function StockTable({ products }) {
               </tr>
             ) : (
               products.map((product) => {
-                const value = draft[product.model] ?? ''
+                const value = draft[product.id] ?? ''
                 const bad = value.trim() !== '' && !/^\d+$/.test(value.trim())
-                const changed = value !== String(product.stock ?? 0)
-                const low = Number(product.stock ?? 0) <= LOW
+                const changed = value !== String(product.stock_quantity ?? 0)
+                const low = Number(product.stock_quantity ?? 0) <= LOW
 
                 return (
-                  <tr key={product.model} className="border-rule border-b last:border-b-0">
+                  <tr key={product.id} className={cx('border-rule border-b last:border-b-0', !product.is_active && 'opacity-50')}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        {product.photo && (
-                          <img src={product.photo} alt="" loading="lazy" className="h-9 w-9 shrink-0 object-contain" />
+                        {product.image_url && (
+                          <img src={product.image_url} alt="" loading="lazy" className="h-9 w-9 shrink-0 object-contain" />
                         )}
                         <span className="text-ink text-sm">{product.name || '—'}</span>
+                        {!product.is_active && <span className="label text-ink-soft">discontinued</span>}
                       </div>
                     </td>
-                    <td className="text-ink px-4 py-3 font-mono text-xs font-medium">{product.model}</td>
-                    <td className="text-ink-soft px-4 py-3 text-sm">{product.family || '—'}</td>
+                    <td className="text-ink-soft px-4 py-3 font-mono text-xs">{peso(product.retail_price)}</td>
                     <td className="text-ink-soft px-4 py-3 font-mono text-xs">
-                      {when(product.updated_at)}
+                      {when(product.created_at)}
                       {low && !changed && (
                         <span className="text-hot-600 ml-2 font-sans text-[11px] font-medium">low</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <label className="sr-only" htmlFor={`stock-${product.model}`}>
-                        Stock for {product.model}
+                      <label className="sr-only" htmlFor={`stock-${product.id}`}>
+                        Stock for {product.name}
                       </label>
                       <input
-                        id={`stock-${product.model}`}
+                        id={`stock-${product.id}`}
                         inputMode="numeric"
                         value={value}
-                        onChange={set(product.model)}
+                        onChange={set(product.id)}
                         aria-invalid={bad || undefined}
                         disabled={status === 'saving'}
                         className={cx(
@@ -142,6 +322,9 @@ export default function StockTable({ products }) {
                               : 'border-rule-strong bg-glare text-ink hover:border-ink-soft focus:border-ink',
                         )}
                       />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <RemoveProduct product={product} onRemoved={refresh} />
                     </td>
                   </tr>
                 )
