@@ -180,21 +180,35 @@ export async function approveVerification(verificationId, profileId) {
 }
 
 /**
- * rejectVerification(verificationId, profileId, reason, filePaths)
+ * rejectVerification(profileId, reason, filePaths)
  *
- * Admin only. Rejects the submission, deletes the uploaded document files,
- * appends to rejection_history, and applies a 7-day lock after 3+ rejections.
+ * Admin only. A rejected installer applicant does not get to resubmit — the
+ * account (auth login, profile) is deleted via delete_user_account()
+ * (supabase-reject-deletes-account.sql), the same function the Accounts tab
+ * uses. If they want to try again, that means registering fresh, not
+ * correcting a submission in place.
+ *
+ * The verification row itself is not part of that deletion — it's written
+ * with the rejection first, and installer_verifications.profile_id is
+ * ON DELETE SET NULL, so it survives as a standalone record of what was
+ * submitted and why it was turned down, detached from the account once that
+ * account is gone.
  *
  * filePaths: array of storage paths to delete, e.g.
  *   [businessRegPath, pvCertPath]
  */
-export async function rejectVerification(verificationId, profileId, reason, filePaths) {
+export async function rejectVerification(profileId, reason, filePaths) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
   const { data: isAdmin } = await supabase.rpc('is_admin')
   if (!isAdmin) return { error: 'Not authorized' }
+
+  const trimmedReason = String(reason ?? '').trim()
+  if (!trimmedReason) {
+    return { error: 'Say why. It stays on record after the account itself is gone.' }
+  }
 
   if (filePaths?.length) {
     await supabase.storage.from(BUCKET).remove(filePaths)
@@ -203,40 +217,29 @@ export async function rejectVerification(verificationId, profileId, reason, file
   const { data: current } = await supabase
     .from(TABLE)
     .select('rejection_history')
-    .eq('id', verificationId)
+    .eq('profile_id', profileId)
     .maybeSingle()
 
-  const updatedHistory = [
-    ...(current?.rejection_history || []),
-    { reason, rejected_at: new Date().toISOString() },
-  ]
-
-  const shouldLock = updatedHistory.length >= 3
-  const lockedUntil = shouldLock
-    ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-    : null
-
-  const { error: profileError } = await supabase.from('profiles')
-    .update({ verification_status: 'rejected' })
-    .eq('id', profileId)
-
-  if (profileError) return { error: profileError.message }
-
-  const { error: verificationError } = await supabase.from(TABLE)
+  const { error: verificationError } = await supabase
+    .from(TABLE)
     .update({
       status: 'rejected',
       reviewed_at: new Date().toISOString(),
       reviewed_by: user.id,
-      rejection_history: updatedHistory,
+      rejection_history: [...(current?.rejection_history || []), { reason: trimmedReason, rejected_at: new Date().toISOString() }],
       business_registration_url: null,
       pv_certification_url: null,
-      locked_until: lockedUntil,
     })
-    .eq('id', verificationId)
+    .eq('profile_id', profileId)
 
   if (verificationError) return { error: verificationError.message }
 
-  // TODO: send rejection email via Resend here, mention lockedUntil if set
+  const { data: deleted, error } = await supabase.rpc('delete_user_account', { p_target: profileId })
+  if (error) return { error: error.message }
+  if (!deleted) return { error: 'That account could not be deleted.' }
 
-  return { success: true, locked: shouldLock }
+  // TODO: send rejection email via Resend here, before the account (and its
+  // only record of the applicant's address) is gone.
+
+  return { success: true }
 }

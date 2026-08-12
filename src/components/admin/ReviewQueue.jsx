@@ -154,7 +154,7 @@ function Submission({ row, onReviewed }) {
     }
     setStatus('rejecting')
     setError('')
-    const result = await rejectVerification(row.id, row.profile_id, reason.trim(), files)
+    const result = await rejectVerification(row.profile_id, reason.trim(), files)
     if (result?.error) {
       setError(result.error)
       setStatus('idle')
@@ -218,11 +218,6 @@ function Submission({ row, onReviewed }) {
                   </li>
                 ))}
               </ul>
-              {history.length >= 2 && (
-                <p className="text-hot-700 mt-3 text-xs leading-relaxed">
-                  One more rejection puts this applicant under a seven-day hold.
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -282,8 +277,9 @@ function Submission({ row, onReviewed }) {
             placeholder="The registration document is expired — send the current one."
             className="bg-glare border-rule-strong text-ink placeholder:text-ink-soft hover:border-ink-soft focus:border-ink w-full resize-y border px-3.5 py-2.5 text-sm transition-colors outline-none"
           />
-          <p className="text-ink-soft mt-2 text-xs leading-relaxed">
-            Rejecting deletes the uploaded documents. The applicant can resubmit once every 24 hours.
+          <p className="text-hot-700 mt-2 text-xs leading-relaxed">
+            This deletes the account outright — login, profile, documents, everything. There is no resubmission; to try
+            again they would have to register from scratch. This cannot be undone.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -291,10 +287,10 @@ function Submission({ row, onReviewed }) {
               {status === 'rejecting' ? (
                 <>
                   <SpinnerIcon className="h-4 w-4" />
-                  Rejecting…
+                  Deleting account…
                 </>
               ) : (
-                'Confirm rejection'
+                'Reject and delete account'
               )}
             </Button>
             <Button variant="ghost" onClick={() => setRejecting(false)} disabled={busy}>
