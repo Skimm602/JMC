@@ -114,7 +114,7 @@ export async function adminSignUp(formData) {
         error: 'The account was created, but this site already has an admin. Ask them for a setup code.',
       }
     }
-    return { success: true, granted: true }
+    return grantedAndSignedOut(supabase)
   }
 
   const { data: granted, error: rpcError } = await supabase.rpc('redeem_admin_setup_code', {
@@ -130,6 +130,20 @@ export async function adminSignUp(formData) {
     }
   }
 
+  return grantedAndSignedOut(supabase)
+}
+
+/**
+ * Registration ends at the site's own log-in page, so the session sign-up
+ * handed out is dropped on the way there. Otherwise the account arrives at a
+ * log-in form it is already past, and typing a password into a form you are
+ * already through is the kind of thing that reads as broken when it fails.
+ *
+ * Signing out here is also what makes the next step meaningful: the role was
+ * granted a moment ago, and the log-in is where it first gets used.
+ */
+async function grantedAndSignedOut(supabase) {
+  await supabase.auth.signOut()
   return { success: true, granted: true }
 }
 

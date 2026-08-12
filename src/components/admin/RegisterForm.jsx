@@ -75,10 +75,15 @@ export default function AdminRegisterForm({ requiresCode }) {
 
     router.refresh()
 
-    // The account exists either way; what differs is whether the code could be
-    // spent yet. Email confirmation means there is no session to promote, so
-    // the code is redeemed after logging in instead.
-    router.replace(result.granted ? '/admin' : '/admin/login?setup=1')
+    // Both paths end at the site's own log-in page — there is one front door,
+    // and it is the same one every customer uses. What happens after the
+    // password is where admin and customer part: signIn() reads the profile and
+    // sends an admin to /admin on its own.
+    //
+    // `granted: false` here means the code could not be spent yet (email
+    // confirmation left the sign-up without a session), so that account logs in
+    // as an ordinary one and finishes at /admin/setup.
+    router.replace('/login?registered=1')
   }
 
   return (

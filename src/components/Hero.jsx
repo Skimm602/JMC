@@ -95,9 +95,13 @@ export default function Hero() {
               The roof is where it gets collected.
             </p>
 
+            {/* The claim is about the enclosure, not the town. A weather
+                station reads shade air at two metres; the wall an inverter is
+                bolted to has been in the sun since mid-morning, and that gap —
+                not the forecast — is what the derating curve gets asked about. */}
             <footer className="border-rule-shade text-glint-soft mt-8 border-t pt-6 text-[0.9375rem] leading-relaxed">
-              Cebu roofs run a 34 °C mean maximum at two in the afternoon. Everything we ship is specified to still be
-              at 100 % there.
+              An Ormoc weather station reads the shade. The wall your inverter is bolted to does not — enclosure
+              ambient sits past 40 °C by mid-afternoon. Everything we ship is specified to hold 100 % there.
             </footer>
           </blockquote>
         </div>

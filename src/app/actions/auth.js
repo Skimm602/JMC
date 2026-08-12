@@ -109,10 +109,13 @@ export async function signUp(formData) {
  *   { success: true, redirectTo: string }
  *   { error: string }
  *
- * Note: redirectTo here is a reasonable default landing page based on
- * customer_type. The (corporate) layout's gating logic still runs on
- * every request and will redirect pending/rejected corporate users to
- * the appropriate status page regardless of what's returned here.
+ * There is one log-in on this site, not two. An admin signs in through the
+ * same form as everybody else and is recognised here rather than at a separate
+ * door — /admin is where they are sent, not where they have to start.
+ *
+ * Note: redirectTo is a landing page, not a permission. The (installer)
+ * layout's gating still runs on every request, and /admin re-checks is_admin
+ * server-side, so a tampered value buys nothing.
  */
 export async function signIn(formData) {
   const supabase = await createClient()
@@ -135,14 +138,19 @@ export async function signIn(formData) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('customer_type')
+    .select('customer_type, is_admin')
     .eq('id', data.user.id)
     .maybeSingle()
 
-  return {
-    success: true,
-    redirectTo: profile?.customer_type === 'corporate' ? '/dashboard' : '/products',
+  // An admin logging in is going to work, not to shop.
+  if (profile?.is_admin) {
+    return { success: true, isAdmin: true, redirectTo: '/admin' }
   }
+
+  // Home, until the routes these used to name actually exist. /products and
+  // /dashboard were being returned by this action and neither is a page — the
+  // form ignored the value, which is the only reason nobody hit a 404.
+  return { success: true, isAdmin: false, redirectTo: '/' }
 }
 
 /**

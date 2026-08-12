@@ -503,7 +503,7 @@ export default function Registration() {
                       {...p}
                       value={form.address}
                       onChange={set('address')}
-                      placeholder="123 Mango Ave, Barangay Kamputhaw, Cebu City"
+                      placeholder="123 Real St, Barangay Cogon, Ormoc City"
                       autoComplete="street-address"
                     />
                   )}
@@ -631,7 +631,7 @@ export default function Registration() {
                         {...p}
                         value={form.serviceArea}
                         onChange={set('serviceArea')}
-                        placeholder="Cebu, Bohol, Negros"
+                        placeholder="Ormoc, Leyte, Biliran"
                       />
                     )}
                   </Field>

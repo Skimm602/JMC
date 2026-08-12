@@ -16,14 +16,14 @@ import { Eyebrow, Lede, Section, SectionHeading } from './ui.jsx'
 
 /** Example — replace with the real company story. */
 const STORY = [
-  'VIP Solar started in a workshop in Cebu, repairing inverters that had failed their first summer. The pattern was hard to miss: the hardware was not built for the heat it was sold into, and the people carrying the cost were the installers going back to fix it.',
+  'VIP Solar started in a workshop in Ormoc, repairing inverters that had failed their first summer. The pattern was hard to miss: the hardware was not built for the heat it was sold into, and the people carrying the cost were the installers going back to fix it.',
   'So we built our own. Every unit is specified for the conditions our own crews work in — sustained heat, salt air, unstable grids — and tested at those limits rather than at a laboratory 25 °C that nobody installs into.',
   'Today we manufacture across four product families and support installers in more than forty countries. The workshop is still here, and warranty returns still land on the same bench they always did.',
 ]
 
 /** Example — replace with the real dates. Add or remove rows freely. */
 const MILESTONES = [
-  { year: '2014', event: 'Founded as a repair shop in Cebu' },
+  { year: '2014', event: 'Founded as a repair shop in Ormoc' },
   { year: '2017', event: 'First S4 grid-tie inverter shipped' },
   { year: '2020', event: 'H6 hybrid platform and V-Stack storage' },
   { year: '2023', event: 'Installer program opens to the region' },

@@ -26,10 +26,10 @@ export default async function AdminRegisterPage() {
       footer={
         <>
           Already have an account?{' '}
-          <a href="/admin/login" className="text-glint border-b border-current/40 pb-px hover:border-current">
-            Log in
+          <a href="/login" className="text-glint border-b border-current/40 pb-px hover:border-current">
+            Log in on the site
           </a>
-          {!hasOwner && ' and claim it from there instead'}.
+          {hasOwner ? ' — an admin account lands here by itself' : ' and claim it from there instead'}.
         </>
       }
     >

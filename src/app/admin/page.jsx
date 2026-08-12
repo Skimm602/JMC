@@ -15,7 +15,10 @@ import ReviewQueue from '@/components/admin/ReviewQueue.jsx'
 export default async function AdminPage() {
   const { user, profile, isAdmin } = await readAdminSession()
 
-  if (!user) redirect('/admin/login')
+  // The site's own log-in, not a second one: signIn() reads the profile and
+  // sends an admin back here by itself, so arriving logged-out is a round trip
+  // through the same front door every customer uses.
+  if (!user) redirect('/login')
   if (!isAdmin) redirect('/admin/setup')
 
   const [queue, accounts] = await Promise.all([getPendingVerifications(), getAccountsOverview()])

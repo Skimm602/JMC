@@ -8,7 +8,7 @@ export const metadata = { title: 'Back office — setup' }
 export default async function AdminSetupPage() {
   const { user, isAdmin } = await readAdminSession()
 
-  if (!user) redirect('/admin/login')
+  if (!user) redirect('/login')
   if (isAdmin) redirect('/admin')
 
   const hasOwner = await adminExists()
@@ -25,7 +25,7 @@ export default async function AdminSetupPage() {
       footer={
         <>
           Wrong account?{' '}
-          <a href="/admin/login" className="text-glint border-b border-current/40 pb-px hover:border-current">
+          <a href="/login" className="text-glint border-b border-current/40 pb-px hover:border-current">
             Log in as someone else
           </a>
           .

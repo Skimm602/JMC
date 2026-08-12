@@ -9,6 +9,14 @@
  *
  * The vertical marker is the point of the chart for a Philippine installer —
  * it lands where they actually operate, not at some lab condition.
+ *
+ * It sits at the enclosure's ambient, not the town's. A weather station reads
+ * shade air at two metres; an inverter is bolted to a wall that has been in the
+ * sun since ten. The marker used to stand at 34 °C — a shade reading — which
+ * put it below the class average's own knee at 35, so at the one condition the
+ * figure highlighted, the competition was also at 100 % and the chart quietly
+ * argued nothing. Placed where the hardware actually sits, the two curves have
+ * already separated, which is the entire claim.
  */
 
 /* plot frame, in viewBox units */
@@ -40,7 +48,13 @@ const CLASS_AVG = [
   [60, 55],
 ]
 
-const DESIGN_POINT = 34
+/**
+ * Enclosure ambient on a sun-exposed wall through an Ormoc afternoon — the
+ * condition VIP specifies against, not a measurement of the town. Treat it as
+ * a design assumption: if the crew's own loggers say otherwise, this number
+ * and the copy in Hero.jsx move together.
+ */
+const DESIGN_POINT = 42
 
 const line = (pts) => pts.map(([t, o], i) => `${i ? 'L' : 'M'}${sx(t)} ${sy(o)}`).join(' ')
 
@@ -74,7 +88,7 @@ export default function DeratingCurve({ className = '' }) {
       viewBox="0 0 900 418"
       className={className}
       role="img"
-      aria-label="Derating curve. VIP inverters hold 100 percent of rated output up to 45 degrees Celsius ambient and 78 percent at 60 degrees. The class average begins derating at 35 degrees and reaches 55 percent at 60 degrees. Cebu's afternoon design condition of 34 degrees falls inside VIP's flat region."
+      aria-label="Derating curve. VIP inverters hold 100 percent of rated output up to 45 degrees Celsius ambient and 78 percent at 60 degrees. The class average begins derating at 35 degrees and reaches 55 percent at 60 degrees. At the 42 degree enclosure design condition of an Ormoc afternoon, VIP is still at 100 percent while the class average has fallen to about 87."
     >
       {/* ------------------------------- grid ------------------------------- */}
       <g className="stroke-hush/50">
@@ -130,7 +144,7 @@ export default function DeratingCurve({ className = '' }) {
           textAnchor="middle"
           className={`fill-hot-600 font-mono font-medium ${TICK_TYPE}`}
         >
-          34 °C
+          {DESIGN_POINT} °C on the wall
         </text>
       </g>
 

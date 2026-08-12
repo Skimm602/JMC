@@ -65,7 +65,12 @@ export default function LoginForm({ onDone, autoFocus = false }) {
     // from the cache it had while logged out.
     onDone?.()
     router.refresh()
-    router.push('/')
+
+    // Where you land is decided server-side, from the profile the server just
+    // read: an admin goes to the back office, everyone else goes home. The
+    // dialog in the header runs this same code, so logging in from the nav bar
+    // takes an admin straight to work too.
+    router.push(result?.redirectTo ?? '/')
   }
 
   return (
