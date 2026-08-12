@@ -26,7 +26,7 @@ export default async function AdminPage() {
   return (
     <>
       <AdminTopBar name={profile?.full_name || user.email} pending={queue.data?.length ?? 0} />
-      <ReviewQueue initialQueue={queue.data ?? []} accounts={accounts.data ?? []} />
+      <ReviewQueue initialQueue={queue.data ?? []} accounts={accounts.data ?? []} currentUserId={user.id} />
     </>
   )
 }

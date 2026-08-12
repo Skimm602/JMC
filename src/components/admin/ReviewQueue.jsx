@@ -10,6 +10,7 @@ import {
   getSignedDocUrl,
   rejectVerification,
 } from '@/app/actions/verification'
+import { setAdmin } from '@/app/actions/admin'
 
 /* --------------------------------- helpers -------------------------------- */
 
@@ -307,9 +308,63 @@ function Submission({ row, onReviewed }) {
   )
 }
 
+/* ------------------------------ admin toggle ------------------------------ */
+
+/**
+ * How a colleague becomes an admin now that there is no setup code: somebody
+ * who already is one presses this. No secret to issue, store or hand over —
+ * the trust was established when they logged in.
+ *
+ * The row for the current admin shows no control at all. The database refuses
+ * self-demotion outright, so offering the button would only produce an error.
+ */
+function AdminToggle({ account, isSelf, onChanged }) {
+  const [status, setStatus] = useState('idle')
+  const [error, setError] = useState('')
+
+  if (isSelf) {
+    return <span className="label text-ink-soft">you</span>
+  }
+
+  const toggle = async () => {
+    setStatus('working')
+    setError('')
+    const result = await setAdmin(account.id, !account.is_admin)
+    setStatus('idle')
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    onChanged()
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={status === 'working'}
+        className={cx(
+          'label border px-2.5 py-1 transition-colors disabled:opacity-50',
+          account.is_admin
+            ? 'border-rule-strong text-ink-soft hover:border-hot-600 hover:text-hot-600'
+            : 'border-rule-strong text-ink-soft hover:border-cool-600 hover:text-cool-600',
+        )}
+      >
+        {status === 'working' ? 'Saving…' : account.is_admin ? 'Remove admin' : 'Make admin'}
+      </button>
+      {error && (
+        <p role="alert" className="text-hot-600 mt-1.5 text-xs">
+          {error}
+        </p>
+      )}
+    </>
+  )
+}
+
 /* --------------------------------- screen --------------------------------- */
 
-export default function ReviewQueue({ initialQueue, accounts }) {
+export default function ReviewQueue({ initialQueue, accounts, currentUserId }) {
   const router = useRouter()
   const [queue, setQueue] = useState(initialQueue)
   const [refreshing, setRefreshing] = useState(false)
@@ -385,12 +440,16 @@ export default function ReviewQueue({ initialQueue, accounts }) {
             after pressing the button. */}
         <section className="mt-16">
           <h2 className="display-wide text-display-3 text-ink font-semibold">Accounts</h2>
+          <p className="text-ink-soft max-w-measure mt-3 text-sm leading-relaxed">
+            Everyone with an account, and who can open this panel. Adding an admin is a button here — there is no
+            invite code to issue and nothing to send anybody.
+          </p>
 
           <div className="border-rule bg-glare mt-6 overflow-x-auto border">
-            <table className="w-full min-w-[42rem] border-collapse text-left">
+            <table className="w-full min-w-[48rem] border-collapse text-left">
               <thead>
                 <tr className="border-rule border-b">
-                  {['Name', 'Company', 'Type', 'Verification', 'Registered'].map((head) => (
+                  {['Name', 'Company', 'Type', 'Verification', 'Registered', 'Back office'].map((head) => (
                     <th key={head} className="label text-ink-soft px-4 py-3 font-medium">
                       {head}
                     </th>
@@ -400,7 +459,7 @@ export default function ReviewQueue({ initialQueue, accounts }) {
               <tbody>
                 {accounts.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-ink-soft px-4 py-10 text-center text-sm">
+                    <td colSpan={6} className="text-ink-soft px-4 py-10 text-center text-sm">
                       No accounts yet.
                     </td>
                   </tr>
@@ -417,6 +476,13 @@ export default function ReviewQueue({ initialQueue, accounts }) {
                         <StatusChip status={account.verification_status} />
                       </td>
                       <td className="text-ink-soft px-4 py-3 font-mono text-xs">{when(account.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <AdminToggle
+                          account={account}
+                          isSelf={account.id === currentUserId}
+                          onChanged={refresh}
+                        />
+                      </td>
                     </tr>
                   ))
                 )}

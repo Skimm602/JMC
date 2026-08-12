@@ -8,22 +8,16 @@ import { AlertIcon, SpinnerIcon } from '../icons.jsx'
 import { adminSignUp } from '@/app/actions/admin'
 
 /**
- * Registering an admin.
+ * Registering the first admin.
  *
- * `requiresCode` is false only while the site has no admin at all, and in that
- * state the field is not merely hidden — the server is not asking for one
- * either. Rendering a code the page would then check itself would be theatre:
- * anyone who can read the form can read the code, so a code that arrives with
- * the form is no gate. The gate is that the window closes for good the moment
- * this form is used once.
- *
- * Once it has closed, the field appears and sits at the top rather than the
- * bottom — someone without a code should find that out before filling in a
- * password, not after.
+ * Nothing to enter but the account itself. The gate is not a secret typed into
+ * this form — it is that the form only exists while the site has no admin, and
+ * closes for good the moment it is used once. The page above refuses to render
+ * it after that, and the server refuses the submission independently.
  */
-export default function AdminRegisterForm({ requiresCode }) {
+export default function AdminRegisterForm() {
   const router = useRouter()
-  const [form, setForm] = useState({ code: '', fullName: '', email: '', password: '', confirm: '' })
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirm: '' })
   const [errors, setErrors] = useState({})
   const [failure, setFailure] = useState('')
   const [status, setStatus] = useState('idle')
@@ -43,7 +37,6 @@ export default function AdminRegisterForm({ requiresCode }) {
     event.preventDefault()
 
     const found = {}
-    if (requiresCode && !form.code.trim()) found.code = 'Enter the setup code you were issued.'
     if (!form.fullName.trim()) found.fullName = 'Enter your full name.'
     if (!form.email.trim()) found.email = 'Enter your email address.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) found.email = 'That address looks incomplete.'
@@ -60,7 +53,6 @@ export default function AdminRegisterForm({ requiresCode }) {
     setStatus('submitting')
 
     const data = new FormData()
-    if (requiresCode) data.set('setup_code', form.code.trim())
     data.set('full_name', form.fullName.trim())
     data.set('email', form.email.trim())
     data.set('password', form.password)
@@ -80,8 +72,8 @@ export default function AdminRegisterForm({ requiresCode }) {
     // password is where admin and customer part: signIn() reads the profile and
     // sends an admin to /admin on its own.
     //
-    // `granted: false` here means the code could not be spent yet (email
-    // confirmation left the sign-up without a session), so that account logs in
+    // `granted: false` here means the role could not be taken yet — email
+    // confirmation left the sign-up without a session — so that account logs in
     // as an ordinary one and finishes at /admin/setup.
     router.replace('/login?registered=1')
   }
@@ -92,38 +84,8 @@ export default function AdminRegisterForm({ requiresCode }) {
         <legend className="sr-only">Register a back-office account</legend>
 
         <div className="grid gap-5">
-          {requiresCode && (
-            <Field
-              label="Setup code"
-              required
-              error={errors.code}
-              hint="Single use. Ask the existing admin — it is never sent by email."
-            >
-              {(p) => (
-                <TextInput
-                  {...p}
-                  value={form.code}
-                  autoFocus
-                  onChange={set('code')}
-                  placeholder="VIPS-000000-000000-000000"
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="font-mono"
-                />
-              )}
-            </Field>
-          )}
-
           <Field label="Full name" required error={errors.fullName}>
-            {(p) => (
-              <TextInput
-                {...p}
-                value={form.fullName}
-                autoFocus={!requiresCode}
-                onChange={set('fullName')}
-                autoComplete="name"
-              />
-            )}
+            {(p) => <TextInput {...p} value={form.fullName} autoFocus onChange={set('fullName')} autoComplete="name" />}
           </Field>
 
           <Field label="Email" required error={errors.email}>
@@ -175,8 +137,6 @@ export default function AdminRegisterForm({ requiresCode }) {
               <SpinnerIcon className="h-4 w-4" />
               Creating…
             </>
-          ) : requiresCode ? (
-            'Create admin account'
           ) : (
             'Create the first admin'
           )}

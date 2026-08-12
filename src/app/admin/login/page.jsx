@@ -25,11 +25,11 @@ export default async function AdminLoginPage({ searchParams }) {
       footer={
         hasOwner ? (
           <>
-            Issued a setup code but no account yet?{' '}
-            <a href="/admin/register" className="text-glint border-b border-current/40 pb-px hover:border-current">
-              Register one
-            </a>
-            .
+            Nothing links here any more — the{' '}
+            <a href="/login" className="text-glint border-b border-current/40 pb-px hover:border-current">
+              site log-in
+            </a>{' '}
+            recognises an admin and brings you straight to the panel. This page still works if you have it bookmarked.
           </>
         ) : (
           <>

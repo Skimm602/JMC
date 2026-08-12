@@ -8,19 +8,22 @@ import { readAdminSession } from '@/utils/admin-session'
  *
  * /admin is not linked from anywhere and is not indexed, but neither of those
  * is a lock — anyone who types the URL arrives at these forms. What actually
- * separates an admin from a visitor is `profiles.is_admin`, and that column is
- * not writable from a browser session at all: a database trigger pins it, and
- * two SECURITY DEFINER functions are the only things that can turn it on.
+ * separates an admin from a visitor is `profiles.is_admin`, and an ordinary
+ * browser session cannot write that column: a database trigger pins it.
  *
- * Which of the two applies depends on whether the site has an owner yet:
+ * Three things can turn it on:
  *
- *   no admin exists  → claim_first_admin(). The window is open exactly once,
- *                      closes on use, and cannot reopen.
- *   an admin exists  → redeem_admin_setup_code(). A single-use code, stored as
- *                      a hash in a table the anon key cannot reach.
+ *   grant_admin_on_register()  — /admin/register. Open by the owner's explicit
+ *                                choice: anybody who reaches that URL becomes
+ *                                an admin. The path is the only secret.
+ *   claim_first_admin()        — /admin/setup, for an account that already
+ *                                exists on a site that has no admin yet.
+ *   set_admin()                — the Accounts table, pressed by an admin, to
+ *                                promote or demote somebody else.
  *
- * So the first account needs nothing but a password, and every account after
- * it needs something the existing admin handed over.
+ * The trigger still pins the column against everything else, so a customer
+ * cannot promote themselves by calling the REST API directly. What the open
+ * registration page gives away is the door, not the lock behind it.
  */
 
 /** What every failed credential check says, whatever actually went wrong. */
@@ -56,15 +59,17 @@ export async function adminSignIn(formData) {
 /**
  * adminSignUp(formData)
  *
- * Expects: email, password, full_name, setup_code.
+ * Expects: email, password, full_name.
  *
- * Creates the account, its profile row, and then grants it — by claim if the
- * site has no admin yet, by code if it does. The code is only asked for in the
- * second case, which is why the form does not always show that field.
+ * Open. Every account made here becomes an admin, whether or not the site
+ * already has one and whoever is filling in the form — the URL is the only
+ * thing standing between a stranger and the back office. That is the owner's
+ * explicit decision; see the note at the top of /admin/register.
  *
- * If the project has email confirmation switched on there is no session yet
- * and nothing can be granted — the account exists, so the answer is to log in
- * and finish at /admin/setup rather than to fail the whole thing.
+ * Registration ends at the site log-in either way, so the session sign-up
+ * handed out is dropped on the way there. If email confirmation is switched on
+ * there is no session to promote at all — the account still exists, so the
+ * caller is told to log in and finish at /admin/setup.
  */
 export async function adminSignUp(formData) {
   const supabase = await createClient()
@@ -72,15 +77,9 @@ export async function adminSignUp(formData) {
   const email = formData.get('email')
   const password = formData.get('password')
   const fullName = formData.get('full_name')
-  const setupCode = formData.get('setup_code')
-
-  // Read before creating the account, so the form's own reasoning and the
-  // server's agree about which of the two paths this sign-up is on.
-  const { data: hasOwner } = await supabase.rpc('admin_exists')
 
   if (!email || !password) return { error: 'Email and password are required.' }
   if (!fullName) return { error: 'Full name is required.' }
-  if (hasOwner && !setupCode) return { error: 'A setup code is required.' }
   if (String(password).length < 8) return { error: 'Use at least 8 characters for the password.' }
 
   const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
@@ -103,30 +102,14 @@ export async function adminSignUp(formData) {
     return { success: true, granted: false, needsConfirmation: true }
   }
 
-  if (!hasOwner) {
-    const { data: claimed, error: claimError } = await supabase.rpc('claim_first_admin')
-    if (claimError) return { error: claimError.message }
-    if (!claimed) {
-      // Somebody took the window between the check above and this call.
-      return {
-        success: true,
-        granted: false,
-        error: 'The account was created, but this site already has an admin. Ask them for a setup code.',
-      }
-    }
-    return grantedAndSignedOut(supabase)
-  }
+  const { data: granted, error: grantError } = await supabase.rpc('grant_admin_on_register')
+  if (grantError) return { error: grantError.message }
 
-  const { data: granted, error: rpcError } = await supabase.rpc('redeem_admin_setup_code', {
-    p_code: String(setupCode).trim(),
-  })
-
-  if (rpcError) return { error: rpcError.message }
   if (!granted) {
     return {
       success: true,
       granted: false,
-      error: 'The account was created, but that setup code is not valid or has already been used.',
+      error: 'The account was created, but admin access could not be given. Log in and try again.',
     }
   }
 
@@ -165,35 +148,31 @@ export async function claimFirstAdmin() {
   const { data: claimed, error } = await supabase.rpc('claim_first_admin')
 
   if (error) return { error: error.message }
-  if (!claimed) return { error: 'This site already has an admin. You need a setup code from them.' }
+  if (!claimed) return { error: 'This site already has an admin. Ask them to add you from the Accounts table.' }
 
   return { success: true }
 }
 
 /**
- * redeemAdminCode(formData)
+ * setAdmin(targetId, value)
  *
- * Expects: setup_code. Promotes the account already signed in on this session.
- * Separate from sign-up because an account can exist before its code does —
- * email confirmation, a code issued later, a second admin being added.
+ * How every admin after the first one is made: an existing admin turns the
+ * role on for an account that already exists. There is no code to hand over,
+ * because the person pressing this has already proved who they are.
+ *
+ * The database refuses to let anyone switch their own access off, so the last
+ * admin cannot leave the panel with nobody able to open it.
  */
-export async function redeemAdminCode(formData) {
+export async function setAdmin(targetId, value) {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { error: 'Your session has expired. Log in again.' }
-
-  const setupCode = formData.get('setup_code')
-  if (!setupCode) return { error: 'Enter your setup code.' }
-
-  const { data: granted, error } = await supabase.rpc('redeem_admin_setup_code', {
-    p_code: String(setupCode).trim(),
+  const { data: changed, error } = await supabase.rpc('set_admin', {
+    p_target: targetId,
+    p_value: Boolean(value),
   })
 
   if (error) return { error: error.message }
-  if (!granted) return { error: 'That setup code is not valid or has already been used.' }
+  if (!changed) return { error: 'That account could not be updated.' }
 
   return { success: true }
 }
