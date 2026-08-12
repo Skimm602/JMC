@@ -294,7 +294,7 @@ export default function Products() {
                 <ArrowLink href={active.manual} target="_blank" rel="noopener noreferrer">
                   User manual (PDF)
                 </ArrowLink>
-                <ArrowLink href="/register">Request a quote</ArrowLink>
+                <ArrowLink href="/products">See prices and order</ArrowLink>
               </div>
             </div>
 

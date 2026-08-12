@@ -48,7 +48,10 @@ const peso = (n) =>
 const when = (iso) =>
   iso ? new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
-const METHOD = { gcash: 'GCash', qrph: 'QR Ph', pesonet: 'PesoNet' }
+/** Keys are the values `orders.payment_method` actually holds — see
+ *  GATEWAY_PAYMENT_METHODS. `qr_ph`, not `qrph`: the mismatch meant a QR Ph
+ *  order showed the raw column value on its own receipt. */
+const METHOD = { gcash: 'GCash', qr_ph: 'QR Ph', pesonet: 'PesoNet' }
 
 function Stage({ status }) {
   const stage = STAGE[status] ?? { label: status, tone: 'neutral' }

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { readAdminSession } from '@/utils/admin-session'
+import { hasInstallerPricing } from '@/utils/pricing'
 
 const IMAGE_BUCKET = 'product-images'
 const DOCUMENT_BUCKET = 'product-documents'
@@ -29,6 +30,81 @@ export async function getProducts() {
 
   if (error) return { error: error.message }
   return { data }
+}
+
+/**
+ * The columns the shop needs. Deliberately not `*`: is_active is a stock-room
+ * concern the storefront filters on rather than renders, and there is no
+ * reason to ship the whole row to a browser to show a card.
+ */
+const STOREFRONT_COLUMNS =
+  'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url'
+
+/**
+ * Whether the person looking gets trade pricing.
+ *
+ * Asked here rather than in the page so /products and /products/[id] cannot
+ * answer it differently, and so the rule stays next to the query that reads
+ * the prices it applies to.
+ */
+async function readPricingContext(supabase) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { signedIn: false, isInstaller: false }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('customer_type, verification_status')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  return { signedIn: true, isInstaller: hasInstallerPricing(profile) }
+}
+
+/**
+ * getStorefront()
+ *
+ * The catalogue as a customer sees it: active products only, in name order,
+ * plus whether this visitor is being shown trade prices. Public — the shop
+ * has to be browsable by someone who has not signed up yet, and the "Anyone
+ * can view products" policy in supabase-orders-checkout.sql is what allows
+ * that.
+ *
+ * A discontinued product is filtered out here rather than greyed out, and
+ * createGatewayCheckout() applies the same filter independently, so a stale
+ * tab cannot order something that has since been pulled.
+ */
+export async function getStorefront() {
+  const supabase = await createClient()
+
+  const [{ data, error }, pricing] = await Promise.all([
+    supabase.from('products').select(STOREFRONT_COLUMNS).eq('is_active', true).order('name', { ascending: true }),
+    readPricingContext(supabase),
+  ])
+
+  if (error) return { error: error.message, ...pricing }
+  return { data, ...pricing }
+}
+
+/**
+ * getStorefrontProduct(id)
+ *
+ * One product's page. `data: null` with no error means the id is real but
+ * the product is not on sale — the page turns that into a 404 rather than a
+ * failure notice, because to a customer those are the same thing.
+ */
+export async function getStorefrontProduct(id) {
+  const supabase = await createClient()
+
+  const [{ data, error }, pricing] = await Promise.all([
+    supabase.from('products').select(STOREFRONT_COLUMNS).eq('id', id).eq('is_active', true).maybeSingle(),
+    readPricingContext(supabase),
+  ])
+
+  if (error) return { error: error.message, ...pricing }
+  return { data, ...pricing }
 }
 
 function readProductFields(formData) {

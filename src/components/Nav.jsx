@@ -24,7 +24,10 @@ const links = [
   // '/#top' rather than '/': from the form it goes home, and from home it
   // scrolls back to the hero instead of doing nothing at all.
   { label: 'Home', href: '/#top' },
-  { label: 'Products', dropdown: true },
+  // Pressing the label goes to the shop; the chevron beside it opens the
+  // shortcut menu into the technical range on the home page. One control
+  // could not do both without one of the two being a surprise.
+  { label: 'Products', href: '/products', dropdown: true },
   { label: 'About', href: '/#about' },
   { label: 'Support', href: '/#footer' },
 ]
@@ -186,12 +189,27 @@ export default function Nav({ user = null }) {
                     />
                   </a>
                 ) : (
-                  <div key={l.label} ref={productsRef} className="relative">
+                  <div key={l.label} ref={productsRef} className="relative flex items-center gap-1">
+                    <a
+                      href={l.href}
+                      className="group text-glint hover:text-glint-soft relative py-1 text-sm transition-colors"
+                    >
+                      {l.label}
+                      <span
+                        aria-hidden="true"
+                        className="bg-glint-soft absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
+                      />
+                    </a>
+
+                    {/* Its own control, with its own name: a chevron that is
+                        part of the link would make "go to the shop" and "show
+                        me the range" the same press. */}
                     <button
                       ref={triggerRef}
                       type="button"
                       aria-expanded={products}
                       aria-controls="products-menu"
+                      aria-label="Product families"
                       onClick={() => setProducts((v) => !v)}
                       onKeyDown={(e) => {
                         if (e.key !== 'ArrowDown') return
@@ -200,20 +218,12 @@ export default function Nav({ user = null }) {
                         setProducts(true)
                       }}
                       className={cx(
-                        'group relative flex items-center gap-1.5 py-1 text-sm transition-colors',
+                        'p-1 transition-colors',
                         products ? 'text-glint-soft' : 'text-glint hover:text-glint-soft',
                       )}
                     >
-                      {l.label}
                       <ChevronDownIcon
                         className={cx('h-3.5 w-3.5 transition-transform duration-200', products && 'rotate-180')}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className={cx(
-                          'bg-glint-soft absolute -bottom-0.5 left-0 h-px transition-all duration-300 ease-out',
-                          products ? 'w-full' : 'w-0 group-hover:w-full',
-                        )}
                       />
                     </button>
 
@@ -255,11 +265,11 @@ export default function Nav({ user = null }) {
                         ))}
 
                         <a
-                          href="/#products"
+                          href="/products"
                           onClick={() => setProducts(false)}
                           className="border-rule text-ink-soft hover:text-ink mt-1.5 flex items-center justify-between border-t px-3.5 py-3 text-xs font-medium transition-colors"
                         >
-                          See the full range
+                          All products and prices
                           <span aria-hidden="true">→</span>
                         </a>
                       </div>
@@ -366,17 +376,26 @@ export default function Nav({ user = null }) {
               </a>
             ) : (
               <div key={l.label} className="border-rule-shade border-b">
-                <button
-                  type="button"
-                  aria-expanded={mobileProducts}
-                  onClick={() => setMobileProducts((v) => !v)}
-                  className="text-glint hover:text-glint-soft flex w-full items-center justify-between py-4 text-sm font-medium transition-colors"
-                >
-                  {l.label}
-                  <ChevronDownIcon
-                    className={cx('h-4 w-4 transition-transform duration-200', mobileProducts && 'rotate-180')}
-                  />
-                </button>
+                <div className="flex items-center justify-between">
+                  <a
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    className="text-glint hover:text-glint-soft flex-1 py-4 text-sm font-medium transition-colors"
+                  >
+                    {l.label}
+                  </a>
+                  <button
+                    type="button"
+                    aria-expanded={mobileProducts}
+                    aria-label="Product families"
+                    onClick={() => setMobileProducts((v) => !v)}
+                    className="text-glint hover:text-glint-soft p-3 transition-colors"
+                  >
+                    <ChevronDownIcon
+                      className={cx('h-4 w-4 transition-transform duration-200', mobileProducts && 'rotate-180')}
+                    />
+                  </button>
+                </div>
 
                 {mobileProducts && (
                   <div className="animate-reveal pb-3">
