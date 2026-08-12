@@ -11,6 +11,10 @@ import { createClient } from '@/utils/supabase/server'
  *   - customer_type  ('individual' | 'installer', required)
  *   - full_name      (string, required)
  *   - company_name   (string, optional)
+ *   - phone          (string, optional)
+ *   - address        (string, optional)
+ *   - country        (string, optional)
+ *   - role           (string, optional)
  *
  * Creates the auth.users row (via supabase.auth.signUp) and the matching
  * profiles row in the same flow. Individual accounts get immediate access
@@ -40,6 +44,10 @@ export async function signUp(formData) {
 
   const fullName = formData.get('full_name')
   const companyName = formData.get('company_name') || null
+  const phone = formData.get('phone') || null
+  const address = formData.get('address') || null
+  const country = formData.get('country') || null
+  const role = formData.get('role') || null
 
   if (!fullName) {
     return { error: 'Full name is required.' }
@@ -65,7 +73,12 @@ export async function signUp(formData) {
     customer_type: customerType,
     verification_status: customerType === 'installer' ? 'pending' : 'not_required',
     full_name: fullName,
+    email,
     company_name: companyName,
+    phone,
+    address,
+    country,
+    role,
   })
 
   if (profileError) {

@@ -280,6 +280,10 @@ export default function Registration() {
     signUpData.set('customer_type', isInstaller ? 'installer' : 'individual')
     signUpData.set('full_name', form.fullName.trim())
     if (form.company.trim()) signUpData.set('company_name', form.company.trim())
+    if (form.phone.trim()) signUpData.set('phone', form.phone.trim())
+    if (form.address.trim()) signUpData.set('address', form.address.trim())
+    if (form.country) signUpData.set('country', form.country)
+    if (form.role) signUpData.set('role', form.role)
 
     const signUpResult = await signUp(signUpData)
 
