@@ -194,21 +194,21 @@ export async function getAccountsOverview() {
   const { supabase, isAdmin } = await readAdminSession()
   if (!isAdmin) return { error: 'Not authorized' }
 
-  // Two reads rather than a join: `admins` is a short list, and keeping it
-  // separate is the point of having moved it out of profiles. The table in the
-  // UI still gets one flat `is_admin` per row — that shape is derived here so
-  // the component never has to know where the answer came from.
-  const [{ data: profiles, error }, { data: admins }] = await Promise.all([
+  // The admins table is keyed by email, not by the profile's uuid, so the
+  // matching happens in the database where both are visible. What comes back
+  // here is a plain list of uuids, and the table in the UI still gets one flat
+  // `is_admin` per row — the component never has to know how it was worked out.
+  const [{ data: profiles, error }, { data: adminIds }] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, full_name, company_name, customer_type, verification_status, created_at')
       .order('created_at', { ascending: false }),
-    supabase.from('admins').select('id'),
+    supabase.rpc('admin_user_ids'),
   ])
 
   if (error) return { error: error.message }
 
-  const adminIds = new Set((admins ?? []).map((a) => a.id))
+  const admins = new Set(adminIds ?? [])
 
-  return { data: (profiles ?? []).map((p) => ({ ...p, is_admin: adminIds.has(p.id) })) }
+  return { data: (profiles ?? []).map((p) => ({ ...p, is_admin: admins.has(p.id) })) }
 }
