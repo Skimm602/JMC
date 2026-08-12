@@ -1,4 +1,4 @@
-import LoginForm from '@/components/LoginForm.jsx'
+import LoginCard from '@/components/LoginCard.jsx'
 import { Eyebrow, Rule, SectionHeading } from '@/components/ui.jsx'
 import { CheckIcon, ShieldIcon } from '@/components/icons.jsx'
 
@@ -43,7 +43,19 @@ export default async function LoginPage({ searchParams }) {
             </div>
           </div>
 
-          <div className="border-rule bg-glare corner-ticks text-ink border p-6 sm:p-9">
+          <LoginCard
+            footer={
+              <p className="border-rule text-ink-soft mt-8 border-t pt-6 text-sm">
+                No account yet?{' '}
+                <a
+                  href="/register"
+                  className="text-ink border-b border-current/40 pb-px font-medium transition-colors hover:border-current"
+                >
+                  Create one
+                </a>
+              </p>
+            }
+          >
             {justRegistered && (
               <div className="border-cool-600/40 bg-cool-600/[0.06] mb-8 flex items-start gap-3 border px-4 py-3.5">
                 <CheckIcon className="text-cool-600 mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.2} />
@@ -58,18 +70,7 @@ export default async function LoginPage({ searchParams }) {
               </div>
             )}
 
-            <LoginForm autoFocus />
-
-            <p className="border-rule text-ink-soft mt-8 border-t pt-6 text-sm">
-              No account yet?{' '}
-              <a
-                href="/register"
-                className="text-ink border-b border-current/40 pb-px font-medium transition-colors hover:border-current"
-              >
-                Create one
-              </a>
-            </p>
-          </div>
+          </LoginCard>
         </div>
       </section>
     </main>

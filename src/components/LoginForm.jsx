@@ -14,8 +14,13 @@ import { signIn } from '@/app/actions/auth'
  *
  * `onDone` lets the dialog close itself once a session exists; the page passes
  * nothing and simply navigates.
+ *
+ * `onSuccess` is awaited between the password being accepted and the
+ * navigation, which is the only gap an accepted log-in has to show anything
+ * in. The card on /login uses it to run its current around the border; the
+ * dialog in the header passes nothing and goes straight there.
  */
-export default function LoginForm({ onDone, autoFocus = false }) {
+export default function LoginForm({ onDone, onSuccess, autoFocus = false }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -60,10 +65,18 @@ export default function LoginForm({ onDone, autoFocus = false }) {
       return
     }
 
+    // `status` is left at 'submitting' on purpose from here on: the button
+    // stays disabled through the animation and the navigation, so a second
+    // press cannot start a second log-in over the top of the first.
+    onDone?.()
+
+    // The card's turn, if it wants one. Awaited rather than fired off, so the
+    // route change does not cut it off a few milliseconds in.
+    await onSuccess?.()
+
     // The session lives in a cookie the server just set, so the tree has to be
     // re-fetched rather than merely navigated — otherwise the page renders
     // from the cache it had while logged out.
-    onDone?.()
     router.refresh()
 
     // Where you land is decided server-side, from the profile the server just
