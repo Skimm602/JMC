@@ -1,5 +1,6 @@
 import Nav from '@/components/Nav.jsx'
 import Footer from '@/components/Footer.jsx'
+import { createClient } from '@/utils/supabase/server'
 
 /**
  * The public site: home, the product pages, registration and log-in. The bar
@@ -10,8 +11,18 @@ import Footer from '@/components/Footer.jsx'
  * The group's parentheses keep it out of the URL — /register is still
  * /register. What the group buys is a boundary: /admin sits outside it and so
  * inherits none of this.
+ *
+ * The session is read here rather than in the bar itself. The bar is a client
+ * component, and asking the browser who you are would render the logged-out
+ * header first and correct it a moment later — a flash of "Create account" at
+ * somebody who has had an account for a year.
  */
-export default function SiteLayout({ children }) {
+export default async function SiteLayout({ children }) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   return (
     <>
       <a
@@ -21,7 +32,9 @@ export default function SiteLayout({ children }) {
         Skip to content
       </a>
 
-      <Nav />
+      {/* Only what the header actually needs. Passing the whole Supabase user
+          object into a client component would ship its tokens to the browser. */}
+      <Nav user={user ? { email: user.email } : null} />
       {children}
       <Footer />
     </>

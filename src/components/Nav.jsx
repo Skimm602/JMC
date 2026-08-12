@@ -1,11 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Logo from './Logo.jsx'
 import LoginDialog from './LoginDialog.jsx'
+import AccountMenu, { initialFor } from './AccountMenu.jsx'
+import { signOut } from '@/app/actions/auth'
 import { PRODUCT_NAV } from './Products.jsx'
 import { Button, cx } from './ui.jsx'
-import { ArrowUpRightIcon, ChevronDownIcon, MenuIcon, XIcon } from './icons.jsx'
+import { ArrowUpRightIcon, ChevronDownIcon, MenuIcon, SpinnerIcon, XIcon } from './icons.jsx'
 
 /**
  * One list drives both the desktop bar and the mobile sheet, so the two can
@@ -26,7 +29,42 @@ const links = [
   { label: 'Support', href: '/#footer' },
 ]
 
-export default function Nav() {
+/**
+ * Logging out from the mobile sheet. Its own component only because it needs
+ * the pending state, and the sheet is not a place to leave a button that has
+ * been pressed looking unpressed.
+ */
+function SignOutRow({ onDone }) {
+  const router = useRouter()
+  const [status, setStatus] = useState('idle')
+
+  const leave = async () => {
+    setStatus('signing-out')
+    await signOut()
+    onDone?.()
+    router.refresh()
+    router.push('/')
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={leave}
+      disabled={status === 'signing-out'}
+      className="text-glint-soft hover:text-glint flex w-full items-center gap-2 py-4 text-left text-sm font-medium transition-colors disabled:opacity-60"
+    >
+      {status === 'signing-out' && <SpinnerIcon className="h-4 w-4" />}
+      {status === 'signing-out' ? 'Logging out…' : 'Log out'}
+    </button>
+  )
+}
+
+/**
+ * `user` comes from the layout, which reads the session on the server — the
+ * bar renders signed-in on the first paint rather than flickering through a
+ * logged-out state while a client-side check catches up.
+ */
+export default function Nav({ user = null }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [login, setLogin] = useState(false)
@@ -260,18 +298,29 @@ export default function Nav() {
                 )}
               />
 
-              <Button variant="ghostShade" size="sm" className="relative" onClick={() => setLogin(true)}>
-                Log in
-              </Button>
-              <a
-                href="/register"
-                className="group/cta border-glint-soft/40 hover:border-glint relative flex h-11 items-center gap-3 rounded-full border pr-1.5 pl-5 transition-colors duration-200"
-              >
-                <span className="text-glint text-sm font-medium">Create account</span>
-                <span className="border-glint-soft/50 group-hover/cta:border-glint grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-colors duration-200">
-                  <ArrowUpRightIcon className="text-glint h-4 w-4" />
-                </span>
-              </a>
+              {/* Signed in, the pair of buttons is replaced rather than added
+                  to: "Log in" and "Create account" both ask for something that
+                  has already happened. */}
+              {user ? (
+                <div className="relative">
+                  <AccountMenu user={user} />
+                </div>
+              ) : (
+                <>
+                  <Button variant="ghostShade" size="sm" className="relative" onClick={() => setLogin(true)}>
+                    Log in
+                  </Button>
+                  <a
+                    href="/register"
+                    className="group/cta border-glint-soft/40 hover:border-glint relative flex h-11 items-center gap-3 rounded-full border pr-1.5 pl-5 transition-colors duration-200"
+                  >
+                    <span className="text-glint text-sm font-medium">Create account</span>
+                    <span className="border-glint-soft/50 group-hover/cta:border-glint grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-colors duration-200">
+                      <ArrowUpRightIcon className="text-glint h-4 w-4" />
+                    </span>
+                  </a>
+                </>
+              )}
             </div>
 
             <button
@@ -355,20 +404,52 @@ export default function Nav() {
             ),
           )}
 
-          <Button as="a" href="/register" onClick={() => setOpen(false)} className="mt-4 w-full">
-            Create account
-            <ArrowUpRightIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outlineShade"
-            onClick={() => {
-              setOpen(false)
-              setLogin(true)
-            }}
-            className="mt-3 mb-4 w-full"
-          >
-            Log in
-          </Button>
+          {/* The same swap as the bar. A dropdown inside a sheet that is
+              already a dropdown would be a menu in a menu, so signed-in the
+              sheet just lists the two destinations flat. */}
+          {user ? (
+            <div className="mt-4 mb-4">
+              <div className="border-rule-shade flex items-center gap-3 border-b pb-4">
+                <span
+                  aria-hidden="true"
+                  className="bg-glint text-pit font-display display-wide grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold"
+                >
+                  {initialFor(user)}
+                </span>
+                <span className="min-w-0">
+                  <span className="label text-glint-soft block">Signed in as</span>
+                  <span className="text-glint mt-0.5 block truncate text-sm">{user.email}</span>
+                </span>
+              </div>
+
+              <a
+                href="/account/orders"
+                onClick={() => setOpen(false)}
+                className="border-rule-shade text-glint hover:text-glint-soft block border-b py-4 text-sm font-medium transition-colors"
+              >
+                Purchase history
+              </a>
+
+              <SignOutRow onDone={() => setOpen(false)} />
+            </div>
+          ) : (
+            <>
+              <Button as="a" href="/register" onClick={() => setOpen(false)} className="mt-4 w-full">
+                Create account
+                <ArrowUpRightIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outlineShade"
+                onClick={() => {
+                  setOpen(false)
+                  setLogin(true)
+                }}
+                className="mt-3 mb-4 w-full"
+              >
+                Log in
+              </Button>
+            </>
+          )}
         </nav>
       </div>
 
