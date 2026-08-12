@@ -10,7 +10,6 @@ import {
   getSignedDocUrl,
   rejectVerification,
 } from '@/app/actions/verification'
-import { setAdmin } from '@/app/actions/admin'
 
 /* --------------------------------- helpers -------------------------------- */
 
@@ -308,63 +307,10 @@ function Submission({ row, onReviewed }) {
   )
 }
 
-/* ------------------------------ admin toggle ------------------------------ */
-
-/**
- * How a colleague becomes an admin now that there is no setup code: somebody
- * who already is one presses this. No secret to issue, store or hand over —
- * the trust was established when they logged in.
- *
- * The row for the current admin shows no control at all. The database refuses
- * self-demotion outright, so offering the button would only produce an error.
- */
-function AdminToggle({ account, isSelf, onChanged }) {
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState('')
-
-  if (isSelf) {
-    return <span className="label text-ink-soft">you</span>
-  }
-
-  const toggle = async () => {
-    setStatus('working')
-    setError('')
-    const result = await setAdmin(account.id, !account.is_admin)
-    setStatus('idle')
-    if (result?.error) {
-      setError(result.error)
-      return
-    }
-    onChanged()
-  }
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={toggle}
-        disabled={status === 'working'}
-        className={cx(
-          'label border px-2.5 py-1 transition-colors disabled:opacity-50',
-          account.is_admin
-            ? 'border-rule-strong text-ink-soft hover:border-hot-600 hover:text-hot-600'
-            : 'border-rule-strong text-ink-soft hover:border-cool-600 hover:text-cool-600',
-        )}
-      >
-        {status === 'working' ? 'Saving…' : account.is_admin ? 'Remove admin' : 'Make admin'}
-      </button>
-      {error && (
-        <p role="alert" className="text-hot-600 mt-1.5 text-xs">
-          {error}
-        </p>
-      )}
-    </>
-  )
-}
 
 /* --------------------------------- screen --------------------------------- */
 
-export default function ReviewQueue({ initialQueue, accounts, currentUserId }) {
+export default function ReviewQueue({ initialQueue }) {
   const router = useRouter()
   const [queue, setQueue] = useState(initialQueue)
   const [refreshing, setRefreshing] = useState(false)
@@ -374,123 +320,66 @@ export default function ReviewQueue({ initialQueue, accounts, currentUserId }) {
     setRefreshing(true)
     const result = await getPendingVerifications()
     setRefreshing(false)
+
     if (result?.error) {
       setLoadError(result.error)
       return
     }
+
     setLoadError('')
     setQueue(result.data ?? [])
 
-    // The waiting count in the bar and the accounts roll below are both
-    // server-rendered, so replacing the queue in state alone would leave a
-    // freshly approved installer showing as pending in two other places.
+    // The waiting count in the rail is server-rendered, so replacing the queue
+    // in state alone would leave a freshly approved installer still counted.
     router.refresh()
   }
 
   return (
-    <main id="content" className="band-sheet min-h-[calc(100dvh-3.5rem)]">
-      <div className="mx-auto max-w-[76rem] px-5 py-12 sm:px-8 lg:py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="display-wide text-display-2 text-ink font-semibold">Installer verification</h1>
-            <p className="text-ink-soft mt-3 max-w-measure leading-relaxed">
-              Every account that ticked “I am a solar installer” lands here. Nothing they typed is trusted until
-              somebody has opened the document behind it.
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="display-wide text-display-2 text-ink font-semibold">Installer verification</h1>
+          <p className="text-ink-soft max-w-measure mt-3 leading-relaxed">
+            Every account that ticked “I am a solar installer” lands here. Nothing they typed is trusted until somebody
+            has opened the document behind it.
+          </p>
+        </div>
+        <Button variant="outline" onClick={refresh} disabled={refreshing}>
+          {refreshing ? (
+            <>
+              <SpinnerIcon className="h-4 w-4" />
+              Refreshing…
+            </>
+          ) : (
+            'Refresh'
+          )}
+        </Button>
+      </div>
+
+      {loadError && (
+        <p
+          role="alert"
+          className="border-hot-600/40 bg-hot-600/[0.06] text-ink mt-8 flex items-start gap-2.5 border px-3.5 py-3 text-xs leading-relaxed"
+        >
+          <AlertIcon className="text-hot-600 mt-px h-3.5 w-3.5 shrink-0" />
+          {loadError}
+        </p>
+      )}
+
+      <div className="mt-8 grid gap-6">
+        {queue.length === 0 ? (
+          <div className="border-rule bg-glare flex flex-col items-center border border-dashed px-6 py-20 text-center">
+            <ShieldIcon className="text-hush h-8 w-8" />
+            <p className="text-ink mt-5 font-medium">Nothing waiting</p>
+            <p className="text-ink-soft max-w-measure mt-2 text-sm leading-relaxed">
+              Every submitted verification has been reviewed. New installer registrations appear here as soon as their
+              documents are uploaded.
             </p>
           </div>
-          <Button variant="outline" onClick={refresh} disabled={refreshing}>
-            {refreshing ? (
-              <>
-                <SpinnerIcon className="h-4 w-4" />
-                Refreshing…
-              </>
-            ) : (
-              'Refresh'
-            )}
-          </Button>
-        </div>
-
-        {loadError && (
-          <p
-            role="alert"
-            className="border-hot-600/40 bg-hot-600/[0.06] text-ink mt-8 flex items-start gap-2.5 border px-3.5 py-3 text-xs leading-relaxed"
-          >
-            <AlertIcon className="text-hot-600 mt-px h-3.5 w-3.5 shrink-0" />
-            {loadError}
-          </p>
+        ) : (
+          queue.map((row) => <Submission key={row.id} row={row} onReviewed={refresh} />)
         )}
-
-        <div className="mt-10 grid gap-6">
-          {queue.length === 0 ? (
-            <div className="border-rule bg-glare flex flex-col items-center border border-dashed px-6 py-20 text-center">
-              <ShieldIcon className="text-hush h-8 w-8" />
-              <p className="text-ink mt-5 font-medium">Nothing waiting</p>
-              <p className="text-ink-soft mt-2 max-w-measure text-sm leading-relaxed">
-                Every submitted verification has been reviewed. New installer registrations appear here as soon as
-                their documents are uploaded.
-              </p>
-            </div>
-          ) : (
-            queue.map((row) => <Submission key={row.id} row={row} onReviewed={refresh} />)
-          )}
-        </div>
-
-        {/* The roll. The queue says who is waiting; this says whether an
-            approval actually landed, which is the question you have straight
-            after pressing the button. */}
-        <section className="mt-16">
-          <h2 className="display-wide text-display-3 text-ink font-semibold">Accounts</h2>
-          <p className="text-ink-soft max-w-measure mt-3 text-sm leading-relaxed">
-            Everyone with an account, and who can open this panel. Adding an admin is a button here — there is no
-            invite code to issue and nothing to send anybody.
-          </p>
-
-          <div className="border-rule bg-glare mt-6 overflow-x-auto border">
-            <table className="w-full min-w-[48rem] border-collapse text-left">
-              <thead>
-                <tr className="border-rule border-b">
-                  {['Name', 'Company', 'Type', 'Verification', 'Registered', 'Back office'].map((head) => (
-                    <th key={head} className="label text-ink-soft px-4 py-3 font-medium">
-                      {head}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {accounts.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-ink-soft px-4 py-10 text-center text-sm">
-                      No accounts yet.
-                    </td>
-                  </tr>
-                ) : (
-                  accounts.map((account) => (
-                    <tr key={account.id} className="border-rule border-b last:border-b-0">
-                      <td className="text-ink px-4 py-3 text-sm">
-                        {account.full_name || '—'}
-                        {account.is_admin && <span className="label text-cool-600 ml-2">admin</span>}
-                      </td>
-                      <td className="text-ink-soft px-4 py-3 text-sm">{account.company_name || '—'}</td>
-                      <td className="text-ink-soft px-4 py-3 text-sm">{account.customer_type}</td>
-                      <td className="px-4 py-3">
-                        <StatusChip status={account.verification_status} />
-                      </td>
-                      <td className="text-ink-soft px-4 py-3 font-mono text-xs">{when(account.created_at)}</td>
-                      <td className="px-4 py-3">
-                        <AdminToggle
-                          account={account}
-                          isSelf={account.id === currentUserId}
-                          onChanged={refresh}
-                        />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
       </div>
-    </main>
+    </>
   )
 }

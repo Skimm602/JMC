@@ -163,6 +163,27 @@ export async function claimFirstAdmin() {
  * The database refuses to let anyone switch their own access off, so the last
  * admin cannot leave the panel with nobody able to open it.
  */
+/**
+ * deleteUserAccount(targetId)
+ *
+ * Removes the account and everything hanging off it — profile, verification
+ * row, admin access. There is no undo, and the database refuses the one case
+ * a new sign-up could not repair: deleting yourself.
+ *
+ * Documents they uploaded stay in the storage bucket; SQL cannot reach object
+ * storage. Clear those from Storage → verification-docs if it matters.
+ */
+export async function deleteUserAccount(targetId) {
+  const supabase = await createClient()
+
+  const { data: deleted, error } = await supabase.rpc('delete_user_account', { p_target: targetId })
+
+  if (error) return { error: error.message }
+  if (!deleted) return { error: 'That account could not be deleted.' }
+
+  return { success: true }
+}
+
 export async function setAdmin(targetId, value) {
   const supabase = await createClient()
 
