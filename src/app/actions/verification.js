@@ -112,13 +112,8 @@ export async function getPendingVerifications() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile?.is_admin) return { error: 'Not authorized' }
+  const { data: isAdmin } = await supabase.rpc('is_admin')
+  if (!isAdmin) return { error: 'Not authorized' }
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -141,13 +136,8 @@ export async function getSignedDocUrl(filePath) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile?.is_admin) return { error: 'Not authorized' }
+  const { data: isAdmin } = await supabase.rpc('is_admin')
+  if (!isAdmin) return { error: 'Not authorized' }
 
   const { data, error } = await supabase.storage
     .from(BUCKET)
@@ -167,13 +157,8 @@ export async function approveVerification(verificationId, profileId) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { data: adminProfile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!adminProfile?.is_admin) return { error: 'Not authorized' }
+  const { data: isAdmin } = await supabase.rpc('is_admin')
+  if (!isAdmin) return { error: 'Not authorized' }
 
   const { error: profileError } = await supabase.from('profiles')
     .update({ verification_status: 'approved' })
@@ -208,13 +193,8 @@ export async function rejectVerification(verificationId, profileId, reason, file
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { data: adminProfile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!adminProfile?.is_admin) return { error: 'Not authorized' }
+  const { data: isAdmin } = await supabase.rpc('is_admin')
+  if (!isAdmin) return { error: 'Not authorized' }
 
   if (filePaths?.length) {
     await supabase.storage.from(BUCKET).remove(filePaths)

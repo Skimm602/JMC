@@ -136,14 +136,12 @@ export async function signIn(formData) {
     return { error: signInError.message }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('customer_type, is_admin')
-    .eq('id', data.user.id)
-    .maybeSingle()
+  // Whether this account runs the site lives in `admins`, not on the profile
+  // row — is_admin() is the same question every RLS policy asks.
+  const { data: isAdmin } = await supabase.rpc('is_admin')
 
   // An admin logging in is going to work, not to shop.
-  if (profile?.is_admin) {
+  if (isAdmin) {
     return { success: true, isAdmin: true, redirectTo: '/admin' }
   }
 

@@ -194,11 +194,21 @@ export async function getAccountsOverview() {
   const { supabase, isAdmin } = await readAdminSession()
   if (!isAdmin) return { error: 'Not authorized' }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, full_name, company_name, customer_type, verification_status, is_admin, created_at')
-    .order('created_at', { ascending: false })
+  // Two reads rather than a join: `admins` is a short list, and keeping it
+  // separate is the point of having moved it out of profiles. The table in the
+  // UI still gets one flat `is_admin` per row — that shape is derived here so
+  // the component never has to know where the answer came from.
+  const [{ data: profiles, error }, { data: admins }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, full_name, company_name, customer_type, verification_status, created_at')
+      .order('created_at', { ascending: false }),
+    supabase.from('admins').select('id'),
+  ])
 
   if (error) return { error: error.message }
-  return { data }
+
+  const adminIds = new Set((admins ?? []).map((a) => a.id))
+
+  return { data: (profiles ?? []).map((p) => ({ ...p, is_admin: adminIds.has(p.id) })) }
 }

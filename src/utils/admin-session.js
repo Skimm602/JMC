@@ -17,13 +17,16 @@ export async function readAdminSession() {
 
   if (!user) return { supabase, user: null, profile: null, isAdmin: false }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin, full_name')
-    .eq('id', user.id)
-    .maybeSingle()
+  // Two questions, two places, on purpose: who they are lives in `profiles`,
+  // and whether they run this site lives in `admins`. is_admin() is asked
+  // rather than the table read directly, so the answer here is the same one
+  // every RLS policy in the database gets.
+  const [{ data: profile }, { data: isAdmin }] = await Promise.all([
+    supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
+    supabase.rpc('is_admin'),
+  ])
 
-  return { supabase, user, profile, isAdmin: Boolean(profile?.is_admin) }
+  return { supabase, user, profile, isAdmin: Boolean(isAdmin) }
 }
 
 /**
