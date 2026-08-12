@@ -17,22 +17,33 @@ const peso = (n) =>
 
 /* -------------------------------- add product ------------------------------ */
 
-const EMPTY_FORM = { name: '', retail_price: '', installer_price: '', stock_quantity: '0', image_url: '' }
+/** Plain file input styled to match the text fields around it. */
+function FileField({ label, name, accept }) {
+  return (
+    <label className="grid gap-1.5">
+      <span className="label text-ink-soft">{label}</span>
+      <input
+        type="file"
+        name={name}
+        accept={accept}
+        className="border-rule-strong bg-glare text-ink file:text-cool-600 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium border px-3 py-2 text-xs outline-none"
+      />
+    </label>
+  )
+}
 
 function AddProduct({ onAdded }) {
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState(EMPTY_FORM)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
 
-  const field = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
-
   const submit = async (e) => {
     e.preventDefault()
+    const form = e.currentTarget
     setStatus('saving')
     setError('')
 
-    const result = await createProduct(form)
+    const result = await createProduct(new FormData(form))
     setStatus('idle')
 
     if (result?.error) {
@@ -40,7 +51,7 @@ function AddProduct({ onAdded }) {
       return
     }
 
-    setForm(EMPTY_FORM)
+    form.reset()
     setOpen(false)
     onAdded()
   }
@@ -59,8 +70,7 @@ function AddProduct({ onAdded }) {
         <span className="label text-ink-soft">Name</span>
         <input
           required
-          value={form.name}
-          onChange={field('name')}
+          name="name"
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
@@ -69,8 +79,7 @@ function AddProduct({ onAdded }) {
         <input
           required
           inputMode="decimal"
-          value={form.retail_price}
-          onChange={field('retail_price')}
+          name="retail_price"
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
@@ -78,8 +87,7 @@ function AddProduct({ onAdded }) {
         <span className="label text-ink-soft">Installer price (optional)</span>
         <input
           inputMode="decimal"
-          value={form.installer_price}
-          onChange={field('installer_price')}
+          name="installer_price"
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
@@ -87,19 +95,15 @@ function AddProduct({ onAdded }) {
         <span className="label text-ink-soft">Starting stock</span>
         <input
           inputMode="numeric"
-          value={form.stock_quantity}
-          onChange={field('stock_quantity')}
+          name="stock_quantity"
+          defaultValue="0"
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
-      <label className="grid gap-1.5">
-        <span className="label text-ink-soft">Image URL (optional)</span>
-        <input
-          value={form.image_url}
-          onChange={field('image_url')}
-          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
-        />
-      </label>
+
+      <FileField label="Image (optional)" name="image" accept="image/*" />
+      <FileField label="Datasheet PDF (optional)" name="datasheet" accept="application/pdf" />
+      <FileField label="User manual PDF (optional)" name="manual" accept="application/pdf" />
 
       {error && (
         <p role="alert" className="text-hot-600 sm:col-span-2 flex items-start gap-1.5 text-xs leading-relaxed">
@@ -291,8 +295,36 @@ export default function StockTable({ products }) {
                         {product.image_url && (
                           <img src={product.image_url} alt="" loading="lazy" className="h-9 w-9 shrink-0 object-contain" />
                         )}
-                        <span className="text-ink text-sm">{product.name || '—'}</span>
-                        {!product.is_active && <span className="label text-ink-soft">discontinued</span>}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-ink text-sm">{product.name || '—'}</span>
+                            {!product.is_active && <span className="label text-ink-soft">discontinued</span>}
+                          </div>
+                          {(product.datasheet_url || product.manual_url) && (
+                            <div className="mt-1 flex gap-3">
+                              {product.datasheet_url && (
+                                <a
+                                  href={product.datasheet_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-cool-600 hover:underline text-xs"
+                                >
+                                  Datasheet
+                                </a>
+                              )}
+                              {product.manual_url && (
+                                <a
+                                  href={product.manual_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-cool-600 hover:underline text-xs"
+                                >
+                                  User manual
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="text-ink-soft px-4 py-3 font-mono text-xs">{peso(product.retail_price)}</td>

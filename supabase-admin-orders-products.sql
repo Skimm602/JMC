@@ -13,6 +13,8 @@
 --    1  products   ->  is_active flag + full admin CRUD (create/edit/remove)
 --    2  orders     ->  admin_set_order_status(), the only way status moves
 --                       once a customer's payment has landed
+--    3  files       ->  datasheet_url/manual_url columns, and who may write
+--                       to the product-images / product-documents buckets
 --
 --  One transaction: if anything fails, nothing is applied.
 -- ===========================================================================
@@ -115,6 +117,33 @@ $$;
 
 revoke all on function public.admin_set_order_status(uuid, text) from public, anon;
 grant execute on function public.admin_set_order_status(uuid, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 3. Product files. `product-images` already exists as a public bucket;
+--    `product-documents` is created here for the datasheet/manual PDFs —
+--    also public, since a spec sheet is meant to be linked to, not gated.
+--    Public only controls reading (served straight from the bucket's public
+--    URL, no policy needed for that); writing still goes through RLS same as
+--    any other table, so both buckets need an explicit admin-only policy.
+-- ---------------------------------------------------------------------------
+alter table public.products add column if not exists datasheet_url text;
+alter table public.products add column if not exists manual_url   text;
+
+insert into storage.buckets (id, name, public)
+values ('product-documents', 'product-documents', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Admins manage product images" on storage.objects;
+create policy "Admins manage product images" on storage.objects
+  for all to authenticated
+  using (bucket_id = 'product-images' and public.is_admin())
+  with check (bucket_id = 'product-images' and public.is_admin());
+
+drop policy if exists "Admins manage product documents" on storage.objects;
+create policy "Admins manage product documents" on storage.objects
+  for all to authenticated
+  using (bucket_id = 'product-documents' and public.is_admin())
+  with check (bucket_id = 'product-documents' and public.is_admin());
 
 commit;
 

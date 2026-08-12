@@ -3,13 +3,17 @@
 import { createClient } from '@/utils/supabase/server'
 import { readAdminSession } from '@/utils/admin-session'
 
+const IMAGE_BUCKET = 'product-images'
+const DOCUMENT_BUCKET = 'product-documents'
+
 /**
  * The catalogue, and the admin's full control over it.
  *
  * Reads are public — the storefront needs the catalogue without being
  * anybody. Writes go through the "Admins manage products" RLS policy
  * (supabase-admin-orders-products.sql), so the database refuses a non-admin
- * regardless of what this layer does or forgets to check.
+ * regardless of what this layer does or forgets to check. The same is true
+ * of the product-images/product-documents buckets below.
  */
 
 /** Public — the site can read the catalogue without being anybody. */
@@ -18,77 +22,137 @@ export async function getProducts() {
 
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, is_active, created_at')
+    .select(
+      'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, is_active, created_at',
+    )
     .order('name', { ascending: true })
 
   if (error) return { error: error.message }
   return { data }
 }
 
-function readProductFields(fields) {
-  const name = String(fields?.name ?? '').trim()
-  const retailPrice = Number(fields?.retail_price)
+function readProductFields(formData) {
+  const name = String(formData.get('name') ?? '').trim()
+  const retailPrice = Number(formData.get('retail_price'))
 
   if (!name) return { error: 'Name is required.' }
   if (!Number.isFinite(retailPrice) || retailPrice < 0) return { error: 'Enter a valid retail price.' }
 
-  const installerPriceRaw = fields?.installer_price
+  const installerPriceRaw = formData.get('installer_price')
   const installerPrice =
     installerPriceRaw === '' || installerPriceRaw == null ? null : Number(installerPriceRaw)
   if (installerPrice != null && (!Number.isFinite(installerPrice) || installerPrice < 0)) {
     return { error: 'Installer price must be a valid number, or left blank.' }
   }
 
-  const stockQuantity = Number(fields?.stock_quantity ?? 0)
+  const stockQuantity = Number(formData.get('stock_quantity') ?? 0)
   if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
     return { error: 'Stock must be a whole number, zero or more.' }
   }
 
+  const description = String(formData.get('description') ?? '').trim()
+
   return {
     row: {
       name,
-      description: fields?.description?.trim() || null,
+      description: description || null,
       retail_price: retailPrice,
       installer_price: installerPrice,
       stock_quantity: stockQuantity,
-      image_url: fields?.image_url?.trim() || null,
-      is_bulk_only: Boolean(fields?.is_bulk_only),
     },
   }
 }
 
-/**
- * createProduct(fields)
- *
- * fields: { name, description?, retail_price, installer_price?, stock_quantity?, image_url?, is_bulk_only? }
- */
-export async function createProduct(fields) {
-  const { supabase, isAdmin } = await readAdminSession()
-  if (!isAdmin) return { error: 'Not authorized' }
+/** File extension used for the storage path — from the upload's own name, not guessed from content. */
+function extensionOf(file, fallback) {
+  const ext = file?.name?.split('.').pop()
+  return ext && ext.length <= 5 ? ext.toLowerCase() : fallback
+}
 
-  const { row, error: validationError } = readProductFields(fields)
-  if (validationError) return { error: validationError }
+async function uploadProductFile(supabase, bucket, productId, kind, file, fallbackExt) {
+  if (!file || typeof file === 'string' || file.size === 0) return {}
 
-  const { data, error } = await supabase.from('products').insert(row).select('id').single()
-  if (error) return { error: error.message }
+  const path = `${productId}/${kind}_${Date.now()}.${extensionOf(file, fallbackExt)}`
+  const { error } = await supabase.storage.from(bucket).upload(path, file)
+  if (error) return { error: `${kind} upload failed: ${error.message}` }
 
-  return { success: true, id: data.id }
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+  return { url: data.publicUrl }
 }
 
 /**
- * updateProduct(id, fields)
- *
- * Same shape as createProduct — the whole editable row, not a partial patch,
- * so the form and the database always agree on what a product is.
+ * Uploads whatever files are present in formData under image/datasheet/manual
+ * and returns the columns to write. A field the admin left empty is just
+ * absent from the result, so it never overwrites an existing file with null.
  */
-export async function updateProduct(id, fields) {
+async function uploadProductFiles(supabase, productId, formData) {
+  const image = await uploadProductFile(supabase, IMAGE_BUCKET, productId, 'image', formData.get('image'), 'jpg')
+  if (image.error) return { error: image.error }
+
+  const datasheet = await uploadProductFile(
+    supabase, DOCUMENT_BUCKET, productId, 'datasheet', formData.get('datasheet'), 'pdf',
+  )
+  if (datasheet.error) return { error: datasheet.error }
+
+  const manual = await uploadProductFile(supabase, DOCUMENT_BUCKET, productId, 'manual', formData.get('manual'), 'pdf')
+  if (manual.error) return { error: manual.error }
+
+  const urls = {}
+  if (image.url) urls.image_url = image.url
+  if (datasheet.url) urls.datasheet_url = datasheet.url
+  if (manual.url) urls.manual_url = manual.url
+  return { urls }
+}
+
+/**
+ * createProduct(formData)
+ *
+ * formData fields: name, description?, retail_price, installer_price?,
+ * stock_quantity?, image? (File), datasheet? (File, PDF), manual? (File, PDF)
+ *
+ * The row is inserted first so uploaded files have a product id to file
+ * under (product-images/<id>/..., product-documents/<id>/...), then the
+ * resulting URLs are saved onto that same row.
+ */
+export async function createProduct(formData) {
   const { supabase, isAdmin } = await readAdminSession()
   if (!isAdmin) return { error: 'Not authorized' }
 
-  const { row, error: validationError } = readProductFields(fields)
+  const { row, error: validationError } = readProductFields(formData)
   if (validationError) return { error: validationError }
 
-  const { error } = await supabase.from('products').update(row).eq('id', id)
+  const { data: product, error } = await supabase.from('products').insert(row).select('id').single()
+  if (error) return { error: error.message }
+
+  const { urls, error: uploadError } = await uploadProductFiles(supabase, product.id, formData)
+  if (uploadError) return { error: `Product was created, but ${uploadError}` }
+
+  if (Object.keys(urls).length) {
+    const { error: urlError } = await supabase.from('products').update(urls).eq('id', product.id)
+    if (urlError) return { error: `Product was created, but saving its files failed: ${urlError.message}` }
+  }
+
+  return { success: true, id: product.id }
+}
+
+/**
+ * updateProduct(id, formData)
+ *
+ * Same fields as createProduct. A file field left empty keeps whatever the
+ * product already has — this never clears an image/datasheet/manual, only
+ * replaces it.
+ */
+export async function updateProduct(id, formData) {
+  const { supabase, isAdmin } = await readAdminSession()
+  if (!isAdmin) return { error: 'Not authorized' }
+
+  const { row, error: validationError } = readProductFields(formData)
+  if (validationError) return { error: validationError }
+
+  const { urls, error: uploadError } = await uploadProductFiles(supabase, id, formData)
+  if (uploadError) return { error: uploadError }
+
+  const { error } = await supabase.from('products').update({ ...row, ...urls }).eq('id', id)
   if (error) return { error: error.message }
 
   return { success: true }
