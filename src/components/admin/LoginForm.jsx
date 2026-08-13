@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '../ui.jsx'
-import { Field, TextInput } from '../form.jsx'
+import { Field, PasswordInput, TextInput } from '../form.jsx'
 import { AlertIcon, SpinnerIcon } from '../icons.jsx'
 import { adminSignIn } from '@/app/actions/admin'
 
@@ -88,9 +88,8 @@ export default function AdminLoginForm() {
 
           <Field label="Password" required error={errors.password}>
             {(p) => (
-              <TextInput
+              <PasswordInput
                 {...p}
-                type="password"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value)

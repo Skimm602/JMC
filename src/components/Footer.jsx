@@ -34,11 +34,15 @@ export default function Footer() {
             <dl className="mt-7 space-y-2">
               <div className="flex gap-3 text-xs">
                 <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Trade desk</dt>
-                <dd className="text-glint font-mono">+63 32 000 0000</dd>
+                <dd className="text-glint space-y-1 font-mono">
+                  <span className="block">0917 508 8220</span>
+                  <span className="block">0949 954 8439</span>
+                  <span className="block">(053) 520-2459</span>
+                </dd>
               </div>
               <div className="flex gap-3 text-xs">
                 <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Email</dt>
-                <dd className="text-glint font-mono">installers@vipsolar.example</dd>
+                <dd className="text-glint font-mono">jmcsolarph@gmail.com</dd>
               </div>
             </dl>
           </div>

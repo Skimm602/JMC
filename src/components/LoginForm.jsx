@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from './ui.jsx'
-import { Checkbox, Field, TextInput } from './form.jsx'
+import { Checkbox, Field, PasswordInput, TextInput } from './form.jsx'
 import { AlertIcon, SpinnerIcon } from './icons.jsx'
 import { signIn } from '@/app/actions/auth'
 
@@ -111,9 +111,8 @@ export default function LoginForm({ onDone, onSuccess, autoFocus = false }) {
 
           <Field label="Password" required error={errors.password}>
             {(p) => (
-              <TextInput
+              <PasswordInput
                 {...p}
-                type="password"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value)

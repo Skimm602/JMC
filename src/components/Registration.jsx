@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import LegalDialog from './LegalDialog.jsx'
 import { Button, Eyebrow, Rule, SectionHeading, cx } from './ui.jsx'
-import { Checkbox, Field, Select, TextInput } from './form.jsx'
+import { Checkbox, Field, PasswordInput, Select, TextInput } from './form.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, ShieldIcon, SpinnerIcon, UploadIcon, XIcon } from './icons.jsx'
 import { signUp } from '@/app/actions/auth'
 import { submitVerification } from '@/app/actions/verification'
@@ -457,9 +457,8 @@ export default function Registration() {
 
                 <Field label="Password" required error={errors.password}>
                   {(p) => (
-                    <TextInput
+                    <PasswordInput
                       {...p}
-                      type="password"
                       value={form.password}
                       onChange={set('password')}
                       autoComplete="new-password"
@@ -469,9 +468,8 @@ export default function Registration() {
 
                 <Field label="Confirm password" required error={errors.confirm}>
                   {(p) => (
-                    <TextInput
+                    <PasswordInput
                       {...p}
-                      type="password"
                       value={form.confirm}
                       onChange={set('confirm')}
                       autoComplete="new-password"

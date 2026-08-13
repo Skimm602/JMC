@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '../ui.jsx'
-import { Field, TextInput } from '../form.jsx'
+import { Field, PasswordInput, TextInput } from '../form.jsx'
 import { AlertIcon, SpinnerIcon } from '../icons.jsx'
 import { adminSignUp } from '@/app/actions/admin'
 
@@ -96,9 +96,8 @@ export default function AdminRegisterForm() {
 
           <Field label="Password" required error={errors.password}>
             {(p) => (
-              <TextInput
+              <PasswordInput
                 {...p}
-                type="password"
                 value={form.password}
                 onChange={set('password')}
                 autoComplete="new-password"
@@ -108,9 +107,8 @@ export default function AdminRegisterForm() {
 
           <Field label="Confirm password" required error={errors.confirm}>
             {(p) => (
-              <TextInput
+              <PasswordInput
                 {...p}
-                type="password"
                 value={form.confirm}
                 onChange={set('confirm')}
                 autoComplete="new-password"

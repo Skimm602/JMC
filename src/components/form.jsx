@@ -1,8 +1,8 @@
 'use client'
 
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { cx } from './ui.jsx'
-import { AlertIcon, ChevronDownIcon, CheckIcon } from './icons.jsx'
+import { AlertIcon, ChevronDownIcon, CheckIcon, EyeIcon, EyeOffIcon } from './icons.jsx'
 
 const controlBase =
   'w-full bg-glare border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft transition-colors duration-200 outline-none'
@@ -77,6 +77,52 @@ export function TextInput({ id, invalid, describedBy, required, className, ...re
       {...rest}
       className={cx(controlBase, controlState(invalid), className)}
     />
+  )
+}
+
+/**
+ * A password field that can be read back.
+ *
+ * Typing a password blind is where sign-up forms lose people — the confirm
+ * field rejects a typo nobody can see, and the only way out is to clear both
+ * and try again. The eye ends that.
+ *
+ * Details that matter:
+ * - `type="button"`, or the toggle submits the form it sits in.
+ * - `type` is applied after `...rest` so a caller cannot leave a stale
+ *   `type="password"` on the field and freeze the toggle.
+ * - The button stays in the tab order. A mistyped password is exactly what a
+ *   keyboard user needs to check, and `aria-pressed` tells a screen reader
+ *   which state it is in.
+ * - Revealing is per-field and starts hidden every time the component mounts,
+ *   so a form re-opened later never comes back with a password on show.
+ */
+export function PasswordInput({ id, invalid, describedBy, required, className, ...rest }) {
+  const [shown, setShown] = useState(false)
+
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        required={required || undefined}
+        aria-required={required || undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        {...rest}
+        type={shown ? 'text' : 'password'}
+        className={cx(controlBase, controlState(invalid), 'pr-11', className)}
+      />
+      <button
+        type="button"
+        onClick={() => setShown((s) => !s)}
+        aria-label={shown ? 'Hide password' : 'Show password'}
+        aria-pressed={shown}
+        title={shown ? 'Hide password' : 'Show password'}
+        className="text-ink-soft hover:text-ink focus-visible:outline-hot-600 absolute inset-y-0 right-0 grid w-11 cursor-pointer place-items-center transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {shown ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+      </button>
+    </div>
   )
 }
 

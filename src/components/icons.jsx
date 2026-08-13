@@ -148,6 +148,27 @@ export const AlertIcon = (p) => (
   </Svg>
 )
 
+export const EyeIcon = (p) => (
+  <Svg {...p}>
+    <path d="M2.5 12S6.4 5.75 12 5.75 21.5 12 21.5 12 17.6 18.25 12 18.25 2.5 12 2.5 12Z" />
+    <circle cx="12" cy="12" r="3.1" />
+  </Svg>
+)
+
+/**
+ * The struck-through eye. The slash is drawn first so it sits under the rest
+ * of the glyph at the crossings, which reads cleaner at 16px than a line laid
+ * over the top of everything.
+ */
+export const EyeOffIcon = (p) => (
+  <Svg {...p}>
+    <path d="M3.5 3.5l17 17" />
+    <path d="M10.6 6.05A9.7 9.7 0 0 1 12 5.75c5.6 0 9.5 6.25 9.5 6.25a16.4 16.4 0 0 1-3.55 4.15" />
+    <path d="M6.6 7.95A16.2 16.2 0 0 0 2.5 12S6.4 18.25 12 18.25a9.9 9.9 0 0 0 3.4-.6" />
+    <path d="M9.85 9.9a3.1 3.1 0 0 0 4.3 4.3" />
+  </Svg>
+)
+
 export const SpinnerIcon = ({ className = 'h-5 w-5' }) => (
   <svg {...base} className={`${className} animate-spin`}>
     <path d="M12 3a9 9 0 1 0 9 9" />
