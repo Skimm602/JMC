@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { cx } from '../ui.jsx'
-import { BoltIcon, FileIcon, MenuIcon, ShieldIcon, SpinnerIcon, WrenchIcon, XIcon } from '../icons.jsx'
+import { ArrowUpRightIcon, BoltIcon, FileIcon, MenuIcon, ShieldIcon, SpinnerIcon, WrenchIcon, XIcon } from '../icons.jsx'
 import { adminSignOut } from '@/app/actions/admin'
 
 /**
@@ -90,6 +90,20 @@ export default function AdminSidebar({ name, pending = 0 }) {
     </div>
   )
 
+  /** The one way out. Everything else here is a page inside the back office;
+      this is the only link that leaves it, so it gets its own row rather
+      than blending into the destinations above. */
+  const viewSite = (
+    <a
+      href="/"
+      onClick={() => setOpen(false)}
+      className="text-glint-soft hover:bg-glint/[0.08] hover:text-glint flex items-center gap-3 rounded-[0.875rem] px-3.5 py-2.5 text-sm transition-colors"
+    >
+      <ArrowUpRightIcon className="h-4 w-4 shrink-0" />
+      View site
+    </a>
+  )
+
   const footer = (
     <div className="border-rule-shade border-t pt-4">
       <p className="text-glint-soft truncate px-1 text-xs">{name}</p>
@@ -131,6 +145,7 @@ export default function AdminSidebar({ name, pending = 0 }) {
         )}
       >
         <div className="grid gap-4 p-4">
+          {viewSite}
           <NavList pathname={pathname} pending={pending} onNavigate={() => setOpen(false)} />
           {footer}
         </div>
@@ -143,7 +158,9 @@ export default function AdminSidebar({ name, pending = 0 }) {
       <aside className="band-pit border-rule-shade fixed inset-y-0 left-0 z-40 hidden w-[17rem] flex-col border-r p-5 lg:flex">
         <div className="px-1">{brand}</div>
 
-        <div className="mt-8 flex-1">
+        <div className="mt-8 mb-4">{viewSite}</div>
+
+        <div className="flex-1">
           <NavList pathname={pathname} pending={pending} />
         </div>
 
