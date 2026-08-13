@@ -24,7 +24,7 @@ export async function getProducts() {
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, is_active, created_at',
+      'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, is_active, created_at',
     )
     .order('name', { ascending: true })
 
@@ -38,7 +38,7 @@ export async function getProducts() {
  * reason to ship the whole row to a browser to show a card.
  */
 const STOREFRONT_COLUMNS =
-  'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url'
+  'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications'
 
 /**
  * Whether the person looking gets trade pricing.
@@ -128,6 +128,11 @@ function readProductFields(formData) {
 
   const description = String(formData.get('description') ?? '').trim()
 
+  const specifications = formData
+    .getAll('specifications')
+    .map((s) => String(s).trim())
+    .filter(Boolean)
+
   return {
     row: {
       name,
@@ -135,6 +140,7 @@ function readProductFields(formData) {
       retail_price: retailPrice,
       installer_price: installerPrice,
       stock_quantity: stockQuantity,
+      specifications,
     },
   }
 }

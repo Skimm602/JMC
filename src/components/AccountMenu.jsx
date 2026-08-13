@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cx } from './ui.jsx'
-import { ChevronDownIcon, FileIcon, SpinnerIcon } from './icons.jsx'
+import { ChevronDownIcon, FileIcon, ShieldIcon, SpinnerIcon } from './icons.jsx'
 import { signOut } from '@/app/actions/auth'
 
 /**
@@ -23,7 +23,7 @@ export function initialFor(user) {
  * two ask for something that has already happened, and leaving them up is how
  * a header ends up telling a logged-in customer to make a second account.
  */
-export default function AccountMenu({ user }) {
+export default function AccountMenu({ user, isAdmin = false }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [status, setStatus] = useState('idle')
@@ -93,7 +93,22 @@ export default function AccountMenu({ user }) {
           <div className="border-rule border-b px-3.5 pt-2.5 pb-3">
             <p className="label text-ink-soft">Signed in as</p>
             <p className="text-ink mt-1.5 truncate text-sm font-medium">{user?.email}</p>
+            {isAdmin && <p className="text-cool-600 mt-1.5 text-xs font-medium">Admin</p>}
           </div>
+
+          {isAdmin && (
+            <a
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="hover:bg-sheet group/item mt-1.5 flex items-center gap-3 rounded-[0.875rem] px-3.5 py-3 transition-colors"
+            >
+              <ShieldIcon className="text-cool-600 h-4 w-4 shrink-0" />
+              <span className="min-w-0">
+                <span className="text-ink block text-sm font-medium">Admin</span>
+                <span className="text-ink-soft mt-0.5 block text-xs">Back office</span>
+              </span>
+            </a>
+          )}
 
           <a
             href="/account/orders"

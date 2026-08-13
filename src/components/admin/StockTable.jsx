@@ -36,6 +36,11 @@ function AddProduct({ onAdded }) {
   const [open, setOpen] = useState(false)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
+  const [specs, setSpecs] = useState([''])
+
+  const addSpec = () => setSpecs((s) => [...s, ''])
+  const setSpec = (i) => (e) => setSpecs((s) => s.map((v, idx) => (idx === i ? e.target.value : v)))
+  const removeSpec = (i) => setSpecs((s) => s.filter((_, idx) => idx !== i))
 
   const submit = async (e) => {
     e.preventDefault()
@@ -52,6 +57,7 @@ function AddProduct({ onAdded }) {
     }
 
     form.reset()
+    setSpecs([''])
     setOpen(false)
     onAdded()
   }
@@ -104,6 +110,36 @@ function AddProduct({ onAdded }) {
       <FileField label="Image (optional)" name="image" accept="image/*" />
       <FileField label="Datasheet PDF (optional)" name="datasheet" accept="application/pdf" />
       <FileField label="User manual PDF (optional)" name="manual" accept="application/pdf" />
+
+      <div className="grid gap-1.5 sm:col-span-2">
+        <span className="label text-ink-soft">Specifications (optional)</span>
+        <div className="grid gap-2">
+          {specs.map((value, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                name="specifications"
+                value={value}
+                onChange={setSpec(i)}
+                placeholder="e.g. Rated output: 6.0 kW"
+                className="border-rule-strong bg-glare text-ink focus:border-ink flex-1 border px-3 py-2 text-sm outline-none"
+              />
+              {specs.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeSpec(i)}
+                  aria-label="Remove specification"
+                  className="text-ink-soft hover:text-hot-600 p-1.5 transition-colors"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={addSpec} className="justify-self-start">
+          + Add specification
+        </Button>
+      </div>
 
       {error && (
         <p role="alert" className="text-hot-600 sm:col-span-2 flex items-start gap-1.5 text-xs leading-relaxed">
