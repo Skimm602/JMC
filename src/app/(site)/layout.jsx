@@ -25,6 +25,14 @@ export default async function SiteLayout({ children }) {
 
   const { data: isAdmin } = user ? await supabase.rpc('is_admin') : { data: false }
 
+  // Sum of quantities, not row count — "3" on the badge should mean three
+  // units waiting to be ordered, the number that matters to a shopper,
+  // whether that is one line of three or three lines of one.
+  const { data: cartRows } = user
+    ? await supabase.from('cart_items').select('quantity').eq('user_id', user.id)
+    : { data: [] }
+  const cartCount = (cartRows ?? []).reduce((sum, row) => sum + row.quantity, 0)
+
   return (
     <>
       <a
@@ -36,7 +44,7 @@ export default async function SiteLayout({ children }) {
 
       {/* Only what the header actually needs. Passing the whole Supabase user
           object into a client component would ship its tokens to the browser. */}
-      <Nav user={user ? { email: user.email } : null} isAdmin={Boolean(isAdmin)} />
+      <Nav user={user ? { email: user.email } : null} isAdmin={Boolean(isAdmin)} cartCount={cartCount} />
       {children}
       <Footer />
     </>

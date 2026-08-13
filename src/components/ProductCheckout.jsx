@@ -4,10 +4,11 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createGatewayCheckout } from '@/app/actions/checkout'
+import { addToCart } from '@/app/actions/cart'
 import { formatPeso, quote, VAT_RATE } from '@/utils/pricing'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
-import { AlertIcon, ArrowRightIcon, CheckIcon, SpinnerIcon } from './icons.jsx'
+import { AlertIcon, ArrowRightIcon, CartIcon, CheckIcon, SpinnerIcon } from './icons.jsx'
 
 /**
  * Buying one unit, in three screens.
@@ -86,6 +87,8 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
   const [error, setError] = useState(null)
   const [pending, setPending] = useState(false)
   const [placed, setPlaced] = useState(null)
+  const [cartStatus, setCartStatus] = useState('idle')
+  const [cartError, setCartError] = useState(null)
 
   const stock = product.stock_quantity
   const soldOut = stock === 0
@@ -101,6 +104,23 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
     event.preventDefault()
     setError(null)
     setStep('summary')
+  }
+
+  const addToCartNow = async () => {
+    setCartStatus('adding')
+    setCartError(null)
+
+    const result = await addToCart(product.id, quantity)
+    setCartStatus(result?.error ? 'idle' : 'added')
+
+    if (result?.error) {
+      setCartError(result.error)
+      return
+    }
+
+    // Only the header's cart badge reads server state on this page — nothing
+    // else here depends on the cart, so a refresh is enough to update it.
+    router.refresh()
   }
 
   const place = async (event) => {
@@ -421,10 +441,34 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
             </div>
           )}
 
-          <Button type="submit" size="lg" disabled={stock != null && quantity > stock} className="mt-7 w-full">
-            Checkout
-            <ArrowRightIcon className="h-4 w-4" />
-          </Button>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Button type="submit" size="lg" disabled={stock != null && quantity > stock} className="flex-1">
+              Checkout
+              <ArrowRightIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              disabled={(stock != null && quantity > stock) || cartStatus === 'adding'}
+              onClick={addToCartNow}
+            >
+              {cartStatus === 'adding' ? (
+                <SpinnerIcon className="h-4 w-4" />
+              ) : cartStatus === 'added' ? (
+                <CheckIcon className="h-4 w-4" />
+              ) : (
+                <CartIcon className="h-4 w-4" />
+              )}
+              {cartStatus === 'added' ? 'Added' : 'Add to cart'}
+            </Button>
+          </div>
+
+          {cartError && (
+            <div className="mt-4">
+              <Notice>{cartError}</Notice>
+            </div>
+          )}
 
           <p className="text-ink-soft mt-4 text-xs leading-relaxed">
             Nothing is charged yet. The next screen shows the full total, including {Math.round(VAT_RATE * 100)} %

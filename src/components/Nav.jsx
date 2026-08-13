@@ -8,7 +8,7 @@ import AccountMenu, { initialFor } from './AccountMenu.jsx'
 import { signOut } from '@/app/actions/auth'
 import { PRODUCT_NAV } from './Products.jsx'
 import { Button, cx } from './ui.jsx'
-import { ArrowUpRightIcon, ChevronDownIcon, MenuIcon, SpinnerIcon, XIcon } from './icons.jsx'
+import { ArrowUpRightIcon, CartIcon, ChevronDownIcon, MenuIcon, SpinnerIcon, XIcon } from './icons.jsx'
 
 /**
  * One list drives both the desktop bar and the mobile sheet, so the two can
@@ -67,7 +67,7 @@ function SignOutRow({ onDone }) {
  * bar renders signed-in on the first paint rather than flickering through a
  * logged-out state while a client-side check catches up.
  */
-export default function Nav({ user = null, isAdmin = false }) {
+export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [login, setLogin] = useState(false)
@@ -308,6 +308,24 @@ export default function Nav({ user = null, isAdmin = false }) {
                 )}
               />
 
+              {/* Visible whether signed in or not — a guest can still find
+                  their way to /cart, which is where "log in to see it" lives. */}
+              <a
+                href="/cart"
+                aria-label={cartCount > 0 ? `Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}` : 'Cart'}
+                className="text-glint hover:text-glint-soft relative p-2 transition-colors"
+              >
+                <CartIcon className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="bg-cool-600 text-glare absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-bold"
+                  >
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </a>
+
               {/* Signed in, the pair of buttons is replaced rather than added
                   to: "Log in" and "Create account" both ask for something that
                   has already happened. */}
@@ -422,6 +440,15 @@ export default function Nav({ user = null, isAdmin = false }) {
               </div>
             ),
           )}
+
+          <a
+            href="/cart"
+            onClick={() => setOpen(false)}
+            className="border-rule-shade text-glint hover:text-glint-soft flex items-center justify-between border-b py-4 text-sm font-medium transition-colors"
+          >
+            Cart
+            {cartCount > 0 && <span className="label text-glint-soft">{cartCount}</span>}
+          </a>
 
           {/* The same swap as the bar. A dropdown inside a sheet that is
               already a dropdown would be a menu in a menu, so signed-in the

@@ -122,6 +122,13 @@ export const FileIcon = (p) => (
   </Svg>
 )
 
+export const CartIcon = (p) => (
+  <Svg {...p}>
+    <path d="M6 8h12l-1.2 10.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+  </Svg>
+)
+
 export const XIcon = (p) => (
   <Svg {...p}>
     <path d="M6 6l12 12M18 6 6 18" />
