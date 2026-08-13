@@ -23,7 +23,9 @@ export async function getOrders() {
   const { data: orders, error } = await supabase
     .from('orders')
     .select(
-      'id, user_id, status, payment_method, payment_reference, total, created_at, paid_at, order_items(id, quantity, price_at_purchase, products(id, name, image_url))',
+      'id, user_id, status, payment_method, payment_reference, total, created_at, paid_at, ' +
+        'street_address, city, province, postal_code, courier, tracking_number, admin_notes, ' +
+        'order_items(id, quantity, price_at_purchase, products(id, name, image_url))',
     )
     .order('created_at', { ascending: false })
 
@@ -61,6 +63,73 @@ export async function setOrderStatus(orderId, status) {
   const { data: changed, error } = await supabase.rpc('admin_set_order_status', {
     p_order_id: orderId,
     p_status: status,
+  })
+
+  if (error) return { error: error.message }
+  if (!changed) return { error: 'That order could not be updated.' }
+
+  return { success: true }
+}
+
+/**
+ * updateOrderAddress(orderId, { streetAddress, city, province, postalCode })
+ *
+ * Fixing a typo caught after the order was placed. Same four fields
+ * checkout itself requires, checked the same way — the database rejects an
+ * edit that would leave the order with an address the warehouse cannot act
+ * on, same as it would a customer's.
+ */
+export async function updateOrderAddress(orderId, address) {
+  const supabase = await createClient()
+
+  const { data: changed, error } = await supabase.rpc('admin_update_order_address', {
+    p_order_id: orderId,
+    p_street_address: address?.streetAddress ?? '',
+    p_city: address?.city ?? '',
+    p_province: address?.province ?? '',
+    p_postal_code: address?.postalCode ?? '',
+  })
+
+  if (error) return { error: error.message }
+  if (!changed) return { error: 'That order could not be updated.' }
+
+  return { success: true }
+}
+
+/**
+ * updateOrderTracking(orderId, { courier, trackingNumber })
+ *
+ * Independent of marking an order shipped — a courier and a tracking number
+ * are often known before that press, not after, and there is no reason to
+ * force them into the same action.
+ */
+export async function updateOrderTracking(orderId, { courier, trackingNumber }) {
+  const supabase = await createClient()
+
+  const { data: changed, error } = await supabase.rpc('admin_update_order_tracking', {
+    p_order_id: orderId,
+    p_courier: courier ?? '',
+    p_tracking_number: trackingNumber ?? '',
+  })
+
+  if (error) return { error: error.message }
+  if (!changed) return { error: 'That order could not be updated.' }
+
+  return { success: true }
+}
+
+/**
+ * updateOrderNotes(orderId, notes)
+ *
+ * Internal only — getMyOrders() never selects admin_notes, so nothing
+ * written here reaches the customer the order belongs to.
+ */
+export async function updateOrderNotes(orderId, notes) {
+  const supabase = await createClient()
+
+  const { data: changed, error } = await supabase.rpc('admin_update_order_notes', {
+    p_order_id: orderId,
+    p_notes: notes ?? '',
   })
 
   if (error) return { error: error.message }

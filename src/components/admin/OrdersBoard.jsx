@@ -3,8 +3,9 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Rule, cx } from '../ui.jsx'
+import { Field, TextInput } from '../form.jsx'
 import { AlertIcon, FileIcon, SpinnerIcon } from '../icons.jsx'
-import { setOrderStatus } from '@/app/actions/orders'
+import { setOrderStatus, updateOrderAddress, updateOrderNotes, updateOrderTracking } from '@/app/actions/orders'
 
 const when = (iso) =>
   iso
@@ -30,10 +31,17 @@ const STATUS_TONE = {
   cancelled: 'border-hot-600/45 bg-hot-600/[0.06] text-hot-700',
 }
 
-/** What an admin may move an order to, from where it is now. */
+/**
+ * What an admin may move an order to, from where it is now.
+ *
+ * pending / pending_bank_transfer -> paid is a manual confirmation rather
+ * than a fulfilment step — with no live payment gateway wired in yet, it is
+ * the only way anything ever leaves "awaiting payment". See
+ * admin_set_order_status() in supabase-admin-order-management.sql.
+ */
 const NEXT_STATUSES = {
-  pending: ['cancelled'],
-  pending_bank_transfer: ['cancelled'],
+  pending: ['paid', 'cancelled'],
+  pending_bank_transfer: ['paid', 'cancelled'],
   paid: ['processing', 'shipped', 'completed', 'cancelled'],
   processing: ['shipped', 'completed', 'cancelled'],
   shipped: ['completed', 'cancelled'],
@@ -51,11 +59,239 @@ const STATUS_LABEL = {
   cancelled: 'cancelled',
 }
 
+/** The button copy for moving *to* this status — "Confirm payment received"
+ *  reads correctly whether the money was GCash, QR Ph or a bank transfer
+ *  read off a statement, so it is not worded around any one method. */
+const MOVE_LABEL = { paid: 'Confirm payment received' }
+
 function StatusChip({ status }) {
   return (
     <span className={cx('label inline-flex items-center border px-2 py-1', STATUS_TONE[status] ?? STATUS_TONE.pending)}>
       {STATUS_LABEL[status] ?? status}
     </span>
+  )
+}
+
+/* ------------------------------ inline editors ----------------------------- */
+
+/** Small "Save"/"Saving…"/"Saved" button that resets itself after a beat. */
+function SaveButton({ pending, saved, ...rest }) {
+  return (
+    <Button type="submit" size="sm" disabled={pending} {...rest}>
+      {pending && <SpinnerIcon className="h-3.5 w-3.5" />}
+      {pending ? 'Saving…' : saved ? 'Saved' : 'Save'}
+    </Button>
+  )
+}
+
+/**
+ * The shipping address, editable in place. Four fields, same rule checkout
+ * itself applies — the database rejects anything less, so a caught typo
+ * cannot be half-fixed.
+ */
+function AddressEditor({ order, onChanged }) {
+  const [editing, setEditing] = useState(false)
+  const [address, setAddress] = useState({
+    streetAddress: order.street_address ?? '',
+    city: order.city ?? '',
+    province: order.province ?? '',
+    postalCode: order.postal_code ?? '',
+  })
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
+
+  const set = (key) => (e) => setAddress((a) => ({ ...a, [key]: e.target.value }))
+
+  const save = async (e) => {
+    e.preventDefault()
+    setPending(true)
+    setError('')
+    const result = await updateOrderAddress(order.id, address)
+    setPending(false)
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    setEditing(false)
+    onChanged()
+  }
+
+  if (!editing) {
+    return (
+      <div>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="label text-ink-soft">Shipping to</p>
+            <address className="text-ink mt-1.5 text-sm leading-relaxed not-italic">
+              {order.street_address || '—'}
+              <br />
+              {[order.city, order.province, order.postal_code].filter(Boolean).join(', ') || '—'}
+            </address>
+          </div>
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-ink-soft hover:text-ink shrink-0 text-xs font-medium underline underline-offset-2 transition-colors"
+          >
+            Edit
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
+      <Field label="Street address" required className="sm:col-span-2">
+        {(p) => <TextInput {...p} value={address.streetAddress} onChange={set('streetAddress')} />}
+      </Field>
+      <Field label="City" required>
+        {(p) => <TextInput {...p} value={address.city} onChange={set('city')} />}
+      </Field>
+      <Field label="Province" required>
+        {(p) => <TextInput {...p} value={address.province} onChange={set('province')} />}
+      </Field>
+      <Field label="ZIP code" required hint="Four digits." className="sm:col-span-2">
+        {(p) => (
+          <TextInput
+            {...p}
+            inputMode="numeric"
+            pattern="\d{4}"
+            maxLength={4}
+            value={address.postalCode}
+            onChange={set('postalCode')}
+          />
+        )}
+      </Field>
+
+      {error && (
+        <p role="alert" className="text-hot-600 flex items-center gap-1.5 text-xs sm:col-span-2">
+          <AlertIcon className="h-3.5 w-3.5 shrink-0" />
+          {error}
+        </p>
+      )}
+
+      <div className="flex items-center gap-2 sm:col-span-2">
+        <SaveButton pending={pending} />
+        <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={() => setEditing(false)}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+/** Courier and tracking number — settable any time, not tied to marking an order shipped. */
+function TrackingEditor({ order, onChanged }) {
+  const [courier, setCourier] = useState(order.courier ?? '')
+  const [trackingNumber, setTrackingNumber] = useState(order.tracking_number ?? '')
+  const [pending, setPending] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+
+  const save = async (e) => {
+    e.preventDefault()
+    setPending(true)
+    setError('')
+    setSaved(false)
+    const result = await updateOrderTracking(order.id, { courier, trackingNumber })
+    setPending(false)
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    setSaved(true)
+    onChanged()
+  }
+
+  return (
+    <form onSubmit={save} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <Field label="Courier">
+        {(p) => (
+          <TextInput
+            {...p}
+            placeholder="LBC, J&T, Grab…"
+            value={courier}
+            onChange={(e) => {
+              setCourier(e.target.value)
+              setSaved(false)
+            }}
+          />
+        )}
+      </Field>
+      <Field label="Tracking number">
+        {(p) => (
+          <TextInput
+            {...p}
+            value={trackingNumber}
+            onChange={(e) => {
+              setTrackingNumber(e.target.value)
+              setSaved(false)
+            }}
+          />
+        )}
+      </Field>
+      <SaveButton pending={pending} saved={saved} />
+
+      {error && (
+        <p role="alert" className="text-hot-600 flex items-center gap-1.5 text-xs sm:col-span-3">
+          <AlertIcon className="h-3.5 w-3.5 shrink-0" />
+          {error}
+        </p>
+      )}
+    </form>
+  )
+}
+
+/** Internal notes. Never shown to the customer — see admin_notes' own comment in the schema. */
+function NotesEditor({ order, onChanged }) {
+  const [notes, setNotes] = useState(order.admin_notes ?? '')
+  const [pending, setPending] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+
+  const save = async (e) => {
+    e.preventDefault()
+    setPending(true)
+    setError('')
+    setSaved(false)
+    const result = await updateOrderNotes(order.id, notes)
+    setPending(false)
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    setSaved(true)
+    onChanged()
+  }
+
+  return (
+    <form onSubmit={save}>
+      <label className="label text-ink-soft mb-2 block">
+        Internal notes<span className="text-ink-soft ml-1.5 normal-case">admins only, not shown to the customer</span>
+      </label>
+      <textarea
+        rows={2}
+        value={notes}
+        onChange={(e) => {
+          setNotes(e.target.value)
+          setSaved(false)
+        }}
+        placeholder="Anything the next admin looking at this order should know."
+        className="bg-glare border-rule-strong text-ink placeholder:text-ink-soft hover:border-ink-soft focus:border-ink w-full resize-y border px-3.5 py-2.5 text-sm transition-colors outline-none"
+      />
+
+      {error && (
+        <p role="alert" className="text-hot-600 mt-2 flex items-center gap-1.5 text-xs">
+          <AlertIcon className="h-3.5 w-3.5 shrink-0" />
+          {error}
+        </p>
+      )}
+
+      <div className="mt-2.5">
+        <SaveButton pending={pending} saved={saved} />
+      </div>
+    </form>
   )
 }
 
@@ -155,6 +391,16 @@ function Order({ order, onChanged }) {
         </tfoot>
       </table>
 
+      <Rule className="my-6" />
+      <AddressEditor order={order} onChanged={onChanged} />
+
+      <Rule className="my-6" />
+      <p className="label text-ink-soft mb-2">Tracking</p>
+      <TrackingEditor order={order} onChanged={onChanged} />
+
+      <Rule className="my-6" />
+      <NotesEditor order={order} onChanged={onChanged} />
+
       {error && (
         <p
           role="alert"
@@ -176,10 +422,10 @@ function Order({ order, onChanged }) {
                   {status === s ? (
                     <>
                       <SpinnerIcon className="h-4 w-4" />
-                      Marking {STATUS_LABEL[s]}…
+                      {MOVE_LABEL[s] ? `${MOVE_LABEL[s]}…` : `Marking ${STATUS_LABEL[s]}…`}
                     </>
                   ) : (
-                    `Mark ${STATUS_LABEL[s]}`
+                    MOVE_LABEL[s] ?? `Mark ${STATUS_LABEL[s]}`
                   )}
                 </Button>
               ))}
@@ -199,6 +445,7 @@ function Order({ order, onChanged }) {
 /* --------------------------------- screen --------------------------------- */
 
 const FILTERS = [
+  { id: 'pending', label: 'Awaiting payment' },
   { id: 'paid', label: 'Awaiting fulfilment' },
   { id: 'processing', label: 'Processing' },
   { id: 'shipped', label: 'Shipped' },
@@ -207,19 +454,26 @@ const FILTERS = [
   { id: 'all', label: 'All' },
 ]
 
+/** pending and pending_bank_transfer read as one tab — a customer sees the
+ *  same split in Purchase history (BUCKETS in PurchaseHistory.jsx), and the
+ *  admin's next move on either is identical: confirm the payment or cancel. */
+const PENDING_STATUSES = ['pending', 'pending_bank_transfer']
+
 export default function OrdersBoard({ orders }) {
   const router = useRouter()
-  const [filter, setFilter] = useState('paid')
+  const [filter, setFilter] = useState('pending')
+
+  const bucketOf = (status) => (PENDING_STATUSES.includes(status) ? 'pending' : status)
 
   const counts = useMemo(
     () =>
-      orders.reduce((acc, o) => ({ ...acc, [o.status]: (acc[o.status] ?? 0) + 1, all: orders.length }), {
+      orders.reduce((acc, o) => ({ ...acc, [bucketOf(o.status)]: (acc[bucketOf(o.status)] ?? 0) + 1, all: orders.length }), {
         all: orders.length,
       }),
     [orders],
   )
 
-  const shown = filter === 'all' ? orders : orders.filter((o) => o.status === filter)
+  const shown = filter === 'all' ? orders : orders.filter((o) => bucketOf(o.status) === filter)
 
   return (
     <>
@@ -248,11 +502,11 @@ export default function OrdersBoard({ orders }) {
           <div className="border-rule bg-glare flex flex-col items-center border border-dashed px-6 py-20 text-center">
             <FileIcon className="text-hush h-8 w-8" />
             <p className="text-ink mt-5 font-medium">
-              {filter === 'paid' ? 'Nothing awaiting fulfilment' : 'Nothing here'}
+              {filter === 'pending' ? 'Nothing awaiting payment' : filter === 'paid' ? 'Nothing awaiting fulfilment' : 'Nothing here'}
             </p>
             <p className="text-ink-soft max-w-measure mt-2 text-sm leading-relaxed">
               {orders.length === 0
-                ? 'No orders have been placed yet. Checkout writes here once a customer pays via GCash, QR Ph, or PesoNet.'
+                ? 'No orders have been placed yet. Checkout writes here the moment a customer places one.'
                 : 'Every order in this state has been dealt with.'}
             </p>
           </div>
