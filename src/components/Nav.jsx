@@ -67,7 +67,7 @@ function SignOutRow({ onDone }) {
  * bar renders signed-in on the first paint rather than flickering through a
  * logged-out state while a client-side check catches up.
  */
-export default function Nav({ user = null }) {
+export default function Nav({ user = null, isAdmin = false }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [login, setLogin] = useState(false)
@@ -313,7 +313,7 @@ export default function Nav({ user = null }) {
                   has already happened. */}
               {user ? (
                 <div className="relative">
-                  <AccountMenu user={user} />
+                  <AccountMenu user={user} isAdmin={isAdmin} />
                 </div>
               ) : (
                 <>
@@ -438,8 +438,19 @@ export default function Nav({ user = null }) {
                 <span className="min-w-0">
                   <span className="label text-glint-soft block">Signed in as</span>
                   <span className="text-glint mt-0.5 block truncate text-sm">{user.email}</span>
+                  {isAdmin && <span className="text-cool-400 mt-0.5 block text-xs font-medium">Admin</span>}
                 </span>
               </div>
+
+              {isAdmin && (
+                <a
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="border-rule-shade text-glint hover:text-glint-soft block border-b py-4 text-sm font-medium transition-colors"
+                >
+                  Admin
+                </a>
+              )}
 
               <a
                 href="/account/orders"

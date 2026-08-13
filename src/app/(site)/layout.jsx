@@ -23,6 +23,8 @@ export default async function SiteLayout({ children }) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const { data: isAdmin } = user ? await supabase.rpc('is_admin') : { data: false }
+
   return (
     <>
       <a
@@ -34,7 +36,7 @@ export default async function SiteLayout({ children }) {
 
       {/* Only what the header actually needs. Passing the whole Supabase user
           object into a client component would ship its tokens to the browser. */}
-      <Nav user={user ? { email: user.email } : null} />
+      <Nav user={user ? { email: user.email } : null} isAdmin={Boolean(isAdmin)} />
       {children}
       <Footer />
     </>

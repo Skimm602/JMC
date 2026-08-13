@@ -81,6 +81,23 @@ export default async function ProductPage({ params }) {
                 </p>
               )}
 
+              {product.specifications?.length > 0 && (
+                <dl className="border-rule mt-8 border-t">
+                  {product.specifications.map((spec, i) => {
+                    const split = spec.indexOf(':')
+                    const label = split === -1 ? null : spec.slice(0, split).trim()
+                    const value = split === -1 ? spec : spec.slice(split + 1).trim()
+
+                    return (
+                      <div key={i} className="border-rule flex items-baseline justify-between gap-6 border-b py-3">
+                        {label && <dt className="label text-ink-soft">{label}</dt>}
+                        <dd className="text-ink font-mono text-sm font-medium tabular-nums">{value}</dd>
+                      </div>
+                    )
+                  })}
+                </dl>
+              )}
+
               {(product.datasheet_url || product.manual_url) && (
                 <>
                   <Rule className="mt-10" />
