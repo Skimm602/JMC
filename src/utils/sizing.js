@@ -31,12 +31,105 @@
  */
 export const REGIONS = {
   'Metro Manila': { tariff: 13.0, yield: 1380 },
+  Cordillera: { tariff: 11.6, yield: 1420 },
+  Ilocos: { tariff: 12.3, yield: 1520 },
+  'Cagayan Valley': { tariff: 12.2, yield: 1440 },
   'Central Luzon': { tariff: 12.1, yield: 1450 },
   Calabarzon: { tariff: 12.4, yield: 1400 },
-  'Central Visayas': { tariff: 13.6, yield: 1470 },
+  Mimaropa: { tariff: 14.2, yield: 1470 },
+  Bicol: { tariff: 13.4, yield: 1330 },
   'Western Visayas': { tariff: 13.1, yield: 1440 },
+  'Central Visayas': { tariff: 13.6, yield: 1470 },
+  'Eastern Visayas': { tariff: 12.8, yield: 1340 },
+  'Zamboanga Peninsula': { tariff: 11.8, yield: 1450 },
   'Northern Mindanao': { tariff: 11.4, yield: 1410 },
   'Davao Region': { tariff: 11.7, yield: 1390 },
+  Soccsksargen: { tariff: 11.6, yield: 1430 },
+  Caraga: { tariff: 12.2, yield: 1340 },
+  BARMM: { tariff: 11.9, yield: 1440 },
+}
+
+/**
+ * Used when the region typed is not one of the above. Roughly the middle of
+ * the country on both counts — good enough to return a shape, and the panel
+ * says out loud that it fell back to it rather than quietly averaging.
+ */
+export const NATIONAL = { tariff: 12.5, yield: 1420 }
+
+/**
+ * The field is typed, not picked, so what arrives is whatever the installer
+ * calls the place. These are the other names for the same regions — the
+ * numerals and the acronyms are what most people actually write.
+ */
+const ALIASES = {
+  NCR: 'Metro Manila',
+  'National Capital Region': 'Metro Manila',
+  Manila: 'Metro Manila',
+  CAR: 'Cordillera',
+  'Region 1': 'Ilocos',
+  'Region I': 'Ilocos',
+  'Region 2': 'Cagayan Valley',
+  'Region II': 'Cagayan Valley',
+  'Region 3': 'Central Luzon',
+  'Region III': 'Central Luzon',
+  'Region 4A': 'Calabarzon',
+  'Region IVA': 'Calabarzon',
+  'Region 4B': 'Mimaropa',
+  'Region IVB': 'Mimaropa',
+  'Region 5': 'Bicol',
+  'Region V': 'Bicol',
+  'Region 6': 'Western Visayas',
+  'Region VI': 'Western Visayas',
+  'Region 7': 'Central Visayas',
+  'Region VII': 'Central Visayas',
+  'Region 8': 'Eastern Visayas',
+  'Region VIII': 'Eastern Visayas',
+  'Region 9': 'Zamboanga Peninsula',
+  'Region IX': 'Zamboanga Peninsula',
+  Zamboanga: 'Zamboanga Peninsula',
+  'Region 10': 'Northern Mindanao',
+  'Region X': 'Northern Mindanao',
+  'Region 11': 'Davao Region',
+  'Region XI': 'Davao Region',
+  Davao: 'Davao Region',
+  'Region 12': 'Soccsksargen',
+  'Region XII': 'Soccsksargen',
+  'Region 13': 'Caraga',
+  'Region XIII': 'Caraga',
+  Bangsamoro: 'BARMM',
+}
+
+/** Case, spacing and punctuation are all noise here. "Region IV-A" = "regioniva". */
+const key = (s) =>
+  String(s ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+
+const LOOKUP = new Map()
+for (const name of Object.keys(REGIONS)) LOOKUP.set(key(name), name)
+for (const [alias, name] of Object.entries(ALIASES)) LOOKUP.set(key(alias), name)
+
+/**
+ * resolveRegion(typed) → a region name, or null if it is not one we hold.
+ *
+ * Exact first. Failing that, the longest known name contained in what was
+ * typed, so "Davao del Sur" still finds Davao and "Region VII (Cebu)" still
+ * finds Central Visayas. Keys under five characters are held out of that
+ * second pass on purpose: "car" is inside "caraga", and Cordillera is not
+ * where Butuan is.
+ */
+export function resolveRegion(typed) {
+  const k = key(typed)
+  if (!k) return null
+  if (LOOKUP.has(k)) return LOOKUP.get(k)
+
+  let best = null
+  for (const [alias, name] of LOOKUP) {
+    if (alias.length >= 5 && k.includes(alias) && (!best || alias.length > best.length)) {
+      best = { length: alias.length, name }
+    }
+  }
+  return best?.name ?? null
 }
 
 /**
@@ -68,26 +161,41 @@ export const SHADING = {
 }
 
 /**
- * The unit ladder, smallest first. `maxPv` is the DC the unit will carry, so
- * the ladder is read as "the first unit big enough for this array".
+ * The hybrid range, as the picker offers it. `maxPv` is the DC the unit will
+ * carry, which is what decides how many of them a given array needs.
  *
- * The LS pair take the array up to 10.4 kWp on a 48 V bank, which is where
- * most single-family jobs land. Past that the HS 8K is the one with the DC
- * headroom — 16 kW of PV input against 8 kW rated, the 200 % oversizing the
- * datasheet leads with — so it takes the large single-unit residential job
- * before anything has to go in parallel.
+ * The LS pair run a 48 V bank and cover most single-family jobs. The HS pair
+ * are the high-voltage half of the same platform, and their number here is
+ * the 200 % DC oversizing the datasheet leads with — 12 kW of PV against 6 kW
+ * rated, 16 against 8.
  */
-const UNITS = [
-  { model: 'HYX-H6K-LS', maxPv: 7.8 },
-  { model: 'HYX-H8K-LS', maxPv: 10.4 },
-  { model: 'HYX-H8K-HS', maxPv: 16.0 },
-]
+export const UNITS = {
+  'HYX-H6K-LS': { rated: 6, maxPv: 7.8 },
+  'HYX-H8K-LS': { rated: 8, maxPv: 10.4 },
+  'HYX-H6K-HS': { rated: 6, maxPv: 12.0 },
+  'HYX-H8K-HS': { rated: 8, maxPv: 16.0 },
+}
 
-/** The largest unit, run in parallel, once one of anything is not enough. */
-const PARALLEL = UNITS[UNITS.length - 1]
+/**
+ * The ladder the model walks when nobody has picked a unit, smallest first:
+ * the first unit whose DC input covers the array wins.
+ *
+ * The H6K-HS is deliberately not on it. Its 12 kW of DC input would let it
+ * take an array the H8K-LS is the better answer for — a 6 kW inverter run at
+ * 180 % is legal and clips all afternoon, and an unattended suggestion should
+ * not be the one that does that. It stays in the picker, because an installer
+ * choosing it has a reason the form does not know about.
+ */
+const AUTO = ['HYX-H6K-LS', 'HYX-H8K-LS', 'HYX-H8K-HS']
 
 /** H-LS parallels to six; past that this stops being a residential job. */
 const MAX_PARALLEL = 6
+
+/** How many of `model` the array needs, and how to write that down. */
+const bank = (model, array) => {
+  const count = Math.max(1, Math.ceil(array / UNITS[model].maxPv))
+  return { model, count, label: count === 1 ? model : `${count} × ${model}` }
+}
 
 /**
  * Fields arrive as whatever was typed — "8,500", "₱8500", "64 m²". Anything
@@ -104,13 +212,23 @@ const number = (raw) => {
  *
  * Bill and region are the two that cannot be guessed: without a bill there is
  * no load, and without a region there is neither a tariff to convert it with
- * nor a yield to size against. The other three refine the answer and default
- * to the middle of their range when left blank, so the panel starts returning
- * something useful as soon as those two are in.
+ * nor a yield to size against. Roof, area and shading refine the answer and
+ * default to the middle of their range when left blank, so the panel starts
+ * returning something useful as soon as those two are in.
+ *
+ * `unit` is the installer's own choice out of UNITS. Left blank, the model
+ * suggests one; set, it is honoured and the count is worked out around it.
  */
 export function sizeSystem(input) {
   const bill = number(input.bill)
-  const region = REGIONS[input.region]
+
+  // Typed but unrecognised is not the same as blank. Blank means the question
+  // has not been answered and there is nothing to compute; unrecognised means
+  // they told us somewhere we have no figures for, which national averages
+  // can stand in for as long as the panel admits that is what happened.
+  const typed = String(input.region ?? '').trim()
+  const regionName = resolveRegion(typed)
+  const region = regionName ? REGIONS[regionName] : typed ? NATIONAL : null
 
   const missing = []
   if (!bill) missing.push('monthly bill')
@@ -139,14 +257,29 @@ export function sizeSystem(input) {
 
   const generation = array * perKwp
 
-  const single = UNITS.find((u) => array <= u.maxPv)
-  const count = single ? 1 : Math.ceil(array / PARALLEL.maxPv)
-  const unit = single ?? PARALLEL
+  // The unit is the installer's call, not the model's. What the model does is
+  // work out how many of whatever they picked the array actually needs, and
+  // keep its own answer on hand — offered as an alternative rather than
+  // substituted for theirs, because "use this instead" is advice and the
+  // person on the roof is allowed to decline it.
+  const suggestion = bank(AUTO.find((m) => array <= UNITS[m].maxPv) ?? AUTO[AUTO.length - 1], array)
+  const chosen = UNITS[input.unit] ? bank(input.unit, array) : null
+  const unit = chosen ?? suggestion
 
   return {
     ok: true,
     array,
-    unit: count === 1 ? unit.model : `${count} × ${unit.model}`,
+    // What the typed region resolved to, so the panel can show the installer
+    // which set of figures it actually used rather than what they typed.
+    region: regionName,
+    regionFallback: !regionName,
+    unit: unit.label,
+    chosen: Boolean(chosen),
+    // Only worth raising when it would actually change the order.
+    alternative: chosen && chosen.label !== suggestion.label ? suggestion.label : null,
+    // How hard the chosen bank is being worked. Well under half its DC input
+    // means they are paying for headroom the array will never reach.
+    dcUse: (array / (unit.count * UNITS[unit.model].maxPv)) * 100,
     generation,
     // Net metering exports the surplus, so the meaningful ceiling is the
     // whole bill rather than the fraction consumed as it is generated.
@@ -155,6 +288,6 @@ export function sizeSystem(input) {
     // bill and the roof will not hold one.
     roofLimited: fromRoof < fromLoad,
     // Past six units in parallel this is a commercial design, not a form.
-    oversized: count > MAX_PARALLEL,
+    oversized: unit.count > MAX_PARALLEL,
   }
 }

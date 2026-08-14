@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { Eyebrow, Lede, Section, SectionHeading } from './ui.jsx'
 import { Field, Select, TextInput } from './form.jsx'
 import { InfoIcon } from './icons.jsx'
-import { REGIONS, ROOF_TYPES, SHADING, sizeSystem } from '@/utils/sizing'
+import { REGIONS, ROOF_TYPES, SHADING, UNITS, sizeSystem } from '@/utils/sizing'
 
 /**
  * System sizing panel.
@@ -28,12 +28,12 @@ import { REGIONS, ROOF_TYPES, SHADING, sizeSystem } from '@/utils/sizing'
 /** Every field the model returns, in the order the readout shows them. */
 const READOUT = [
   { key: 'array', label: 'Array size', unit: 'kWp' },
-  { key: 'inverter', label: 'Suggested unit', unit: '' },
+  { key: 'inverter', label: 'Unit', unit: '' },
   { key: 'yield', label: 'Annual yield', unit: 'kWh' },
   { key: 'offset', label: 'Bill offset', unit: '%' },
 ]
 
-const EMPTY = { bill: '', area: '', region: '', roof: '', shading: '' }
+const EMPTY = { bill: '', area: '', region: '', roof: '', shading: '', unit: '' }
 
 /**
  * An estimate that reads "10,734 kWh" claims a precision the model does not
@@ -98,16 +98,29 @@ export default function Sizing() {
               )}
             </Field>
 
-            <Field label="Region" required span={2}>
+            {/* Typed rather than picked. A closed dropdown of seventeen
+                regions is a list to hunt through on a phone in somebody's
+                driveway, and it has no answer at all for the installer who
+                works in terms of the province. The datalist keeps the
+                suggestions; the model does the matching, including the
+                numerals and acronyms people actually write. */}
+            <Field label="Region" required span={2} hint="Type it, or choose from the suggestions.">
               {(p) => (
-                <Select {...p} value={input.region} onChange={set('region')}>
-                  <option value="">Select…</option>
-                  {Object.keys(REGIONS).map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </Select>
+                <>
+                  <TextInput
+                    {...p}
+                    list="sizing-regions"
+                    autoComplete="off"
+                    value={input.region}
+                    onChange={set('region')}
+                    placeholder="Central Luzon"
+                  />
+                  <datalist id="sizing-regions">
+                    {Object.keys(REGIONS).map((r) => (
+                      <option key={r} value={r} />
+                    ))}
+                  </datalist>
+                </>
               )}
             </Field>
 
@@ -137,6 +150,33 @@ export default function Sizing() {
               )}
             </Field>
           </div>
+
+          {/* Held apart from the site conditions because it is a different
+              kind of question with a different owner: the roof is measured,
+              the unit is decided. Each option carries its rated output and
+              its DC ceiling, so the choice can be made here rather than by
+              opening four datasheets first. */}
+          <div className="border-rule mt-8 border-t pt-8">
+            <p className="label text-ink-soft">Unit</p>
+
+            <div className="mt-6">
+              <Field
+                label="Preferred unit"
+                hint="Left on suggest, the smallest unit whose DC input carries the array is used."
+              >
+                {(p) => (
+                  <Select {...p} value={input.unit} onChange={set('unit')}>
+                    <option value="">Suggest one for me</option>
+                    {Object.entries(UNITS).map(([model, u]) => (
+                      <option key={model} value={model}>
+                        {model} — {u.rated} kW, up to {u.maxPv} kWp
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+            </div>
+          </div>
         </div>
 
         {/* ------------------------------ the readout -------------------------- */}
@@ -154,19 +194,26 @@ export default function Sizing() {
             </div>
 
             <dl className="mt-2">
-              {READOUT.map((r) => (
-                <div key={r.key} className="border-rule-shade flex items-baseline justify-between gap-6 border-b py-4">
-                  <dt className="label text-glint-soft">{r.label}</dt>
-                  <dd
-                    className={`flex items-baseline gap-1.5 font-mono text-lg tabular-nums ${
-                      values ? 'text-glint' : 'text-glint-soft'
-                    }`}
-                  >
-                    {values ? <span>{values[r.key]}</span> : <span aria-label="No value yet">—</span>}
-                    {r.unit && <span className="text-[0.6875rem]">{r.unit}</span>}
-                  </dd>
-                </div>
-              ))}
+              {READOUT.map((r) => {
+                // The unit row is the only one whose name depends on where its
+                // value came from. Calling their own choice a suggestion would
+                // read as though the form had overruled them.
+                const label = r.key === 'inverter' && !result.chosen ? 'Suggested unit' : r.label
+
+                return (
+                  <div key={r.key} className="border-rule-shade flex items-baseline justify-between gap-6 border-b py-4">
+                    <dt className="label text-glint-soft">{label}</dt>
+                    <dd
+                      className={`flex items-baseline gap-1.5 font-mono text-lg tabular-nums ${
+                        values ? 'text-glint' : 'text-glint-soft'
+                      }`}
+                    >
+                      {values ? <span>{values[r.key]}</span> : <span aria-label="No value yet">—</span>}
+                      {r.unit && <span className="text-[0.6875rem]">{r.unit}</span>}
+                    </dd>
+                  </div>
+                )
+              })}
             </dl>
           </div>
 
@@ -189,6 +236,21 @@ export default function Sizing() {
 
               {result.ok && (
                 <>
+                  {/* Which figures the typed region actually resolved to. The
+                      fallback is called out loudly because national averages
+                      are the weakest input the model can be given; a plain
+                      resolution is just confirmation and stays quiet. */}
+                  {result.regionFallback ? (
+                    <p className="text-glint">
+                      No tariff or yield held for &ldquo;{input.region.trim()}&rdquo; — sized on national averages.
+                      Choose one of the suggested regions for a closer estimate.
+                    </p>
+                  ) : (
+                    result.region.toLowerCase() !== input.region.trim().toLowerCase() && (
+                      <p>Sized on {result.region} figures.</p>
+                    )
+                  )}
+
                   {/* Said first, because it is the one that changes what the
                       installer does next: the answer is smaller than the bill
                       asked for, and the reason is the roof. */}
@@ -203,6 +265,17 @@ export default function Sizing() {
                     <p className="text-glint">
                       Past six units in parallel this is a commercial design rather than a form. Talk to us before
                       quoting it.
+                    </p>
+                  )}
+
+                  {/* Their choice stands; this is the second opinion beside
+                      it. The DC loading is the number that says why — a bank
+                      running well under half its input is headroom being paid
+                      for and never reached. */}
+                  {result.alternative && (
+                    <p className="text-glint">
+                      Left to itself the model would specify {result.alternative}. Your pick runs at{' '}
+                      {Math.round(result.dcUse)} % of its DC input.
                     </p>
                   )}
 
