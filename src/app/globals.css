@@ -241,24 +241,59 @@
     text-transform: uppercase;
   }
 
+  /* Distance from the window's left edge to the content's left edge. Held in
+     one property because two different things have to agree on it: every
+     band's left padding, and the fixed section spine that hangs beside them.
+
+     Below lg it is an ordinary gutter. From lg it is the rail datum — until
+     the window is wider than the rail, the measure and the right gutter
+     actually need (86rem). Past that the surplus was being handed entirely to
+     the right margin, so a 1920 display showed the whole page shoved into its
+     left two-thirds with a quarter of the screen empty beside it. Splitting
+     the surplus keeps the rail's off-centre relationship with the content —
+     the left margin stays the wider of the two — while the page stops
+     drifting away from the middle of a wide display.
+
+     `100%` rather than `100vw`: the percentage resolves against the band's
+     own containing block, which excludes the scrollbar. `100vw` does not,
+     and would push every left edge half a scrollbar off the spine. */
+  :root {
+    --rail-inset: 1.25rem;
+  }
+
+  @media (width >= 40rem) {
+    :root {
+      --rail-inset: 2rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    :root {
+      --rail-inset: max(
+        var(--spacing-rail),
+        calc(
+          var(--spacing-rail) + (100% - var(--spacing-rail) - var(--container-page) - var(--spacing-gutter)) / 2
+        )
+      );
+    }
+  }
+
   /* The page's content rail. Every band — header, hero, sections, form,
      footer — starts at the same x, and the measure is capped so the line
      never runs the full width of an ultrawide display. */
   .rail {
-    padding-left: 1.25rem;
+    padding-left: var(--rail-inset);
     padding-right: 1.25rem;
   }
 
   @media (width >= 40rem) {
     .rail {
-      padding-left: 2rem;
       padding-right: 2rem;
     }
   }
 
   @media (width >= 64rem) {
     .rail {
-      padding-left: var(--spacing-rail);
       padding-right: var(--spacing-gutter);
     }
   }

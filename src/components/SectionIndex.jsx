@@ -15,6 +15,13 @@ import { cx } from './ui.jsx'
  * invert with the surface it is currently floating over.
  *
  * Hidden below lg, where it would cost more width than it earns.
+ *
+ * The column is offset by however far the rail itself has been pushed in
+ * (`--rail-inset` minus one rail), so on a window wider than the shell needs
+ * the spine travels with the content rather than stranding itself against the
+ * left edge of the screen. At 1376px and below that offset is zero and the
+ * column is flush left, exactly as before. Everything inside keeps its own
+ * offsets, so nothing here has to know the window is wide.
  */
 const SECTIONS = [
   { id: 'top', label: 'Overview', shade: true },
@@ -52,7 +59,7 @@ export default function SectionIndex() {
   return (
     <nav
       aria-label="Section index"
-      className="pointer-events-none fixed top-0 left-0 z-40 hidden h-screen w-rail flex-col justify-center lg:flex"
+      className="pointer-events-none fixed top-0 left-[calc(var(--rail-inset)_-_var(--spacing-rail))] z-40 hidden h-screen w-rail flex-col justify-center lg:flex"
     >
       <span
         aria-hidden="true"
