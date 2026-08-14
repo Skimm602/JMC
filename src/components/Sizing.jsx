@@ -1,46 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Eyebrow, Lede, Section, SectionHeading } from './ui.jsx'
 import { Field, Select, TextInput } from './form.jsx'
 import { InfoIcon } from './icons.jsx'
+import { REGIONS, ROOF_TYPES, SHADING, sizeSystem } from '@/utils/sizing'
 
 /**
  * System sizing panel.
  *
- * INTERFACE ONLY — nothing here computes. The inputs hold their own state so
- * the control surface can be reviewed and wired up later, but every derived
- * figure stays blank on purpose: an array size, a yield or a payback period
- * invented client-side would be a number a homeowner might act on, and this
- * page has no tariff data, no irradiance model and no product-selection rules
- * behind it. When the sizing service exists, fill READOUT from its response.
+ * The readout is live: bill and region are enough to return a specification,
+ * and the remaining three fields refine it. The model itself is in
+ * utils/sizing.js — the tariffs and yields it runs on are business constants
+ * that move every year, and they should not be buried in markup.
+ *
+ * What is deliberately not claimed: this is a starting specification for the
+ * first site visit, not a quote. The panel says as much under the figures,
+ * because an array size and a bill offset are numbers a homeowner will act
+ * on, and the regional tariff behind them is an average rather than their
+ * actual schedule.
  *
  * The readout is drawn as an instrument display rather than a results card,
  * which is the same panel the H6 carries in InverterArt — the tool and the
  * hardware read as one system.
  */
 
-const REGIONS = [
-  'Metro Manila',
-  'Central Luzon',
-  'Calabarzon',
-  'Central Visayas',
-  'Western Visayas',
-  'Northern Mindanao',
-  'Davao Region',
-]
-
-const ROOF_TYPES = [
-  'Corrugated GI sheet',
-  'Standing seam metal',
-  'Concrete deck',
-  'Clay or concrete tile',
-  'Ground mount',
-]
-
-const SHADING = ['None to speak of', 'Light, part of the day', 'Heavy for hours']
-
-/** Every field the sizing service will return. Values arrive from the API. */
+/** Every field the model returns, in the order the readout shows them. */
 const READOUT = [
   { key: 'array', label: 'Array size', unit: 'kWp' },
   { key: 'inverter', label: 'Suggested unit', unit: '' },
@@ -50,9 +35,27 @@ const READOUT = [
 
 const EMPTY = { bill: '', area: '', region: '', roof: '', shading: '' }
 
+/**
+ * An estimate that reads "10,734 kWh" claims a precision the model does not
+ * have. Yield is rounded to the nearest hundred and the offset to a whole
+ * percent so the figures look like what they are.
+ */
+const grouped = (n) => Math.round(n / 100) * 100
+const format = (result) => ({
+  array: result.array.toFixed(1),
+  inverter: result.unit,
+  yield: grouped(result.generation).toLocaleString('en-PH'),
+  offset: String(Math.round(result.offset)),
+})
+
 export default function Sizing() {
   const [input, setInput] = useState(EMPTY)
   const set = (key) => (e) => setInput((v) => ({ ...v, [key]: e.target.value }))
+
+  const result = useMemo(() => sizeSystem(input), [input])
+  const values = result.ok ? format(result) : null
+
+  const status = result.ok ? 'Estimate' : result.tooSmall ? 'Below minimum' : 'Awaiting input'
 
   return (
     <Section id="sizing" className="band-sheet">
@@ -77,24 +80,29 @@ export default function Sizing() {
         <div className="band-glare p-7 sm:p-9">
           <p className="label text-ink-soft">Site conditions</p>
 
+          {/* Bill and region carry the asterisk because they are the two the
+              model cannot assume: one is the load, the other is both the
+              tariff that recovers it and the yield it is sized against. The
+              rest genuinely are optional — left blank they fall back to an
+              ordinary metal roof with a bit of afternoon shade. */}
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
-            <Field label="Monthly electricity bill" hint="Average across the last twelve months.">
+            <Field label="Monthly electricity bill" required hint="Average across the last twelve months.">
               {(p) => (
                 <TextInput {...p} inputMode="numeric" value={input.bill} onChange={set('bill')} placeholder="₱ 8,500" />
               )}
             </Field>
 
-            <Field label="Usable roof area">
+            <Field label="Usable roof area" hint="Leave blank to size on the bill alone.">
               {(p) => (
                 <TextInput {...p} inputMode="numeric" value={input.area} onChange={set('area')} placeholder="64 m²" />
               )}
             </Field>
 
-            <Field label="Region" span={2}>
+            <Field label="Region" required span={2}>
               {(p) => (
                 <Select {...p} value={input.region} onChange={set('region')}>
                   <option value="">Select…</option>
-                  {REGIONS.map((r) => (
+                  {Object.keys(REGIONS).map((r) => (
                     <option key={r} value={r}>
                       {r}
                     </option>
@@ -107,7 +115,7 @@ export default function Sizing() {
               {(p) => (
                 <Select {...p} value={input.roof} onChange={set('roof')}>
                   <option value="">Select…</option>
-                  {ROOF_TYPES.map((r) => (
+                  {Object.keys(ROOF_TYPES).map((r) => (
                     <option key={r} value={r}>
                       {r}
                     </option>
@@ -120,7 +128,7 @@ export default function Sizing() {
               {(p) => (
                 <Select {...p} value={input.shading} onChange={set('shading')}>
                   <option value="">Select…</option>
-                  {SHADING.map((r) => (
+                  {Object.keys(SHADING).map((r) => (
                     <option key={r} value={r}>
                       {r}
                     </option>
@@ -131,21 +139,30 @@ export default function Sizing() {
           </div>
         </div>
 
-        {/* ------------------------------ the readout --------------------------
-            Drawn as the instrument it will be, held in its unpowered state. */}
+        {/* ------------------------------ the readout -------------------------- */}
         <div className="band-shade border-rule flex flex-col justify-between gap-8 p-7 max-lg:border-t sm:p-9 lg:border-t-0 lg:border-l">
           <div>
             <div className="border-rule-shade flex items-baseline justify-between gap-4 border-b pb-3">
               <p className="label text-glint-soft">Specification</p>
-              <p className="label text-glint-soft">Awaiting service</p>
+              {/* The state of the instrument, not decoration: it is the only
+                  thing telling you whether the dashes mean "no answer" or
+                  "not enough asked". aria-live so the change is announced
+                  rather than only seen. */}
+              <p className="label text-glint-soft" aria-live="polite">
+                {status}
+              </p>
             </div>
 
             <dl className="mt-2">
               {READOUT.map((r) => (
                 <div key={r.key} className="border-rule-shade flex items-baseline justify-between gap-6 border-b py-4">
                   <dt className="label text-glint-soft">{r.label}</dt>
-                  <dd className="text-glint-soft flex items-baseline gap-1.5 font-mono text-lg tabular-nums">
-                    <span aria-label="No value yet">—</span>
+                  <dd
+                    className={`flex items-baseline gap-1.5 font-mono text-lg tabular-nums ${
+                      values ? 'text-glint' : 'text-glint-soft'
+                    }`}
+                  >
+                    {values ? <span>{values[r.key]}</span> : <span aria-label="No value yet">—</span>}
                     {r.unit && <span className="text-[0.6875rem]">{r.unit}</span>}
                   </dd>
                 </div>
@@ -153,13 +170,51 @@ export default function Sizing() {
             </dl>
           </div>
 
-          <p className="text-glint-soft flex gap-3 text-xs leading-relaxed">
+          <div className="text-glint-soft flex gap-3 text-xs leading-relaxed">
             <InfoIcon aria-hidden="true" className="text-cool-400 mt-px h-4 w-4 shrink-0" />
-            <span>
-              The readout is not connected yet. These are the fields VIP&rsquo;s sizing service will return — no figure
-              is estimated in the browser.
-            </span>
-          </p>
+            <div className="space-y-2">
+              {!result.ok && result.missing?.length > 0 && (
+                <p>
+                  Enter the {result.missing.join(' and the ')} to see a starting specification. The other three refine
+                  it.
+                </p>
+              )}
+
+              {!result.ok && result.tooSmall && (
+                <p>
+                  That bill works out under a kilowatt-peak of array. There is no system here worth quoting — check the
+                  figure is a month rather than a week.
+                </p>
+              )}
+
+              {result.ok && (
+                <>
+                  {/* Said first, because it is the one that changes what the
+                      installer does next: the answer is smaller than the bill
+                      asked for, and the reason is the roof. */}
+                  {result.roofLimited && (
+                    <p className="text-glint">
+                      The roof is the constraint here, not the bill — {input.area} m² is what caps the array. A bigger
+                      roof would carry more.
+                    </p>
+                  )}
+
+                  {result.oversized && (
+                    <p className="text-glint">
+                      Past six units in parallel this is a commercial design rather than a form. Talk to us before
+                      quoting it.
+                    </p>
+                  )}
+
+                  <p>
+                    A starting specification for the first site visit, not a quote. Built on an indicative regional
+                    tariff and yield — confirm against the customer&rsquo;s own bill, roof pitch and utility before
+                    pricing.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </Section>
