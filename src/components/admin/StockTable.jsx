@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, cx } from '../ui.jsx'
-import { AlertIcon, CheckIcon, SpinnerIcon, XIcon } from '../icons.jsx'
-import { createProduct, deleteProduct, setStockBulk } from '@/app/actions/catalogue'
+import { AlertIcon, CheckIcon, SpinnerIcon, WrenchIcon, XIcon } from '../icons.jsx'
+import { createProduct, deleteProduct, setStockBulk, updateProduct } from '@/app/actions/catalogue'
 
 /** Below this, the row starts saying so rather than waiting to be read. */
 const LOW = 3
@@ -15,10 +15,10 @@ const when = (iso) =>
 const peso = (n) =>
   n == null ? '—' : new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(n))
 
-/* -------------------------------- add product ------------------------------ */
+/* ------------------------------ product form -------------------------------- */
 
 /** Plain file input styled to match the text fields around it. */
-function FileField({ label, name, accept }) {
+function FileField({ label, name, accept, currentUrl, currentLabel }) {
   return (
     <label className="grid gap-1.5">
       <span className="label text-ink-soft">{label}</span>
@@ -28,15 +28,28 @@ function FileField({ label, name, accept }) {
         accept={accept}
         className="border-rule-strong bg-glare text-ink file:text-cool-600 file:mr-3 file:border-0 file:bg-transparent file:text-xs file:font-medium border px-3 py-2 text-xs outline-none"
       />
+      {currentUrl && (
+        <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-cool-600 text-xs hover:underline">
+          Current {currentLabel} — choosing a file above replaces it
+        </a>
+      )}
     </label>
   )
 }
 
-function AddProduct({ onAdded }) {
-  const [open, setOpen] = useState(false)
+/**
+ * Shared by "Add product" and "Edit product": same fields either way, the
+ * only difference is whether `product` is there to prefill from and which
+ * server action the submit calls.
+ *
+ * A file field left empty on an edit keeps whatever the product already has
+ * — updateProduct() never clears a file that wasn't replaced — so the form
+ * only needs to show what is currently set, not resubmit it.
+ */
+function ProductForm({ product, onCancel, onSaved }) {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
-  const [specs, setSpecs] = useState([''])
+  const [specs, setSpecs] = useState(product?.specifications?.length ? product.specifications : [''])
 
   const addSpec = () => setSpecs((s) => [...s, ''])
   const setSpec = (i) => (e) => setSpecs((s) => s.map((v, idx) => (idx === i ? e.target.value : v)))
@@ -48,7 +61,8 @@ function AddProduct({ onAdded }) {
     setStatus('saving')
     setError('')
 
-    const result = await createProduct(new FormData(form))
+    const formData = new FormData(form)
+    const result = product ? await updateProduct(product.id, formData) : await createProduct(formData)
     setStatus('idle')
 
     if (result?.error) {
@@ -56,18 +70,7 @@ function AddProduct({ onAdded }) {
       return
     }
 
-    form.reset()
-    setSpecs([''])
-    setOpen(false)
-    onAdded()
-  }
-
-  if (!open) {
-    return (
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Add product
-      </Button>
-    )
+    onSaved()
   }
 
   return (
@@ -77,6 +80,7 @@ function AddProduct({ onAdded }) {
         <input
           required
           name="name"
+          defaultValue={product?.name ?? ''}
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
@@ -86,6 +90,7 @@ function AddProduct({ onAdded }) {
           required
           inputMode="decimal"
           name="retail_price"
+          defaultValue={product?.retail_price ?? ''}
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
@@ -94,6 +99,7 @@ function AddProduct({ onAdded }) {
         <input
           inputMode="decimal"
           name="installer_price"
+          defaultValue={product?.installer_price ?? ''}
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
@@ -102,7 +108,7 @@ function AddProduct({ onAdded }) {
         <input
           inputMode="numeric"
           name="stock_quantity"
-          defaultValue="0"
+          defaultValue={product?.stock_quantity ?? '0'}
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
@@ -111,7 +117,7 @@ function AddProduct({ onAdded }) {
         <span className="label text-ink-soft">Type</span>
         <select
           name="category"
-          defaultValue=""
+          defaultValue={product?.category ?? ''}
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         >
           <option value="">Not set</option>
@@ -123,7 +129,7 @@ function AddProduct({ onAdded }) {
         <span className="label text-ink-soft">Voltage</span>
         <select
           name="voltage_class"
-          defaultValue=""
+          defaultValue={product?.voltage_class ?? ''}
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         >
           <option value="">Not set</option>
@@ -136,14 +142,33 @@ function AddProduct({ onAdded }) {
         <input
           inputMode="decimal"
           name="rating"
+          defaultValue={product?.rating ?? ''}
           placeholder="e.g. 4.5"
           className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
         />
       </label>
 
-      <FileField label="Image (optional)" name="image" accept="image/*" />
-      <FileField label="Datasheet PDF (optional)" name="datasheet" accept="application/pdf" />
-      <FileField label="User manual PDF (optional)" name="manual" accept="application/pdf" />
+      <FileField
+        label={product ? 'Replace image (optional)' : 'Image (optional)'}
+        name="image"
+        accept="image/*"
+        currentUrl={product?.image_url}
+        currentLabel="image"
+      />
+      <FileField
+        label={product ? 'Replace datasheet PDF (optional)' : 'Datasheet PDF (optional)'}
+        name="datasheet"
+        accept="application/pdf"
+        currentUrl={product?.datasheet_url}
+        currentLabel="datasheet"
+      />
+      <FileField
+        label={product ? 'Replace user manual PDF (optional)' : 'User manual PDF (optional)'}
+        name="manual"
+        accept="application/pdf"
+        currentUrl={product?.manual_url}
+        currentLabel="manual"
+      />
 
       <div className="grid gap-1.5 sm:col-span-2">
         <span className="label text-ink-soft">Specifications (optional)</span>
@@ -187,17 +212,41 @@ function AddProduct({ onAdded }) {
           {status === 'saving' ? (
             <>
               <SpinnerIcon className="h-3.5 w-3.5" />
-              Adding…
+              {product ? 'Saving…' : 'Adding…'}
             </>
+          ) : product ? (
+            'Save changes'
           ) : (
             'Add to catalogue'
           )}
         </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={status === 'saving'}>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={status === 'saving'}>
           Cancel
         </Button>
       </div>
     </form>
+  )
+}
+
+function AddProduct({ onAdded }) {
+  const [open, setOpen] = useState(false)
+
+  if (!open) {
+    return (
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        Add product
+      </Button>
+    )
+  }
+
+  return (
+    <ProductForm
+      onCancel={() => setOpen(false)}
+      onSaved={() => {
+        setOpen(false)
+        onAdded()
+      }}
+    />
   )
 }
 
@@ -268,6 +317,7 @@ export default function StockTable({ products }) {
   const [failure, setFailure] = useState('')
   const [notice, setNotice] = useState('')
   const [saved, setSaved] = useState(0)
+  const [editingId, setEditingId] = useState(null)
 
   const dirty = useMemo(
     () => products.filter((p) => draft[p.id] !== String(p.stock_quantity ?? 0)),
@@ -319,6 +369,8 @@ export default function StockTable({ products }) {
     setNotice(message ?? '')
     router.refresh()
   }
+
+  const editing = editingId != null ? products.find((p) => p.id === editingId) : null
 
   return (
     <>
@@ -426,11 +478,39 @@ export default function StockTable({ products }) {
                       />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <RemoveProduct product={product} onRemoved={refresh} />
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingId((current) => (current === product.id ? null : product.id))}
+                          aria-label={`Edit ${product.name}`}
+                          aria-expanded={editingId === product.id}
+                          className={cx(
+                            'p-1.5 transition-colors',
+                            editingId === product.id ? 'text-cool-600' : 'text-ink-soft hover:text-ink',
+                          )}
+                        >
+                          <WrenchIcon className="h-4 w-4" />
+                        </button>
+                        <RemoveProduct product={product} onRemoved={refresh} />
+                      </div>
                     </td>
                   </tr>
                 )
               })
+            )}
+            {editing && (
+              <tr key={`${editing.id}-edit`} className="border-rule border-b last:border-b-0">
+                <td colSpan={5} className="bg-sheet/40 px-4 py-4">
+                  <ProductForm
+                    product={editing}
+                    onCancel={() => setEditingId(null)}
+                    onSaved={() => {
+                      setEditingId(null)
+                      refresh('Product updated.')
+                    }}
+                  />
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
