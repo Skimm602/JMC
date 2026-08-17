@@ -3,10 +3,11 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Eyebrow, cx } from './ui.jsx'
 import { Field, Textarea, TextInput } from './form.jsx'
-import { AlertIcon, CheckIcon, HeadsetIcon, SparkleIcon, SpinnerIcon, XIcon } from './icons.jsx'
+import { AlertIcon, CheckIcon, HeadsetIcon, SpinnerIcon, XIcon } from './icons.jsx'
 import { sendSupportRequest } from '@/app/actions/support'
 import { MESSAGE_LIMIT, MESSAGE_MINIMUM, SUBJECT_LIMIT } from '@/utils/support/limits'
 import AssistantDialog from './AssistantDialog.jsx'
+import RobotMascot from './RobotMascot.jsx'
 
 /**
  * Customer support, from wherever they are standing.
@@ -34,7 +35,7 @@ export default function SupportButton({ email }) {
         {menuOpen && (
           <div className="animate-reveal flex flex-col items-end gap-2">
             <LauncherOption
-              icon={<SparkleIcon className="h-[1.05rem] w-[1.05rem] shrink-0" />}
+              icon={<RobotMascot state="idle" className="h-[1.15rem] w-[1.15rem] shrink-0" />}
               label="Assistant"
               onClick={() => {
                 setMenuOpen(false)

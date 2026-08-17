@@ -5,6 +5,7 @@ import { askAssistant } from '@/app/actions/assistant'
 import { MESSAGE_LIMIT } from '@/utils/assistant/limits'
 import { Eyebrow, cx } from './ui.jsx'
 import { AlertIcon, ArrowRightIcon, SpinnerIcon, XIcon } from './icons.jsx'
+import RobotMascot from './RobotMascot.jsx'
 
 /**
  * The shopping assistant — same native-<dialog> shell as SupportDialog, a
@@ -88,11 +89,14 @@ function AssistantPanel({ titleId, onClose }) {
   return (
     <div className="animate-reveal flex max-h-[calc(100dvh-2rem)] flex-col">
       <div className="border-rule flex items-start justify-between gap-6 border-b px-7 py-6">
-        <div>
-          <Eyebrow>Ask, compare, search</Eyebrow>
-          <h2 id={titleId} className="display-wide text-display-3 mt-3 font-semibold">
-            Assistant
-          </h2>
+        <div className="flex items-start gap-3.5">
+          <RobotMascot state={pending ? 'thinking' : 'idle'} className="text-cool-600 h-12 w-12 shrink-0" />
+          <div>
+            <Eyebrow>Ask, compare, search</Eyebrow>
+            <h2 id={titleId} className="display-wide text-display-3 mt-3 font-semibold">
+              Assistant
+            </h2>
+          </div>
         </div>
         <button
           type="button"
@@ -130,7 +134,7 @@ function AssistantPanel({ titleId, onClose }) {
 
         {pending && (
           <div className="text-ink-soft mt-4 flex items-center gap-2 text-xs">
-            <SpinnerIcon className="h-3.5 w-3.5" />
+            <RobotMascot state="thinking" className="text-ink-soft h-4 w-4" />
             Thinking…
           </div>
         )}
