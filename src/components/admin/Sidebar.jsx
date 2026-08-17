@@ -4,7 +4,17 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { cx } from '../ui.jsx'
-import { ArrowUpRightIcon, BoltIcon, FileIcon, MenuIcon, ShieldIcon, SpinnerIcon, WrenchIcon, XIcon } from '../icons.jsx'
+import {
+  ArrowUpRightIcon,
+  BoltIcon,
+  ChartIcon,
+  FileIcon,
+  MenuIcon,
+  ShieldIcon,
+  SpinnerIcon,
+  WrenchIcon,
+  XIcon,
+} from '../icons.jsx'
 import { adminSignOut } from '@/app/actions/admin'
 
 /**
@@ -22,6 +32,7 @@ import { adminSignOut } from '@/app/actions/admin'
 const LINKS = [
   { href: '/admin', label: 'Verification', icon: ShieldIcon, hint: 'Installer applications' },
   { href: '/admin/orders', label: 'Orders', icon: FileIcon, hint: 'Approve and reject' },
+  { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon, hint: 'Sales and reports' },
   { href: '/admin/maintenance', label: 'Maintenance', icon: WrenchIcon, hint: 'Stock levels' },
   { href: '/admin/accounts', label: 'Accounts', icon: BoltIcon, hint: 'Users and admins' },
 ]

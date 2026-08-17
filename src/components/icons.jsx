@@ -176,6 +176,27 @@ export const EyeOffIcon = (p) => (
   </Svg>
 )
 
+export const ChartIcon = (p) => (
+  <Svg {...p}>
+    <path d="M4 20V4M4 20h16" />
+    <path d="M8 16v-4M12.5 16V7.5M17 16v-7" />
+  </Svg>
+)
+
+export const DownloadIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 3v12M7.5 11 12 15.5 16.5 11" />
+    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+  </Svg>
+)
+
+export const TableIcon = (p) => (
+  <Svg {...p}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="1.6" />
+    <path d="M3.5 9.5h17M9.5 4.5v15" />
+  </Svg>
+)
+
 export const SparkleIcon = (p) => (
   <Svg {...p}>
     <path d="M12 3.5c.5 3 2 4.5 5 5-3 .5-4.5 2-5 5-.5-3-2-4.5-5-5 3-.5 4.5-2 5-5Z" />
