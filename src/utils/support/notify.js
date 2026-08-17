@@ -9,6 +9,11 @@
  * may reach the browser.
  */
 
+// Hard boundary rather than a convention. This module reads RESEND_API_KEY and
+// the Supabase service key; importing it from a client component would be a
+// build error here instead of a secret in a browser bundle.
+import 'server-only'
+
 import { Resend } from 'resend'
 
 /** A roster is a handful of people. The cap is here so a misconfigured

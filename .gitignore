@@ -33,9 +33,6 @@ logs/
 Thumbs.db
 *.pem
 
-# clasp — .clasp.json holds only the script id and is committed on purpose.
-# .clasprc.json is the OAuth token clasp login writes, and is not.
-.clasprc.json
 
 # misc
 *.tsbuildinfo
