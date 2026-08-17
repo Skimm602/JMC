@@ -1,31 +1,19 @@
 /**
  * Getting a support request in front of a human.
  *
- * The site has no mailbox of its own. Sending is delegated to a Google Apps
- * Script web app (see apps-script/Code.gs), which runs as the account that
- * owns it and therefore already has the right to send mail — so nothing here
- * holds a mail password, and turning support off is an undeploy rather than a
- * secret rotation.
+ * Sent via Resend, straight from the server — the API key never reaches the
+ * browser. Recipients come from `public.admins`, read with the service key,
+ * the same as before: a customer's own session cannot see who to write to.
  *
  * Server-only. Every value read below is unprefixed on purpose: none of it
  * may reach the browser.
  */
 
+import { Resend } from 'resend'
+
 /** A roster is a handful of people. The cap is here so a misconfigured
     service key cannot turn one button press into a bulk send. */
 const ROSTER_LIMIT = 25
-
-/** The script is a network call to somebody else's infrastructure, and a
-    customer is watching a spinner while it happens. */
-const SEND_TIMEOUT_MS = 15_000
-
-function envList(value) {
-  if (!value) return []
-  return value
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-}
 
 /**
  * The admin roster, read with the service key.
@@ -36,8 +24,8 @@ function envList(value) {
  * Supabase client, because a client that carries this key must never be one
  * that could accidentally be handed a cookie store and reused elsewhere.
  *
- * Optional. Without the key the send still happens; the script falls back to
- * its own inbox setting, and finally to the address that owns it.
+ * Optional. Without the key the send still happens; it falls back to
+ * SUPPORT_INBOX or, failing that, the configured from-address's own inbox.
  */
 async function rosterFromDatabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -49,7 +37,7 @@ async function rosterFromDatabase() {
     const res = await fetch(`${url}/rest/v1/admins?select=email&limit=${ROSTER_LIMIT}`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
       cache: 'no-store',
-      signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+      signal: AbortSignal.timeout(15_000),
     })
 
     if (!res.ok) {
@@ -65,12 +53,19 @@ async function rosterFromDatabase() {
   }
 }
 
+function envList(value) {
+  if (!value) return []
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
+
 /**
  * Who this request should reach, most specific first.
  *
  * SUPPORT_INBOX wins because it is the deliberate answer — someone typed it.
- * The roster is the standing answer. An empty list is not a failure: it means
- * "you decide", and the script's own fallbacks take over from there.
+ * The roster is the standing answer.
  */
 export async function supportRecipients() {
   const override = envList(process.env.SUPPORT_INBOX)
@@ -78,64 +73,58 @@ export async function supportRecipients() {
   return rosterFromDatabase()
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]
+  )
+}
+
 /**
- * Hand the request to the Apps Script relay.
+ * Hand the request to Resend.
  *
- * Never throws. A support form that explodes because a Google deployment is
+ * Never throws. A support form that explodes because the mail provider is
  * having a bad afternoon is worse than one that says so, and the caller needs
  * the outcome to record it either way.
+ *
+ * The sandbox address `onboarding@resend.dev` (the default for
+ * SUPPORT_FROM_EMAIL until a domain is verified) only delivers to the email
+ * address on the Resend account itself — sends to any other admin address
+ * will fail with a 403 until a real domain is added and verified in Resend.
  */
 export async function notifySupportTeam({ name, email, account, subject, message, recipients }) {
-  const url = process.env.SUPPORT_SCRIPT_URL?.trim()
-  const token = process.env.SUPPORT_SCRIPT_TOKEN?.trim()
+  const apiKey = process.env.RESEND_API_KEY?.trim()
+  const from = process.env.SUPPORT_FROM_EMAIL?.trim() || 'onboarding@resend.dev'
 
-  if (!url) {
-    console.warn('[support] SUPPORT_SCRIPT_URL is not set — nothing was emailed.')
+  if (!apiKey) {
+    console.warn('[support] RESEND_API_KEY is not set — nothing was emailed.')
     return { ok: false, reason: 'not-configured', delivered: [] }
   }
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      // text/plain rather than application/json: Apps Script reads
-      // e.postData.contents identically either way, and this content type is
-      // the one its web apps handle without argument.
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ token, name, email, account, subject, message, recipients }),
-      // /exec answers with a 302 to googleusercontent, where the result is
-      // actually served. doPost has already run by then.
-      redirect: 'follow',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
-    })
-
-    const raw = await res.text()
-
-    let payload
-    try {
-      payload = JSON.parse(raw)
-    } catch {
-      // Almost always the Google sign-in page: the deployment is set to
-      // "Only myself" instead of "Anyone".
-      console.error('[support] the relay did not answer with JSON. Check the deployment is open to "Anyone".')
-      return { ok: false, reason: 'bad-response', delivered: [] }
-    }
-
-    if (!payload.ok) {
-      console.error('[support] the relay refused the request:', payload.error)
-      return { ok: false, reason: payload.error || 'refused', delivered: [] }
-    }
-
-    // Apps Script caps a consumer account at 100 mails a day. Running out is
-    // silent from the site's side — sends simply start failing — so the warning
-    // goes out while there is still time to do something about it.
-    if (typeof payload.quotaRemaining === 'number' && payload.quotaRemaining < 20) {
-      console.warn(`[support] only ${payload.quotaRemaining} sends left on the relay's daily quota.`)
-    }
-
-    return { ok: true, delivered: payload.delivered ?? [] }
-  } catch (error) {
-    console.error('[support] could not reach the relay:', error.message)
-    return { ok: false, reason: 'unreachable', delivered: [] }
+  if (!recipients?.length) {
+    console.warn('[support] no admin recipients configured — nothing was emailed.')
+    return { ok: false, reason: 'no-recipients', delivered: [] }
   }
+
+  const resend = new Resend(apiKey)
+
+  const text = `From: ${name} <${account}>\n\n${message}`
+  const html = `<p><strong>From:</strong> ${escapeHtml(name)} &lt;${escapeHtml(account)}&gt;</p><p>${escapeHtml(
+    message
+  ).replace(/\n/g, '<br>')}</p>`
+
+  const { data, error } = await resend.emails.send({
+    from,
+    to: recipients,
+    replyTo: email,
+    subject: `[Support] ${subject}`,
+    text,
+    html,
+  })
+
+  if (error) {
+    console.error('[support] Resend refused the request:', error.message)
+    return { ok: false, reason: error.message, delivered: [] }
+  }
+
+  return { ok: true, delivered: recipients, id: data?.id }
 }
