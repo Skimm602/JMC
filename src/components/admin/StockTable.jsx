@@ -107,6 +107,40 @@ function AddProduct({ onAdded }) {
         />
       </label>
 
+      <label className="grid gap-1.5">
+        <span className="label text-ink-soft">Type</span>
+        <select
+          name="category"
+          defaultValue=""
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        >
+          <option value="">Not set</option>
+          <option value="inverter">Inverter</option>
+          <option value="battery">Battery</option>
+        </select>
+      </label>
+      <label className="grid gap-1.5">
+        <span className="label text-ink-soft">Voltage</span>
+        <select
+          name="voltage_class"
+          defaultValue=""
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        >
+          <option value="">Not set</option>
+          <option value="low">Low voltage</option>
+          <option value="high">High voltage</option>
+        </select>
+      </label>
+      <label className="grid gap-1.5">
+        <span className="label text-ink-soft">Rating (0-5, optional)</span>
+        <input
+          inputMode="decimal"
+          name="rating"
+          placeholder="e.g. 4.5"
+          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
+        />
+      </label>
+
       <FileField label="Image (optional)" name="image" accept="image/*" />
       <FileField label="Datasheet PDF (optional)" name="datasheet" accept="application/pdf" />
       <FileField label="User manual PDF (optional)" name="manual" accept="application/pdf" />

@@ -24,7 +24,7 @@ export async function getProducts() {
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, is_active, created_at',
+      'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, category, voltage_class, rating, is_active, created_at',
     )
     .order('name', { ascending: true })
 
@@ -38,7 +38,7 @@ export async function getProducts() {
  * reason to ship the whole row to a browser to show a card.
  */
 const STOREFRONT_COLUMNS =
-  'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications'
+  'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, category, voltage_class, rating'
 
 /**
  * Whether the person looking gets trade pricing.
@@ -133,6 +133,22 @@ function readProductFields(formData) {
     .map((s) => String(s).trim())
     .filter(Boolean)
 
+  const categoryRaw = String(formData.get('category') ?? '').trim()
+  if (categoryRaw && !['inverter', 'battery'].includes(categoryRaw)) {
+    return { error: 'Type must be inverter or battery.' }
+  }
+
+  const voltageRaw = String(formData.get('voltage_class') ?? '').trim()
+  if (voltageRaw && !['low', 'high'].includes(voltageRaw)) {
+    return { error: 'Voltage must be low or high.' }
+  }
+
+  const ratingRaw = formData.get('rating')
+  const rating = ratingRaw === '' || ratingRaw == null ? null : Number(ratingRaw)
+  if (rating != null && (!Number.isFinite(rating) || rating < 0 || rating > 5)) {
+    return { error: 'Rating must be between 0 and 5.' }
+  }
+
   return {
     row: {
       name,
@@ -141,6 +157,9 @@ function readProductFields(formData) {
       installer_price: installerPrice,
       stock_quantity: stockQuantity,
       specifications,
+      category: categoryRaw || null,
+      voltage_class: voltageRaw || null,
+      rating,
     },
   }
 }

@@ -204,6 +204,12 @@ export const SparkleIcon = (p) => (
   </Svg>
 )
 
+export const StarIcon = ({ filled, className = 'h-4 w-4', ...rest }) => (
+  <Svg className={className} fill={filled ? 'currentColor' : 'none'} {...rest}>
+    <path d="M12 3.5l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9-5.3-2.9-5.3 2.9 1.1-5.9-4.3-4.1 5.9-.7Z" />
+  </Svg>
+)
+
 export const SpinnerIcon = ({ className = 'h-5 w-5' }) => (
   <svg {...base} className={`${className} animate-spin`}>
     <path d="M12 3a9 9 0 1 0 9 9" />
