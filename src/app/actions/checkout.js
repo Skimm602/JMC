@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@/utils/supabase/server'
 import { GATEWAY_PAYMENT_METHODS, isSupportedGatewayMethod, gatewayClient } from '@/utils/payments/gateway'
-import { hasInstallerPricing, quote } from '@/utils/pricing'
+import { hasInstallerPricing, isPriced, quote } from '@/utils/pricing'
 
 /**
  * The delivery address, checked before anything is written.
@@ -126,6 +126,14 @@ export async function createGatewayCheckout({ items, paymentMethod, shipping, ac
   const lines = []
   for (const product of products) {
     const quantity = quantityByProductId.get(product.id)
+
+    // A product in the catalogue that has not been priced yet. The storefront
+    // already refuses to offer these, so reaching here means a stale tab or a
+    // hand-made request — and writing the order anyway would bill somebody
+    // zero pesos for hardware.
+    if (!isPriced(product)) {
+      return { error: `${product.name} is not priced yet. Ask us for a quote before ordering it.` }
+    }
 
     if (product.stock_quantity != null && quantity > product.stock_quantity) {
       return { error: `Only ${product.stock_quantity} left in stock for ${product.name}.` }

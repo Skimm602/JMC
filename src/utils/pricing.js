@@ -45,6 +45,25 @@ export function hasInstallerPricing(profile) {
 }
 
 /**
+ * Whether this product has a price yet.
+ *
+ * A row can exist in the catalogue before anybody has decided what it sells
+ * for — the range is loaded from the manufacturer's datasheets, and the
+ * pesos are set afterwards in the Maintenance tab. Those rows carry
+ * retail_price 0, which is not a price: nothing here is free, so zero can
+ * only mean "not yet priced".
+ *
+ * The storefront asks this before it shows a figure, and createGatewayCheckout
+ * asks it again before it writes an order, so an unpriced product can be read
+ * about but not bought. Setting a real price is the only thing needed to turn
+ * one into a live line — there is no second flag to remember.
+ */
+export function isPriced(product) {
+  const retail = Number(product?.retail_price)
+  return Number.isFinite(retail) && retail > 0
+}
+
+/**
  * The price one unit actually sells for. Trade price when there is one and
  * the buyer is entitled to it, list price otherwise — a product with no
  * installer_price is simply never discounted.

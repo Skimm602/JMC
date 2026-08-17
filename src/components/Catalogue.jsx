@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatPeso, unitPriceOf, VAT_RATE } from '@/utils/pricing'
+import { formatPeso, isPriced, unitPriceOf, VAT_RATE } from '@/utils/pricing'
 import { cx } from './ui.jsx'
 import { ArrowRightIcon, FileIcon } from './icons.jsx'
 
@@ -21,6 +21,26 @@ export function PriceTag({ product, isInstaller, size = 'md' }) {
   const price = unitPriceOf(product, isInstaller)
   const list = Number(product.retail_price)
   const discounted = isInstaller && product.installer_price != null && price < list
+
+  // A product whose peso figure has not been set yet. Saying so is the whole
+  // job here — rendering the zero it actually holds would read as free, and
+  // hiding the product entirely would lose the specification and the
+  // datasheet somebody came to read.
+  if (!isPriced(product)) {
+    return (
+      <div>
+        <p
+          className={cx(
+            'text-ink font-medium',
+            size === 'lg' ? 'text-display-3 font-display display-wide' : 'text-lg',
+          )}
+        >
+          Price on request
+        </p>
+        <p className="text-ink-soft mt-1.5 text-xs">Ask us for a quote — this line is not on general sale yet.</p>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -122,7 +142,9 @@ function ProductCard({ product, isInstaller }) {
 
         <span className="text-ink-soft group-hover:text-ink mt-5 flex items-center gap-2 text-sm font-medium transition-colors">
           <span className="border-b border-current/40 pb-px transition-colors group-hover:border-current">
-            View and order
+            {/* Promising "order" on a card that cannot be ordered from is the
+                kind of small lie that costs a click and some goodwill. */}
+            {isPriced(product) ? 'View and order' : 'View specification'}
           </span>
           <ArrowRightIcon
             aria-hidden="true"

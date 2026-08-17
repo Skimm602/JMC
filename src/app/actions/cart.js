@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { hasInstallerPricing, quote } from '@/utils/pricing'
+import { hasInstallerPricing, isPriced, quote } from '@/utils/pricing'
 
 /**
  * The cart: what a signed-in customer has added, kept in the database rather
@@ -85,12 +85,18 @@ export async function getCart() {
 async function activeProduct(supabase, productId) {
   const { data, error } = await supabase
     .from('products')
-    .select('id, stock_quantity')
+    .select('id, name, retail_price, stock_quantity')
     .eq('id', productId)
     .eq('is_active', true)
     .maybeSingle()
   if (error) return { error: error.message }
   if (!data) return { error: 'This product is not available.' }
+
+  // A catalogued product with no price yet. The product page never offers the
+  // button for one of these, so arriving here means a stale tab — and a cart
+  // line at zero pesos would go on to show a total nobody agreed to.
+  if (!isPriced(data)) return { error: `${data.name} is not priced yet. Ask us for a quote instead.` }
+
   return { product: data }
 }
 
