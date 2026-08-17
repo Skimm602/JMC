@@ -47,6 +47,12 @@
   --color-glint: #e8f1fb;
   --color-glint-soft: #a2bedc;
 
+  /* The brand green, sampled from the logo file rather than matched by eye.
+     It belongs to the mark and nothing else — the palette's working colours
+     are the cool and hot ramps below, and a third accent loose in the UI
+     would cost the logo the one place it is the only green on the page. */
+  --color-brand: #49d058;
+
   /* Hairlines. Solid, because six ad-hoc alpha steps read as six weights.
      Each is the old ink/glint alpha resolved against the band it sits on. */
   --color-rule: #c2d8ec;

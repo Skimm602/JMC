@@ -17,9 +17,12 @@ export default function AuthShell({ eyebrow, title, intro, children, footer }) {
       <div className="w-full max-w-[26rem]">
         {/* Not the site Logo component: that one is a link home, and this
             corridor does not lead back to the showroom. */}
-        <div className="flex items-baseline gap-2">
-          <span className="font-display display-wide bg-glint text-pit rounded-[0.5rem] px-2.5 py-1 text-[1.0625rem] leading-none font-bold tracking-[0.02em]">
-            VIP
+        <div className="flex items-baseline gap-2.5">
+          <span className="flex items-baseline">
+            <span className="font-display text-glint text-[1.0625rem] leading-none font-bold tracking-[-0.02em]">
+              Vip Solar
+            </span>
+            <span className="font-display text-brand text-[1.0625rem] leading-none font-bold">.</span>
           </span>
           <span className="label text-glint-soft">{eyebrow}</span>
         </div>

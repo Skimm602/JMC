@@ -79,13 +79,15 @@ export default function IntroScreen() {
           ))}
         </div>
 
-        <div className="intro-mark flex items-baseline gap-2.5">
-          <span className="font-display display-wide bg-glint text-pit rounded-[0.5rem] px-3 py-1.5 text-[1.375rem] leading-none font-bold tracking-[0.02em]">
-            VIP
+        {/* The wordmark exactly as Logo.jsx sets it, only larger — same
+            capitalisation, same tracking, same green full stop. An opening
+            that introduced a slightly different logo to the one in the header
+            would be the worst possible thing for it to do. */}
+        <div className="intro-mark flex items-baseline">
+          <span className="font-display text-glint text-[1.75rem] leading-none font-bold tracking-[-0.02em]">
+            Vip Solar
           </span>
-          <span className="font-display display-wide text-glint text-[1.375rem] leading-none font-bold tracking-[0.02em]">
-            Solar
-          </span>
+          <span className="font-display text-brand text-[1.75rem] leading-none font-bold">.</span>
         </div>
       </div>
     </>

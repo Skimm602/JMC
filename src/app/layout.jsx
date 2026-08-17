@@ -56,7 +56,21 @@ export const viewport = {
  */
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} scroll-smooth`}>
+    <html
+      lang="en"
+      className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} scroll-smooth`}
+      // The opening animation's skip check (IntroScreen) sets data-intro-seen
+      // on this element before React hydrates — that is the whole point of it,
+      // since deciding after hydration would mean painting a frame of a cover
+      // the visitor has already been shown. React sees an attribute the server
+      // never sent and reports a mismatch.
+      //
+      // This suppresses that one comparison and nothing else: the flag applies
+      // to this element's own attributes and text, not to its subtree, so
+      // every real mismatch below it is still reported. It is the same
+      // arrangement a theme script needs, and for the same reason.
+      suppressHydrationWarning
+    >
       <body>{children}</body>
     </html>
   )

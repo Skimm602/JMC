@@ -1,4 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#0d2949" />
-  <path d="M5 11h13l9 12" fill="none" stroke="#4AA9EC" stroke-width="3.4" stroke-linecap="square" />
+  <!--
+    A favicon is read at 16px, so it carries the one part of the wordmark that
+    survives that size: the V, and the green full stop that ends the mark.
+    Spelling out "Vip Solar" here would be a grey smudge.
+
+    Deep-blue ground rather than the logo file's white, because a tab strip is
+    usually light and a white-on-white mark disappears into it.
+  -->
+  <rect width="32" height="32" fill="#081c34" />
+  <path d="M7 8.5 L14.5 22.5 L22 8.5" fill="none" stroke="#e8f1fb" stroke-width="3.6" stroke-linecap="square" stroke-linejoin="miter" />
+  <circle cx="25.5" cy="21" r="2.6" fill="#49d058" />
 </svg>
