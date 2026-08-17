@@ -102,11 +102,38 @@ function doPost(e) {
 
 /**
  * Opening the deployment URL in a browser is how everybody checks whether a
- * web app is live, so it answers instead of throwing. It deliberately reports
- * nothing about the token or the roster.
+ * web app is live, so it answers instead of throwing.
+ *
+ * It also reports enough to tell a working deployment from a misconfigured
+ * one without anybody having to read an execution log: whether the token is
+ * set, and which property names the script can actually see. Names, never
+ * values — the URL is unguessable rather than secret, and a diagnostic that
+ * prints the shared token would hand over the thing the token protects.
+ *
+ * The property read is wrapped because it is exactly the call that fails when
+ * the manifest pins an OAuth scope list that leaves PropertiesService out. A
+ * thrown exception here would read as "the script is broken" when the real
+ * answer is "the script is not allowed to look".
  */
 function doGet() {
-  return reply(200, { ok: true, service: 'VIP Solar support relay' })
+  var diagnostics = { tokenSet: false, propertyKeys: [], propertiesReadable: false }
+
+  try {
+    var properties = PropertiesService.getScriptProperties().getProperties()
+    diagnostics.propertiesReadable = true
+    diagnostics.propertyKeys = Object.keys(properties)
+    diagnostics.tokenSet = Boolean(properties.SHARED_TOKEN)
+  } catch (err) {
+    diagnostics.propertiesError = String((err && err.message) || err)
+  }
+
+  try {
+    diagnostics.mailQuotaRemaining = MailApp.getRemainingDailyQuota()
+  } catch (err) {
+    diagnostics.mailError = String((err && err.message) || err)
+  }
+
+  return reply(200, { ok: true, service: 'VIP Solar support relay', diagnostics: diagnostics })
 }
 
 /* ------------------------------- helpers -------------------------------- */
