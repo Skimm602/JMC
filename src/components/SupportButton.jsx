@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useId, useRef, useState } from 'react'
+import Link from 'next/link'
 import { Button, Eyebrow, cx } from './ui.jsx'
 import { Field, Textarea, TextInput } from './form.jsx'
-import { AlertIcon, CheckIcon, HeadsetIcon, SpinnerIcon, XIcon } from './icons.jsx'
+import { AlertIcon, CheckIcon, HeadsetIcon, InfoIcon, SpinnerIcon, XIcon } from './icons.jsx'
 import { sendSupportRequest } from '@/app/actions/support'
 import { MESSAGE_LIMIT, MESSAGE_MINIMUM, SUBJECT_LIMIT } from '@/utils/support/limits'
 
@@ -21,18 +22,46 @@ import { MESSAGE_LIMIT, MESSAGE_MINIMUM, SUBJECT_LIMIT } from '@/utils/support/l
  * who it is replying to.
  */
 export default function SupportButton({ email }) {
+  const [menuOpen, setMenuOpen] = useState(false)
   const [supportOpen, setSupportOpen] = useState(false)
 
   return (
     <>
       {/* Bottom right, and below the header's z-50 so the mobile menu covers
           it rather than fighting it for the corner. */}
-      <div className="fixed right-4 bottom-4 z-30 sm:right-6 sm:bottom-6">
+      <div className="fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2.5 sm:right-6 sm:bottom-6">
+        {menuOpen && (
+          <div className="animate-reveal flex flex-col items-end gap-2">
+            {/* Answers first, and a real page rather than another panel: an
+                FAQ is something to read, link to and come back to, none of
+                which a dialog that closes on Esc is any good at. */}
+            <LauncherOption
+              as={Link}
+              href="/faqs"
+              icon={<InfoIcon className="h-[1.05rem] w-[1.05rem] shrink-0" />}
+              label="FAQs"
+              onClick={() => setMenuOpen(false)}
+            />
+            <LauncherOption
+              icon={<HeadsetIcon className="h-[1.05rem] w-[1.05rem] shrink-0" />}
+              label="Customer support"
+              onClick={() => {
+                setMenuOpen(false)
+                setSupportOpen(true)
+              }}
+            />
+          </div>
+        )}
+
         <button
           type="button"
-          onClick={() => setSupportOpen(true)}
-          aria-label="Customer support"
-          title="Customer support"
+          onClick={() => setMenuOpen((current) => !current)}
+          aria-haspopup="true"
+          aria-expanded={menuOpen}
+          // Icon only, so the name has to be carried here — a button whose
+          // whole content is an <svg> announces as nothing at all otherwise.
+          aria-label={menuOpen ? 'Close' : 'Help'}
+          title={menuOpen ? 'Close' : 'Help'}
           className={cx(
             'group/support bg-cool-600 text-glare flex items-center justify-center',
             'h-11 w-11 shrink-0',
@@ -40,12 +69,43 @@ export default function SupportButton({ email }) {
             'hover:bg-cool-700 active:translate-y-px',
           )}
         >
-          <HeadsetIcon className="h-[1.2rem] w-[1.2rem] shrink-0" />
+          {menuOpen ? (
+            <XIcon className="h-[1.2rem] w-[1.2rem] shrink-0" />
+          ) : (
+            <HeadsetIcon className="h-[1.2rem] w-[1.2rem] shrink-0" />
+          )}
         </button>
       </div>
 
       <SupportDialog open={supportOpen} email={email} onClose={() => setSupportOpen(false)} />
     </>
+  )
+}
+
+/**
+ * One row of the launcher's expanded menu.
+ *
+ * `as` exists because the two rows are genuinely different elements: FAQs
+ * navigates and must be a link — middle-clickable, openable in a new tab,
+ * announced as a link — while support opens a dialog and must be a button.
+ * Rendering one as the other to keep the markup uniform would break whichever
+ * one lost.
+ */
+function LauncherOption({ as: Tag = 'button', icon, label, ...rest }) {
+  return (
+    <Tag
+      {...(Tag === 'button' ? { type: 'button' } : null)}
+      {...rest}
+      className={cx(
+        'bg-glare text-ink border-rule-strong flex items-center gap-2.5 border',
+        'h-10 px-3.5 text-[0.8125rem] font-medium tracking-[0.01em]',
+        'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.35)] transition-colors duration-200',
+        'hover:border-ink hover:bg-ink/[0.03] active:translate-y-px',
+      )}
+    >
+      {icon}
+      {label}
+    </Tag>
   )
 }
 
