@@ -206,7 +206,7 @@ function TrackingEditor({ order, onChanged }) {
 
   return (
     <form onSubmit={save} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-      <Field label="Courier">
+      <Field label="Courier" required>
         {(p) => (
           <TextInput
             {...p}
@@ -219,7 +219,7 @@ function TrackingEditor({ order, onChanged }) {
           />
         )}
       </Field>
-      <Field label="Tracking number">
+      <Field label="Tracking number" required>
         {(p) => (
           <TextInput
             {...p}
