@@ -1,5 +1,6 @@
 import Nav from '@/components/Nav.jsx'
 import Footer from '@/components/Footer.jsx'
+import IntroScreen from '@/components/IntroScreen.jsx'
 import SupportButton from '@/components/SupportButton.jsx'
 import { createClient } from '@/utils/supabase/server'
 
@@ -36,6 +37,10 @@ export default async function SiteLayout({ children }) {
 
   return (
     <>
+      {/* Above the skip link so the cover is parsed — and its "already seen"
+          check has run — before anything else on the page. */}
+      <IntroScreen />
+
       <a
         href="#content"
         className="focus:bg-cool-600 focus:text-glare sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"

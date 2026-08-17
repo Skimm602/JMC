@@ -555,6 +555,98 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   The opening.
+
+   A brief cover on the first load of a visit: the wordmark, and the datum
+   rule the rest of the page is built on drawing itself underneath. It is the
+   same two marks the header uses, held for about a second.
+
+   Three properties this is built around, in order of how badly they would
+   hurt if they were missing:
+
+   1. It clears itself in CSS alone. Every step including the exit is a
+      keyframe with `both` fill, so a browser that ran no JavaScript at all
+      still ends with the cover gone. Nothing here waits for a script.
+   2. It never takes a click. `pointer-events: none` is on the element from
+      the first frame, so even a cover that somehow stayed on screen could
+      not stop someone using the site behind it.
+   3. It is skippable and skipped. Once per visit (the script sets
+      data-intro-seen), and never for somebody who asked for less motion.
+
+   Total run is 1.2s: 0.78s of animation, then a 0.42s fade.
+   --------------------------------------------------------------------------- */
+
+/* One cell of the array waking up: dim, a bright pass as the light reaches
+   it, then settling to the deep blue a panel actually sits at. The travelling
+   highlight is the whole effect — each cell runs this identically and the
+   wave comes entirely from the delay the markup gives it. */
+@keyframes intro-cell {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+    background-color: var(--color-shade-edge);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1);
+    background-color: var(--color-cool-400);
+  }
+  to {
+    opacity: 0.92;
+    transform: scale(1);
+    background-color: var(--color-cool-700);
+  }
+}
+
+@keyframes intro-mark {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* visibility rather than only opacity, so the cover is genuinely out of the
+   way at the end rather than an invisible sheet lying over the page. */
+@keyframes intro-clear {
+  from {
+    opacity: 1;
+    visibility: visible;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* 2.1s end to end. The wave finishes around 1.05s, the wordmark lands at
+   1.30s, and the cover holds for a beat before it goes — the pause is what
+   stops the whole thing feeling snatched away. */
+.intro-screen {
+  animation: intro-clear 0.48s var(--ease-out-expo) 1.62s both;
+}
+
+/* ease-out alone here, not the expo curve the rest of the site uses: a cell
+   is a light turning on, and the near-instant attack of expo reads as a snap
+   rather than a sweep when forty of them fire in sequence. */
+.intro-cell {
+  animation: intro-cell 0.55s ease-out both;
+}
+
+.intro-mark {
+  animation: intro-mark 0.45s var(--ease-out-expo) 0.85s both;
+}
+
+/* Second visit onward within the same tab. An intro is a greeting, and a
+   greeting repeated on every page load is an obstacle. */
+[data-intro-seen] .intro-screen {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -563,5 +655,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* The rule above would collapse the cover to a single frame rather than
+     remove it, and a one-frame flash of navy is the exact thing somebody
+     asking for reduced motion is trying to avoid. */
+  .intro-screen {
+    display: none;
   }
 }
