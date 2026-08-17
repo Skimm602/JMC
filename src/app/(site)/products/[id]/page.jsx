@@ -82,20 +82,53 @@ export default async function ProductPage({ params }) {
               )}
 
               {product.specifications?.length > 0 && (
-                <dl className="border-rule mt-8 border-t">
-                  {product.specifications.map((spec, i) => {
-                    const split = spec.indexOf(':')
-                    const label = split === -1 ? null : spec.slice(0, split).trim()
-                    const value = split === -1 ? spec : spec.slice(split + 1).trim()
+                <>
+                  <Rule className="mt-10" />
+                  <h2 className="display-wide text-display-3 text-ink mt-8 font-semibold">Technical specification</h2>
+                  <p className="text-ink-soft mt-3 text-sm leading-relaxed">
+                    Every figure below is transcribed from the manufacturer&apos;s datasheet, which is linked in full
+                    underneath.
+                  </p>
 
-                    return (
-                      <div key={i} className="border-rule flex items-baseline justify-between gap-6 border-b py-3">
-                        {label && <dt className="label text-ink-soft">{label}</dt>}
-                        <dd className="text-ink font-mono text-sm font-medium tabular-nums">{value}</dd>
-                      </div>
-                    )
-                  })}
-                </dl>
+                  <dl className="mt-8">
+                    {product.specifications.map((spec, i) => {
+                      // A datasheet is grouped — PV input, battery, efficiency,
+                      // general data — and forty rows read as a wall without
+                      // those divisions. A leading "# " marks a heading, which
+                      // is also what an admin types into the Maintenance tab.
+                      if (spec.startsWith('#')) {
+                        return (
+                          <div
+                            key={i}
+                            className="border-rule bg-sheet/60 border-t border-b px-3.5 py-2 first:border-t-0"
+                          >
+                            <dt className="label text-ink font-medium">{spec.replace(/^#+\s*/, '')}</dt>
+                          </div>
+                        )
+                      }
+
+                      const split = spec.indexOf(':')
+                      const label = split === -1 ? null : spec.slice(0, split).trim()
+                      const value = split === -1 ? spec : spec.slice(split + 1).trim()
+
+                      return (
+                        <div
+                          key={i}
+                          className="border-rule flex flex-col gap-1 border-b px-3.5 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+                        >
+                          {label && <dt className="label text-ink-soft sm:shrink-0">{label}</dt>}
+                          {/* Some rows are a paragraph of protections rather
+                              than a number, so the value wraps and stays left
+                              aligned on a phone instead of being squeezed into
+                              a column beside its own label. */}
+                          <dd className="text-ink font-mono text-sm leading-relaxed font-medium tabular-nums sm:max-w-[60%] sm:text-right">
+                            {value}
+                          </dd>
+                        </div>
+                      )
+                    })}
+                  </dl>
+                </>
               )}
 
               {(product.datasheet_url || product.manual_url) && (

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createGatewayCheckout } from '@/app/actions/checkout'
 import { addToCart } from '@/app/actions/cart'
-import { formatPeso, quote, VAT_RATE } from '@/utils/pricing'
+import { formatPeso, isPriced, quote, VAT_RATE } from '@/utils/pricing'
 import NoRefundsDialog from './NoRefundsDialog.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
@@ -76,6 +76,38 @@ function Notice({ children }) {
 
 /* -------------------------------- component ------------------------------- */
 
+/**
+ * What stands in for the order form on a product that has no price yet.
+ *
+ * The range is loaded from the manufacturer's datasheets before anybody sets
+ * the pesos, so for a while a real product can be fully documented and not
+ * yet for sale. Showing the form anyway would let someone fill in an address
+ * for an order the server is going to refuse; showing nothing would leave the
+ * column blank next to a full specification. This says where the page stands
+ * and gives the one action that does work.
+ */
+function QuotePanel({ product }) {
+  return (
+    <div className="border-rule bg-glare border p-6">
+      <p className="label text-ink-soft">Not yet priced</p>
+      <p className="display-wide text-display-3 text-ink mt-3 font-semibold">Price on request</p>
+      <p className="text-ink-soft mt-4 text-sm leading-relaxed">
+        {product.name} is in the catalogue with its full specification and the manufacturer&apos;s datasheet, but it
+        is not on general sale yet. Ask us and we will quote it — including delivery, and installation if you need
+        it.
+      </p>
+      <Rule className="mt-6" />
+      <p className="text-ink-soft mt-6 text-sm leading-relaxed">
+        Use the support button in the corner if you are signed in, or email{' '}
+        <a href="mailto:jmcsolarph@gmail.com" className="text-ink font-mono underline underline-offset-2">
+          jmcsolarph@gmail.com
+        </a>
+        .
+      </p>
+    </div>
+  )
+}
+
 export default function ProductCheckout({ product, isInstaller, signedIn }) {
   const router = useRouter()
 
@@ -99,6 +131,11 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
     () => quote({ lines: [{ product, quantity }], isInstaller }),
     [product, quantity, isInstaller],
   )
+
+  // After every hook, never before one: this component's state is declared
+  // unconditionally so that a product gaining a price mid-session does not
+  // change the order of the hooks React is tracking.
+  if (!isPriced(product)) return <QuotePanel product={product} />
 
   const set = (key) => (event) => setAddress((current) => ({ ...current, [key]: event.target.value }))
 
