@@ -57,22 +57,24 @@ export default function SupportButton({ email }) {
           onClick={() => setMenuOpen((current) => !current)}
           aria-haspopup="true"
           aria-expanded={menuOpen}
+          // Icon only, so the name has to be carried here — a button whose
+          // whole content is an <svg> announces as nothing at all otherwise.
+          // It doubles as the hover tooltip, which is what a bare icon in a
+          // corner needs to be guessable.
+          aria-label={menuOpen ? 'Close' : 'Support'}
+          title={menuOpen ? 'Close' : 'Support'}
           className={cx(
-            'group/support bg-cool-600 text-glare flex items-center gap-2.5',
-            'h-11 px-3.5 text-[0.8125rem] font-medium tracking-[0.01em]',
+            'group/support bg-cool-600 text-glare flex items-center justify-center',
+            'h-11 w-11 shrink-0',
             'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.55)] transition-colors duration-200',
             'hover:bg-cool-700 active:translate-y-px',
           )}
         >
           {menuOpen ? (
-            <XIcon className="h-[1.15rem] w-[1.15rem] shrink-0" />
+            <XIcon className="h-[1.2rem] w-[1.2rem] shrink-0" />
           ) : (
-            <HeadsetIcon className="h-[1.15rem] w-[1.15rem] shrink-0" />
+            <HeadsetIcon className="h-[1.2rem] w-[1.2rem] shrink-0" />
           )}
-          {/* The label is the affordance; the icon alone is a guess. It is
-              dropped only where the corner is genuinely tight. */}
-          <span className="hidden sm:inline">{menuOpen ? 'Close' : 'Support'}</span>
-          <span className="sr-only sm:hidden">{menuOpen ? 'Close' : 'Support'}</span>
         </button>
       </div>
 
