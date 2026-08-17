@@ -176,6 +176,13 @@ export const EyeOffIcon = (p) => (
   </Svg>
 )
 
+export const SparkleIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 3.5c.5 3 2 4.5 5 5-3 .5-4.5 2-5 5-.5-3-2-4.5-5-5 3-.5 4.5-2 5-5Z" />
+    <path d="M19 15c.25 1.5 1 2.25 2.5 2.5-1.5.25-2.25 1-2.5 2.5-.25-1.5-1-2.25-2.5-2.5 1.5-.25 2.25-1 2.5-2.5Z" />
+  </Svg>
+)
+
 export const SpinnerIcon = ({ className = 'h-5 w-5' }) => (
   <svg {...base} className={`${className} animate-spin`}>
     <path d="M12 3a9 9 0 1 0 9 9" />

@@ -3,9 +3,10 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Eyebrow, cx } from './ui.jsx'
 import { Field, Textarea, TextInput } from './form.jsx'
-import { AlertIcon, CheckIcon, HeadsetIcon, SpinnerIcon, XIcon } from './icons.jsx'
+import { AlertIcon, CheckIcon, HeadsetIcon, SparkleIcon, SpinnerIcon, XIcon } from './icons.jsx'
 import { sendSupportRequest } from '@/app/actions/support'
 import { MESSAGE_LIMIT, MESSAGE_MINIMUM, SUBJECT_LIMIT } from '@/utils/support/limits'
+import AssistantDialog from './AssistantDialog.jsx'
 
 /**
  * Customer support, from wherever they are standing.
@@ -21,32 +22,83 @@ import { MESSAGE_LIMIT, MESSAGE_MINIMUM, SUBJECT_LIMIT } from '@/utils/support/l
  * who it is replying to.
  */
 export default function SupportButton({ email }) {
-  const [open, setOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
+  const [assistantOpen, setAssistantOpen] = useState(false)
 
   return (
     <>
       {/* Bottom right, and below the header's z-50 so the mobile menu covers
           it rather than fighting it for the corner. */}
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-        className={cx(
-          'group/support bg-cool-600 text-glare fixed right-4 bottom-4 z-30 flex items-center gap-2.5',
-          'h-11 px-3.5 text-[0.8125rem] font-medium tracking-[0.01em] sm:right-6 sm:bottom-6',
-          'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.55)] transition-colors duration-200',
-          'hover:bg-cool-700 active:translate-y-px',
+      <div className="fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2.5 sm:right-6 sm:bottom-6">
+        {menuOpen && (
+          <div className="animate-reveal flex flex-col items-end gap-2">
+            <LauncherOption
+              icon={<SparkleIcon className="h-[1.05rem] w-[1.05rem] shrink-0" />}
+              label="Assistant"
+              onClick={() => {
+                setMenuOpen(false)
+                setAssistantOpen(true)
+              }}
+            />
+            <LauncherOption
+              icon={<HeadsetIcon className="h-[1.05rem] w-[1.05rem] shrink-0" />}
+              label="Customer support"
+              onClick={() => {
+                setMenuOpen(false)
+                setSupportOpen(true)
+              }}
+            />
+          </div>
         )}
-      >
-        <HeadsetIcon className="h-[1.15rem] w-[1.15rem] shrink-0" />
-        {/* The label is the affordance; the icon alone is a guess. It is
-            dropped only where the corner is genuinely tight. */}
-        <span className="hidden sm:inline">Support</span>
-        <span className="sr-only sm:hidden">Customer support</span>
-      </button>
 
-      <SupportDialog open={open} email={email} onClose={() => setOpen(false)} />
+        <button
+          type="button"
+          onClick={() => setMenuOpen((current) => !current)}
+          aria-haspopup="true"
+          aria-expanded={menuOpen}
+          className={cx(
+            'group/support bg-cool-600 text-glare flex items-center gap-2.5',
+            'h-11 px-3.5 text-[0.8125rem] font-medium tracking-[0.01em]',
+            'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.55)] transition-colors duration-200',
+            'hover:bg-cool-700 active:translate-y-px',
+          )}
+        >
+          {menuOpen ? (
+            <XIcon className="h-[1.15rem] w-[1.15rem] shrink-0" />
+          ) : (
+            <HeadsetIcon className="h-[1.15rem] w-[1.15rem] shrink-0" />
+          )}
+          {/* The label is the affordance; the icon alone is a guess. It is
+              dropped only where the corner is genuinely tight. */}
+          <span className="hidden sm:inline">{menuOpen ? 'Close' : 'Support'}</span>
+          <span className="sr-only sm:hidden">{menuOpen ? 'Close' : 'Support'}</span>
+        </button>
+      </div>
+
+      <SupportDialog open={supportOpen} email={email} onClose={() => setSupportOpen(false)} />
+      <AssistantDialog open={assistantOpen} onClose={() => setAssistantOpen(false)} />
     </>
+  )
+}
+
+/** One row of the launcher's expanded menu — same filled-pill shape as the
+    main button, so the two read as one control rather than a menu bolted on. */
+function LauncherOption({ icon, label, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cx(
+        'bg-glare text-ink border-rule-strong flex items-center gap-2.5 border',
+        'h-10 px-3.5 text-[0.8125rem] font-medium tracking-[0.01em]',
+        'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.35)] transition-colors duration-200',
+        'hover:border-ink hover:bg-ink/[0.03] active:translate-y-px',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   )
 }
 
