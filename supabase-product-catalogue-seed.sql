@@ -3,12 +3,24 @@
 --  Dashboard -> SQL Editor -> New query -> paste ALL of this -> Run.
 --
 --  The real HYXiPOWER range, as the storefront sells it: seven models across
---  the four families the header menu lists. Every specification line below is
---  transcribed from the manufacturer datasheet linked on the same row —
---  HYX-H(6-8)K-LS V1.3, HYX-H(3-8)K-HS V1.2, HYX-E(50-100)-H3 V1.5 and
---  HYX-E160-L V1.0 — and not from a product page, because the pages round and
---  occasionally contradict the PDF, and the PDF is what an installer will be
---  holding when something does not match on site.
+--  the four families the header menu lists, and the four product pages the
+--  manufacturer publishes —
+--
+--    hyxipower.com/en/ProductsDetail/HYX-H6-8K-LS        H6K-LS, H8K-LS
+--    hyxipower.com/en/ProductsDetail/hybrid-inverter-3-8k  H6K-HS, H8K-HS
+--    hyxipower.com/en/ProductsDetail/E50-100-H3          E50-H3, E100-H3
+--    hyxipower.com/en/ProductsDetail/E160-L              E160-L
+--
+--  Every specification line below is transcribed from the datasheet linked on
+--  the same row — HYX-H(6-8)K-LS V1.3, HYX-H(3-8)K-HS V1.2, HYX-E(50-100)-H3
+--  V1.5 and HYX-E160-L V1.0 — rather than from those pages, because the pages
+--  round and occasionally contradict the PDF, and the PDF is what an installer
+--  will be holding when something does not match on site.
+--
+--  Images point at /products/*.png in this repository rather than at the
+--  manufacturer's CDN. Those files are hotlinkable today, but a storefront
+--  whose product photos live on somebody else's server breaks the day they
+--  reorganise it.
 --
 --  NO PRICES ARE SET HERE. Every row lands with retail_price 0, which the
 --  storefront reads as "not priced yet": the product is browsable, its
@@ -437,7 +449,33 @@ on conflict (name) do update set
 
 
 -- ---------------------------------------------------------------------------
--- 2. THE TEST ROWS
+-- 2. TYPE AND VOLTAGE CLASS
+--
+--    Set here as its own statement rather than inline above, so the seven
+--    product rows stay readable and this mapping can be checked at a glance —
+--    which matters, because the shop's filter bar is driven entirely by these
+--    two columns. A product with them unset is invisible to every filter.
+--
+--    The classification is the manufacturer's own, and is legible in the model
+--    names: LS is the low-voltage single-phase inverter line and HS the
+--    high-voltage one; E50/E100-H3 are the high-voltage battery packs and
+--    E160-L the low-voltage cabinet.
+-- ---------------------------------------------------------------------------
+update public.products set category = 'inverter', voltage_class = 'low'
+ where name in ('HYX-H6K-LS', 'HYX-H8K-LS');
+
+update public.products set category = 'inverter', voltage_class = 'high'
+ where name in ('HYX-H6K-HS', 'HYX-H8K-HS');
+
+update public.products set category = 'battery', voltage_class = 'high'
+ where name in ('HYX-E50-H3', 'HYX-E100-H3');
+
+update public.products set category = 'battery', voltage_class = 'low'
+ where name in ('HYX-E160-L');
+
+
+-- ---------------------------------------------------------------------------
+-- 3. THE TEST ROWS
 --
 --    'test1' and 'Testing' were placeholders from before the catalogue was
 --    loaded. They are deactivated rather than deleted: order_items may still
@@ -456,6 +494,8 @@ commit;
 -- and both documents, and every price still waiting to be set.
 -- ---------------------------------------------------------------------------
 select name,
+       category,
+       voltage_class,
        retail_price,
        stock_quantity,
        array_length(specifications, 1) as spec_lines,
@@ -463,4 +503,4 @@ select name,
        (manual_url is not null)        as has_manual
   from public.products
  where is_active
- order by name;
+ order by category, voltage_class, name;
