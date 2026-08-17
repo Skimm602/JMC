@@ -126,6 +126,28 @@ export function PasswordInput({ id, invalid, describedBy, required, className, .
   )
 }
 
+/**
+ * Multi-line input. Same border, padding and focus behaviour as TextInput —
+ * a form should not look like it changed hands halfway down.
+ *
+ * Resizing is left on, but vertically only: a textarea a customer can drag
+ * wider than the panel it sits in is a layout bug they performed themselves.
+ */
+export function Textarea({ id, invalid, describedBy, required, className, rows = 5, ...rest }) {
+  return (
+    <textarea
+      id={id}
+      rows={rows}
+      required={required || undefined}
+      aria-required={required || undefined}
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy}
+      {...rest}
+      className={cx(controlBase, controlState(invalid), 'resize-y leading-relaxed', className)}
+    />
+  )
+}
+
 export function Select({ id, invalid, describedBy, required, children, ...rest }) {
   return (
     <div className="relative">

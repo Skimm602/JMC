@@ -1,5 +1,6 @@
 import Nav from '@/components/Nav.jsx'
 import Footer from '@/components/Footer.jsx'
+import SupportButton from '@/components/SupportButton.jsx'
 import { createClient } from '@/utils/supabase/server'
 
 /**
@@ -47,6 +48,12 @@ export default async function SiteLayout({ children }) {
       <Nav user={user ? { email: user.email } : null} isAdmin={Boolean(isAdmin)} cartCount={cartCount} />
       {children}
       <Footer />
+
+      {/* Signed-in only, and for the same reason the header takes only the
+          address: a request sent under a session is one the back office can
+          reply to without asking who it is from. Logged-out visitors still
+          have the address in the footer. */}
+      {user && <SupportButton email={user.email} />}
     </>
   )
 }
