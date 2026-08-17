@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createGatewayCheckout } from '@/app/actions/checkout'
 import { clearCart, removeFromCart, updateCartItem } from '@/app/actions/cart'
 import { formatPeso, VAT_RATE } from '@/utils/pricing'
+import NoRefundsDialog from './NoRefundsDialog.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, FileIcon, SpinnerIcon, XIcon } from './icons.jsx'
@@ -84,6 +85,7 @@ export default function CartView({ data, signedIn }) {
   const [placed, setPlaced] = useState(null)
   const [rowPending, setRowPending] = useState({})
   const [rowError, setRowError] = useState({})
+  const [refundWarningOpen, setRefundWarningOpen] = useState(false)
 
   const items = data?.items ?? []
   const unavailable = data?.unavailable ?? []
@@ -123,7 +125,7 @@ export default function CartView({ data, signedIn }) {
   const review = (event) => {
     event.preventDefault()
     setError(null)
-    setStep('summary')
+    setRefundWarningOpen(true)
   }
 
   const place = async (event) => {
@@ -317,6 +319,15 @@ export default function CartView({ data, signedIn }) {
 
   return (
     <form onSubmit={review} className="grid gap-8 lg:grid-cols-[1fr_24rem] lg:items-start lg:gap-10">
+      <NoRefundsDialog
+        open={refundWarningOpen}
+        onConfirm={() => {
+          setRefundWarningOpen(false)
+          setStep('summary')
+        }}
+        onClose={() => setRefundWarningOpen(false)}
+      />
+
       <div className="border-rule bg-glare border">
         {items.map((item) => {
           const stock = item.product.stock_quantity

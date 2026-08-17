@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createGatewayCheckout } from '@/app/actions/checkout'
 import { addToCart } from '@/app/actions/cart'
 import { formatPeso, quote, VAT_RATE } from '@/utils/pricing'
+import NoRefundsDialog from './NoRefundsDialog.jsx'
 import { Checkbox, Field, Select, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
 import { AlertIcon, ArrowRightIcon, CartIcon, CheckIcon, SpinnerIcon } from './icons.jsx'
@@ -89,6 +90,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
   const [placed, setPlaced] = useState(null)
   const [cartStatus, setCartStatus] = useState('idle')
   const [cartError, setCartError] = useState(null)
+  const [refundWarningOpen, setRefundWarningOpen] = useState(false)
 
   const stock = product.stock_quantity
   const soldOut = stock === 0
@@ -103,7 +105,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
   const review = (event) => {
     event.preventDefault()
     setError(null)
-    setStep('summary')
+    setRefundWarningOpen(true)
   }
 
   const addToCartNow = async () => {
@@ -320,6 +322,14 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
 
   return (
     <form onSubmit={review} className="border-rule bg-glare border p-6 sm:p-8">
+      <NoRefundsDialog
+        open={refundWarningOpen}
+        onConfirm={() => {
+          setRefundWarningOpen(false)
+          setStep('summary')
+        }}
+        onClose={() => setRefundWarningOpen(false)}
+      />
       <p className="label text-ink-soft">Step 1 of 2</p>
 
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
