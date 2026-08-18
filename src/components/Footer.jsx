@@ -1,68 +1,30 @@
 import Logo from './Logo.jsx'
 import { Rule } from './ui.jsx'
 
-const columns = [
-  {
-    title: 'Products',
-    links: ['S4 grid-tie', 'H6 hybrid', 'V-Stack storage', 'M1 microinverters', 'Accessories'],
-  },
-  {
-    title: 'Installers',
-    links: ['Partner program', 'Training & certification', 'Design tools', 'Firmware library', 'Warranty claims'],
-  },
-  {
-    title: 'Company',
-    links: ['About VIP', 'Manufacturing', 'Careers', 'Newsroom', 'Contact'],
-  },
-  {
-    title: 'Support',
-    links: ['Documentation', 'Grid codes', 'Troubleshooting', 'RMA process', 'Report a fault'],
-  },
-]
-
 export default function Footer() {
   return (
     <footer id="footer" className="band-pit rail">
       <div className="rail-inner py-20 lg:py-24 xl:py-28">
-        <div className="grid gap-14 lg:grid-cols-[1.2fr_2fr]">
-          <div>
-            <Logo tone="shade" />
-            <p className="text-glint-soft mt-6 max-w-xs text-sm leading-relaxed">
-              Grid-tie, hybrid and storage inverters for residential and commercial solar. Engineered for the people who
-              have to service them.
-            </p>
-            <dl className="mt-7 space-y-2">
-              <div className="flex gap-3 text-xs">
-                <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Trade desk</dt>
-                <dd className="text-glint space-y-1 font-mono">
-                  <span className="block">0917 508 8220</span>
-                  <span className="block">0949 954 8439</span>
-                  <span className="block">(053) 520-2459</span>
-                </dd>
-              </div>
-              <div className="flex gap-3 text-xs">
-                <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Email</dt>
-                <dd className="text-glint font-mono">jmcsolarph@gmail.com</dd>
-              </div>
-            </dl>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-            {columns.map((col) => (
-              <nav key={col.title} aria-label={col.title}>
-                <h3 className="label text-glint-soft">{col.title}</h3>
-                <ul className="mt-5 space-y-3">
-                  {col.links.map((l) => (
-                    <li key={l}>
-                      <a href="/" className="text-glint-soft hover:text-glint text-sm transition-colors">
-                        {l}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ))}
-          </div>
+        <div className="flex flex-col items-center text-center">
+          <Logo tone="shade" />
+          <p className="text-glint-soft mt-6 max-w-xs text-sm leading-relaxed">
+            Grid-tie, hybrid and storage inverters for residential and commercial solar. Engineered for the people who
+            have to service them.
+          </p>
+          <dl className="mt-7 space-y-2">
+            <div className="flex justify-center gap-3 text-xs">
+              <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Trade desk</dt>
+              <dd className="text-glint space-y-1 font-mono">
+                <span className="block">0917 508 8220</span>
+                <span className="block">0949 954 8439</span>
+                <span className="block">(053) 520-2459</span>
+              </dd>
+            </div>
+            <div className="flex justify-center gap-3 text-xs">
+              <dt className="text-glint-soft w-20 shrink-0 font-mono tracking-wide">Email</dt>
+              <dd className="text-glint font-mono">jmcsolarph@gmail.com</dd>
+            </div>
+          </dl>
         </div>
 
         <Rule tone="shade" className="my-12" />
