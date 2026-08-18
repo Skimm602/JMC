@@ -10,6 +10,27 @@
  * is literally true — it is where the conversion loss becomes heat, and
  * therefore where the whole thermal argument lives.
  */
+/**
+ * A conductor drawn as a sine run rather than a straight rule.
+ *
+ * The two sides of the inverter are deliberately not the same wave. DC carries
+ * a low, lazy ripple; AC is a faster, taller sine, because that is the actual
+ * difference between them — the diagram is making the same point the inverter
+ * node makes, in the shape of the line instead of a label.
+ *
+ * Sampled as a fine polyline rather than fitted with Béziers: at this stroke
+ * width the two are indistinguishable, and stroke-dasharray runs along either
+ * the same way, so the travelling-dash animation is unaffected.
+ */
+function wave(x1, x2, y, cycles, amp, step = 2) {
+  const points = []
+  for (let x = x1; x <= x2; x += step) {
+    const t = (x - x1) / (x2 - x1)
+    points.push(`${x.toFixed(1)} ${(y + Math.sin(t * cycles * Math.PI * 2) * amp).toFixed(2)}`)
+  }
+  return `M${points.join(' L')}`
+}
+
 export default function EnergyFlow({ className = '' }) {
   const DC = 'var(--color-cool-600)'
   const AC = 'var(--color-ink)'
@@ -32,13 +53,13 @@ export default function EnergyFlow({ className = '' }) {
       aria-label="Energy flow from array through inverter to loads and grid"
     >
       {/* ---------------------------- conductors ---------------------------- */}
-      <g stroke={DC} strokeWidth="1.6" fill="none">
-        <line x1="126" y1="86" x2="318" y2="86" strokeDasharray="6 8" className="animate-dash" />
-        <line x1="392" y1="86" x2="578" y2="86" strokeDasharray="6 8" className="animate-dash" />
+      <g stroke={DC} strokeWidth="1.6" fill="none" strokeLinecap="round">
+        <path d={wave(126, 318, 86, 1.5, 3.2)} strokeDasharray="6 8" className="animate-dash" />
+        <path d={wave(392, 578, 86, 1.5, 3.2)} strokeDasharray="6 8" className="animate-dash" />
       </g>
-      <g stroke={AC} strokeWidth="1.6" fill="none" opacity="0.7">
-        <line x1="662" y1="86" x2="848" y2="86" strokeDasharray="6 8" className="animate-dash" />
-        <line x1="922" y1="86" x2="1086" y2="86" strokeDasharray="6 8" className="animate-dash" />
+      <g stroke={AC} strokeWidth="1.6" fill="none" opacity="0.7" strokeLinecap="round">
+        <path d={wave(662, 848, 86, 3.5, 5.4)} strokeDasharray="6 8" className="animate-dash" />
+        <path d={wave(922, 1086, 86, 3.5, 5.4)} strokeDasharray="6 8" className="animate-dash" />
       </g>
 
       {/* conversion markers */}
