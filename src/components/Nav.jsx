@@ -8,7 +8,7 @@ import AccountMenu, { initialFor } from './AccountMenu.jsx'
 import { signOut } from '@/app/actions/auth'
 import { PRODUCT_NAV } from './Products.jsx'
 import { Button, cx } from './ui.jsx'
-import { ArrowUpRightIcon, CartIcon, ChevronDownIcon, MenuIcon, SpinnerIcon, XIcon } from './icons.jsx'
+import { ArrowUpRightIcon, CartIcon, ChevronDownIcon, FileIcon, MenuIcon, SpinnerIcon, XIcon } from './icons.jsx'
 
 /**
  * One list drives both the desktop bar and the mobile sheet, so the two can
@@ -307,6 +307,20 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                   scrolled ? 'opacity-0' : 'opacity-100',
                 )}
               />
+
+              {/* Signed-in only, unlike the cart: an order history is a thing
+                  you have, and offering it to somebody with no account is a
+                  link to a log-in wall wearing a different name. */}
+              {user && (
+                <a
+                  href="/account/orders"
+                  aria-label="Your orders"
+                  title="Your orders"
+                  className="text-glint hover:text-glint-soft relative p-2 transition-colors"
+                >
+                  <FileIcon className="h-5 w-5" />
+                </a>
+              )}
 
               {/* Visible whether signed in or not — a guest can still find
                   their way to /cart, which is where "log in to see it" lives. */}

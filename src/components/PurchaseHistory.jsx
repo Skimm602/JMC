@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react'
 import { Rule, cx } from './ui.jsx'
 import { FileIcon } from './icons.jsx'
 import PaymentPanel from './PaymentPanel.jsx'
+import OrderFlow from './OrderFlow.jsx'
+import DeliveryPanel from './DeliveryPanel.jsx'
 
 /**
  * Six statuses, three answers.
@@ -98,6 +100,13 @@ function Order({ order }) {
         <Stage status={order.status} />
       </div>
 
+      {/* The whole journey, not just the label for where it is. Somebody
+          checking an order wants to know what happens next as much as what
+          has happened, and a single chip only answers half of that. */}
+      <div className="border-rule mt-6 border-t pt-6">
+        <OrderFlow status={order.status} />
+      </div>
+
       {order.status === 'pending' && (
         <p className="border-rule bg-sheet/60 text-ink-soft mt-5 border px-3.5 py-3 text-sm leading-relaxed">
           Somebody from VIP will call you to confirm this order — sizing, installation and delivery. Payment comes
@@ -106,6 +115,8 @@ function Order({ order }) {
       )}
 
       {order.status === 'approved' && <PaymentPanel order={order} />}
+
+      {order.status === 'shipped' && <DeliveryPanel order={order} />}
 
       <Rule className="my-5" />
 

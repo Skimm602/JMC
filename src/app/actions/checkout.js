@@ -24,6 +24,7 @@ import { hasInstallerPricing, quote } from '@/utils/pricing'
  */
 
 const PROOF_BUCKET = 'payment-proofs'
+const DELIVERY_BUCKET = 'delivery-proofs'
 
 /** Big enough for a phone screenshot at full resolution, small enough that a
     mistaken video upload is refused rather than waited on. */
@@ -295,6 +296,87 @@ export async function attachPaymentProof(formData) {
   }
 
   return { success: true }
+}
+
+/**
+ * confirmDelivery(formData)
+ *
+ * formData fields: orderId, proof (File).
+ *
+ * The last step, and the only one the customer takes on their own: the box
+ * arrived, here is a photograph of it, the order is done. Nobody in the back
+ * office can know this first-hand, which is why it is theirs to press.
+ *
+ * Single-use by construction rather than by a flag — confirm_delivery() only
+ * moves an order that is still `shipped`, so the second press finds nothing
+ * to move. The upload happens first so a failed write never leaves an order
+ * completed with no photograph against it.
+ */
+export async function confirmDelivery(formData) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Log in to confirm delivery.' }
+
+  const orderId = String(formData.get('orderId') ?? '')
+  if (!orderId) return { error: 'Something went wrong. Try again.' }
+
+  const proof = formData.get('proof')
+  if (!proof || typeof proof === 'string' || proof.size === 0) {
+    return { error: 'Attach a photo of what arrived.' }
+  }
+  if (proof.size > MAX_PROOF_BYTES) return { error: 'That file is over 8 MB. A photo is enough.' }
+  if (proof.type && !PROOF_TYPES.has(proof.type)) return { error: 'Attach an image or a PDF.' }
+
+  const proofPath = `${user.id}/${orderId}_${Date.now()}.${extensionOf(proof)}`
+
+  const { error: uploadError } = await supabase.storage.from(DELIVERY_BUCKET).upload(proofPath, proof, {
+    contentType: proof.type || undefined,
+    upsert: false,
+  })
+  if (uploadError) return { error: `Could not upload that: ${uploadError.message}` }
+
+  const { data: moved, error } = await supabase.rpc('confirm_delivery', {
+    p_order_id: orderId,
+    p_proof_path: proofPath,
+  })
+
+  if (error || !moved) {
+    // The photo is in the bucket and belongs to no completed order. Remove it
+    // rather than leave an orphan nobody will look at.
+    await supabase.storage.from(DELIVERY_BUCKET).remove([proofPath])
+    return { error: error?.message ?? 'That order could not be marked as received.' }
+  }
+
+  return { success: true }
+}
+
+/**
+ * getDeliveryProofUrl(orderId)
+ *
+ * The same five-minute signature as the payment proof, for the back office to
+ * see what actually turned up on the doorstep.
+ */
+export async function getDeliveryProofUrl(orderId) {
+  const supabase = await createClient()
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('delivery_proof_path')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (error) return { error: error.message }
+  if (!order?.delivery_proof_path) return { error: 'That order has no delivery photo attached.' }
+
+  const { data, error: signError } = await supabase.storage
+    .from(DELIVERY_BUCKET)
+    .createSignedUrl(order.delivery_proof_path, 60 * 5)
+
+  if (signError) return { error: signError.message }
+  return { data: data.signedUrl }
 }
 
 /**

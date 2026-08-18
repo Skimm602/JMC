@@ -276,6 +276,98 @@ create policy "Admins read every payment proof" on storage.objects
 
 
 -- ===========================================================================
+-- 6. THE CUSTOMER CONFIRMS DELIVERY
+--
+--    The last step belongs to the customer rather than the back office: only
+--    they know the box actually arrived. Pressing "Received" moves the order
+--    to completed and files a photo of what turned up.
+--
+--    SECURITY DEFINER because the transition rules live in the database and
+--    should keep living there — this is the one move a customer may make, and
+--    it is spelled out here rather than handed to them as a general update
+--    right. Once through, the guard on `shipped` makes it unrepeatable.
+-- ===========================================================================
+
+alter table public.orders add column if not exists delivery_proof_path        text;
+alter table public.orders add column if not exists delivery_confirmed_at      timestamptz;
+
+create or replace function public.confirm_delivery(p_order_id uuid, p_proof_path text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $recv$
+declare
+  v_status  text;
+  v_owner   uuid;
+begin
+  select status, user_id into v_status, v_owner
+    from public.orders where id = p_order_id for update;
+
+  if v_status is null then
+    return false;
+  end if;
+
+  -- Yours, and only yours. The order is looked up by id alone above so the
+  -- two failures can be told apart in the log; the customer sees one answer.
+  if v_owner <> auth.uid() then
+    raise exception 'That order is not yours.' using errcode = 'insufficient_privilege';
+  end if;
+
+  -- The single-use guard. A completed order is no longer shipped, so a second
+  -- press finds nothing to move.
+  if v_status <> 'shipped' then
+    raise exception 'Order % is %, so delivery cannot be confirmed on it.', p_order_id, v_status
+      using errcode = 'check_violation';
+  end if;
+
+  if p_proof_path is null or length(trim(p_proof_path)) = 0 then
+    raise exception 'A photo of the delivery is required.' using errcode = 'check_violation';
+  end if;
+
+  update public.orders
+     set status                = 'completed',
+         delivery_proof_path   = p_proof_path,
+         delivery_confirmed_at = now()
+   where id = p_order_id;
+
+  return true;
+end;
+$recv$;
+
+grant execute on function public.confirm_delivery(uuid, text) to authenticated;
+
+
+-- ===========================================================================
+-- 7. THE DELIVERY-PROOF BUCKET
+--
+--    Its own bucket rather than sharing the payment one. They are different
+--    kinds of evidence with different lifetimes, and a bucket named for
+--    payments holding photographs of doorsteps is how the next person to look
+--    at this gets it wrong.
+-- ===========================================================================
+
+insert into storage.buckets (id, name, public)
+values ('delivery-proofs', 'delivery-proofs', false)
+on conflict (id) do nothing;
+
+drop policy if exists "Customers upload their own delivery proof" on storage.objects;
+create policy "Customers upload their own delivery proof" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'delivery-proofs' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Customers read their own delivery proof" on storage.objects;
+create policy "Customers read their own delivery proof" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'delivery-proofs' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Admins read every delivery proof" on storage.objects;
+create policy "Admins read every delivery proof" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'delivery-proofs' and public.is_admin());
+
+
+-- ===========================================================================
 -- 6. UNDO THE AGENT-GATE EXPERIMENT
 --
 --    An earlier design put the call *before* checkout, behind a consultations
@@ -303,8 +395,9 @@ commit;
 select column_name from information_schema.columns
  where table_schema = 'public' and table_name = 'orders'
    and column_name in ('contact_phone', 'customer_note', 'payment_proof_path',
-                       'payment_proof_uploaded_at', 'approved_at');
+                       'payment_proof_uploaded_at', 'approved_at',
+                       'delivery_proof_path', 'delivery_confirmed_at');
 
 select status, count(*) from public.orders group by status order by status;
 
-select id, public from storage.buckets where id = 'payment-proofs';
+select id, public from storage.buckets where id in ('payment-proofs', 'delivery-proofs');

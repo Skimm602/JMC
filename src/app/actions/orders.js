@@ -25,6 +25,7 @@ export async function getOrders() {
     .select(
       'id, user_id, status, payment_method, payment_reference, total, created_at, paid_at, approved_at, ' +
         'payment_proof_path, payment_proof_uploaded_at, contact_phone, customer_note, ' +
+        'delivery_proof_path, delivery_confirmed_at, ' +
         'street_address, city, province, postal_code, courier, tracking_number, admin_notes, ' +
         'order_items(id, quantity, price_at_purchase, products(id, name, image_url))',
     )

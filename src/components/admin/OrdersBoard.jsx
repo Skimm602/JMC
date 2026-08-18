@@ -12,7 +12,7 @@ import {
   updateOrderNotes,
   updateOrderTracking,
 } from '@/app/actions/orders'
-import { getPaymentProofUrl } from '@/app/actions/checkout'
+import { getDeliveryProofUrl, getPaymentProofUrl } from '@/app/actions/checkout'
 
 const when = (iso) =>
   iso
@@ -87,7 +87,7 @@ const MOVE_LABEL = { approved: 'Confirmed on the call', paid: 'Confirm payment r
  * the same arrangement verification documents use. Toggling closed and back
  * open re-fetches rather than reusing the old URL, since it may have expired.
  */
-function ProofLink({ orderId }) {
+function ProofLink({ orderId, kind = 'payment' }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [url, setUrl] = useState(null)
@@ -99,7 +99,7 @@ function ProofLink({ orderId }) {
     }
     setBusy(true)
     setError(null)
-    const result = await getPaymentProofUrl(orderId)
+    const result = kind === 'delivery' ? await getDeliveryProofUrl(orderId) : await getPaymentProofUrl(orderId)
     setBusy(false)
 
     if (result?.error) {
@@ -113,12 +113,12 @@ function ProofLink({ orderId }) {
     <>
       <Button variant="outline" onClick={toggle} disabled={busy}>
         {busy ? <SpinnerIcon className="h-4 w-4" /> : <FileIcon className="h-4 w-4" />}
-        {busy ? 'Opening…' : url ? 'Hide payment proof' : 'View payment proof'}
+        {busy ? 'Opening…' : `${url ? 'Hide' : 'View'} ${kind === 'delivery' ? 'delivery photo' : 'payment proof'}`}
       </Button>
       {error && <span className="text-hot-600 text-xs">{error}</span>}
       {url && (
-        <div className="border-rule bg-sheet/60 mt-3 w-full border p-3">
-          <img src={url} alt="Customer's payment proof" className="max-h-[32rem] w-auto max-w-full object-contain" />
+        <div className="border-rule bg-sheet/60 rounded-card mt-3 w-full border p-3">
+          <img src={url} alt={kind === 'delivery' ? "Customer's photo of the delivery" : "Customer's payment proof"} className="max-h-[32rem] w-auto max-w-full object-contain" />
         </div>
       )}
     </>
@@ -583,6 +583,7 @@ function Order({ order, onChanged }) {
               </Button>
             )}
             {order.payment_proof_path && <ProofLink orderId={order.id} />}
+            {order.delivery_proof_path && <ProofLink orderId={order.id} kind="delivery" />}
             <Button variant="ghost" onClick={() => move('cancelled')} disabled={busy}>
               {status === 'cancelled' ? 'Cancelling…' : 'Cancel order'}
             </Button>
