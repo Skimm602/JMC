@@ -2,8 +2,36 @@
 
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@/utils/supabase/server'
-import { GATEWAY_PAYMENT_METHODS, isSupportedGatewayMethod, gatewayClient } from '@/utils/payments/gateway'
 import { hasInstallerPricing, isPriced, quote } from '@/utils/pricing'
+
+/**
+ * Placing an order, and attaching the payment afterwards.
+ *
+ * There is no payment gateway here and no card form. Checkout itself is open:
+ * a customer orders the ordinary way and the order lands as `pending`. What
+ * happens next is a phone call — somebody from VIP confirms sizing, install
+ * and delivery, and an admin then approves it. Only once it is `approved` is
+ * the customer asked to pay and attach proof of it, which is what
+ * attachPaymentProof() below is for.
+ *
+ * Payment happens outside the site, however the two of them agreed on the
+ * call: bank transfer, GCash, cash on collection. That is why
+ * `payment_method` is not set — the proof shows what was used, and a dropdown
+ * guessing at it would only be a second answer to disagree with.
+ *
+ * Requires supabase-orders-checkout.sql and supabase-order-approval.sql to
+ * have been run.
+ */
+
+const PROOF_BUCKET = 'payment-proofs'
+
+/** Big enough for a phone screenshot at full resolution, small enough that a
+    mistaken video upload is refused rather than waited on. */
+const MAX_PROOF_BYTES = 8 * 1024 * 1024
+
+/** What a bank app or camera actually produces. A PDF is included because
+    some banks email a receipt rather than showing one. */
+const PROOF_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf'])
 
 /**
  * The delivery address, checked before anything is written.
@@ -35,80 +63,75 @@ function readShippingAddress(shipping) {
   }
 }
 
-/**
- * Track A — Gateway checkout.
- *
- * Covers the three payment methods `orders.payment_method` allows: gcash,
- * qr_ph, pesonet. No PSP is wired in yet — gatewayClient is the stub in
- * src/utils/payments/gateway.js; everything else here (pricing, the order
- * row, the pending order_items) is real and does not change when a real
- * client replaces the stub.
- *
- * Requires supabase-orders-checkout.sql to have been run — orders,
- * order_items and products have RLS enabled with no policies otherwise, and
- * every write below is rejected until that script grants access.
- */
+/** Extension from the upload's own name rather than guessed from its type,
+    so a .jpeg stays a .jpeg and the admin's browser opens it as one. */
+function extensionOf(file) {
+  const ext = file?.name?.split('.').pop()
+  return ext && ext.length <= 5 ? ext.toLowerCase() : 'jpg'
+}
 
 /**
- * createGatewayCheckout({ items, paymentMethod, shipping, acceptedTerms })
+ * createOrder(formData)
  *
- * items: [{ productId, quantity }, ...]  — cart contents, not prices. Prices
- *   are always re-read from `products` server-side; the client only gets to
- *   say what it wants and how many.
- * paymentMethod: 'gcash' | 'qr_ph' | 'pesonet'
- * shipping: { streetAddress, city, province, postalCode }
- * acceptedTerms: must be exactly true — the customer ticking "I agree to pay,
- *   and I understand this is not refundable". The summary they read it under
- *   is computed by the same pricing module used below, so what they agreed to
- *   and what gets charged are the same figure reached twice.
+ * formData fields:
+ *   items          JSON [{ productId, quantity }] — what they want and how
+ *                  many, never prices. Prices are re-read from `products`
+ *                  server-side; the browser only says what it wants.
+ *   shipping       JSON { streetAddress, city, province, postalCode }
+ *   acceptedTerms  'true' — the customer ticking "I agree to pay, and I
+ *                  understand this is not refundable". The summary they read
+ *                  it under is computed by the same pricing module used here,
+ *                  so what they agreed to and what is recorded are the same
+ *                  figure reached twice.
  *
- * Returns:
- *   { success: true, orderId, checkoutUrl, total }
- *   { error: string }
+ * No payment is taken here and none is asked for. The order lands as
+ * `pending`, an admin calls to confirm it, and the money comes after that.
+ *
+ * Returns { success: true, orderId, total } or { error: string }.
  */
-export async function createGatewayCheckout({ items, paymentMethod, shipping, acceptedTerms }) {
+export async function createOrder(formData) {
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
+  if (!user) return { error: 'Log in to place an order.' }
 
-  if (!isSupportedGatewayMethod(paymentMethod)) {
-    return { error: `Payment method must be one of: ${GATEWAY_PAYMENT_METHODS.join(', ')}` }
+  let items
+  let shipping
+  try {
+    items = JSON.parse(String(formData.get('items') ?? '[]'))
+    shipping = JSON.parse(String(formData.get('shipping') ?? '{}'))
+  } catch {
+    return { error: 'Something went wrong. Try again.' }
   }
 
-  // `!== true` rather than falsy: this is the record that the customer
-  // undertook to pay for something that will not be refunded, so it is worth
-  // refusing anything that merely looks agreeable.
-  if (acceptedTerms !== true) {
-    return { error: 'Tick the box confirming you agree to pay and accept the no-refund policy.' }
+  if (String(formData.get('acceptedTerms')) !== 'true') {
+    return { error: 'Tick the box to confirm the amount and the no-refund terms.' }
   }
 
   const { row: shippingRow, error: shippingError } = readShippingAddress(shipping)
   if (shippingError) return { error: shippingError }
 
-  if (!Array.isArray(items) || items.length === 0) {
-    return { error: 'Cart is empty' }
-  }
-
   const quantityByProductId = new Map()
-  for (const item of items) {
+  for (const item of items ?? []) {
     const quantity = Number(item?.quantity)
     if (!item?.productId || !Number.isInteger(quantity) || quantity < 1) {
-      return { error: 'Each cart item needs a productId and a quantity of at least 1' }
+      return { error: 'Something went wrong. Try again.' }
     }
     quantityByProductId.set(item.productId, (quantityByProductId.get(item.productId) ?? 0) + quantity)
   }
+  if (quantityByProductId.size === 0) return { error: 'There is nothing to order.' }
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('customer_type')
+    .select('customer_type, verification_status')
     .eq('id', user.id)
     .maybeSingle()
   if (profileError) return { error: profileError.message }
 
   const productIds = [...quantityByProductId.keys()]
+
   // is_active is filtered in the query rather than checked after it, so a
   // product pulled from the catalogue since the page was opened falls out of
   // the count below and is reported as unavailable — which is what it is.
@@ -120,17 +143,16 @@ export async function createGatewayCheckout({ items, paymentMethod, shipping, ac
   if (productsError) return { error: productsError.message }
 
   if (!products || products.length !== productIds.length) {
-    return { error: 'One or more items in the cart are no longer available' }
+    return { error: 'One or more items are no longer available.' }
   }
 
   const lines = []
   for (const product of products) {
     const quantity = quantityByProductId.get(product.id)
 
-    // A product in the catalogue that has not been priced yet. The storefront
-    // already refuses to offer these, so reaching here means a stale tab or a
-    // hand-made request — and writing the order anyway would bill somebody
-    // zero pesos for hardware.
+    // A catalogued product with no price yet. The storefront never offers
+    // these, so reaching here means a stale tab — and writing the order
+    // anyway would bill somebody zero pesos for hardware.
     if (!isPriced(product)) {
       return { error: `${product.name} is not priced yet. Ask us for a quote before ordering it.` }
     }
@@ -146,34 +168,14 @@ export async function createGatewayCheckout({ items, paymentMethod, shipping, ac
   // against prices the browser never had a chance to alter.
   const priced = quote({ lines, isInstaller: hasInstallerPricing(profile) })
 
-  const orderItems = priced.items.map((item) => ({
-    product_id: item.product.id,
-    quantity: item.quantity,
-    price_at_purchase: item.unitPrice,
-  }))
-
   const orderId = randomUUID()
-
-  let session
-  try {
-    session = await gatewayClient.createCheckoutSession({
-      orderId,
-      // The gateway collects the total including VAT — the subtotal is what
-      // the sale was worth, not what the customer hands over.
-      amount: priced.total,
-      method: paymentMethod,
-      description: `Order ${orderId}`,
-    })
-  } catch (gatewayError) {
-    return { error: `Could not start payment: ${gatewayError.message}` }
-  }
 
   const { error: orderError } = await supabase.from('orders').insert({
     id: orderId,
     user_id: user.id,
+    // Pending until somebody has called to confirm it. Nothing here approves
+    // itself, and no money is asked for until it has been.
     status: 'pending',
-    payment_method: paymentMethod,
-    payment_reference: session.reference,
     ...shippingRow,
     subtotal: priced.subtotal,
     discount: priced.discount,
@@ -185,16 +187,132 @@ export async function createGatewayCheckout({ items, paymentMethod, shipping, ac
   })
   if (orderError) return { error: orderError.message }
 
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems.map((item) => ({ ...item, order_id: orderId })))
+  const { error: itemsError } = await supabase.from('order_items').insert(
+    priced.items.map((item) => ({
+      order_id: orderId,
+      product_id: item.product.id,
+      quantity: item.quantity,
+      price_at_purchase: item.unitPrice,
+    })),
+  )
 
-  // The order row above already exists with a real gateway reference — surface
-  // this rather than unwind it, the same way signUp() leaves a profile-insert
-  // failure for investigation instead of deleting the auth user it just made.
+  // The order row above already exists — surface this rather than unwind it,
+  // the same way signUp() leaves a profile-insert failure for investigation
+  // instead of deleting the auth user it just made.
   if (itemsError) {
     return { error: `Order ${orderId} was created but its items failed to save: ${itemsError.message}` }
   }
 
-  return { success: true, orderId, checkoutUrl: session.checkoutUrl, total: priced.total }
+  return { success: true, orderId, total: priced.total }
+}
+
+/**
+ * attachPaymentProof(formData)
+ *
+ * formData fields: orderId, proof (File).
+ *
+ * The step after the confirmation call. An admin has approved the order, the
+ * customer has paid however the two of them agreed, and this records what
+ * that looked like. It does not mark anything paid — an admin reads the proof
+ * and moves the order themselves, because "customer says they paid" and "the
+ * money arrived" are different facts and only one of them belongs to the
+ * customer.
+ *
+ * The status stays `approved` throughout. The presence of a proof is what the
+ * back office sorts on, and the RLS policy in supabase-order-approval.sql
+ * refuses this write on an order in any other state regardless of what
+ * reaches here.
+ */
+export async function attachPaymentProof(formData) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Log in to attach a payment.' }
+
+  const orderId = String(formData.get('orderId') ?? '')
+  if (!orderId) return { error: 'Something went wrong. Try again.' }
+
+  const proof = formData.get('proof')
+  if (!proof || typeof proof === 'string' || proof.size === 0) {
+    return { error: 'Attach a photo or screenshot of the payment.' }
+  }
+  if (proof.size > MAX_PROOF_BYTES) return { error: 'That file is over 8 MB. A screenshot or photo is enough.' }
+  if (proof.type && !PROOF_TYPES.has(proof.type)) return { error: 'Attach an image or a PDF.' }
+
+  // Read the order first so the refusal can say which of the two reasons it
+  // is — not yours, or not ready — rather than a policy violation.
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .select('id, status, payment_proof_path')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (orderError) return { error: orderError.message }
+  if (!order) return { error: 'That order could not be found.' }
+
+  if (order.status === 'pending') {
+    return { error: 'This order is still waiting for our confirmation call. We will ask for payment after it.' }
+  }
+  if (order.status !== 'approved') {
+    return { error: 'This order is past the point where a payment can be attached. Use Customer support.' }
+  }
+
+  // Filed under the customer's own uuid, which is what the bucket policy keys
+  // on — a path outside their own folder is refused by storage rather than by
+  // this code. Timestamped so re-uploading a clearer photo does not have to
+  // overwrite the first one.
+  const proofPath = `${user.id}/${orderId}_${Date.now()}.${extensionOf(proof)}`
+
+  const { error: uploadError } = await supabase.storage.from(PROOF_BUCKET).upload(proofPath, proof, {
+    contentType: proof.type || undefined,
+    upsert: false,
+  })
+  if (uploadError) return { error: `Could not upload that: ${uploadError.message}` }
+
+  const { error: updateError } = await supabase
+    .from('orders')
+    .update({ payment_proof_path: proofPath, payment_proof_uploaded_at: new Date().toISOString() })
+    .eq('id', orderId)
+
+  if (updateError) {
+    // The file is in the bucket and now belongs to no order. Remove it rather
+    // than leave an orphan nobody will ever look at.
+    await supabase.storage.from(PROOF_BUCKET).remove([proofPath])
+    return { error: updateError.message }
+  }
+
+  return { success: true }
+}
+
+/**
+ * getPaymentProofUrl(orderId)
+ *
+ * A short-lived link to one order's payment proof, for the back office to
+ * read before confirming payment. Five minutes, the same as verification
+ * documents: long enough to open, short enough that a copied URL in a chat
+ * log is not a standing key to somebody's bank screenshot.
+ *
+ * The bucket's own policies decide who gets a signature, so a customer asking
+ * for another customer's proof gets nothing regardless of what reaches here.
+ */
+export async function getPaymentProofUrl(orderId) {
+  const supabase = await createClient()
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('payment_proof_path')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (error) return { error: error.message }
+  if (!order?.payment_proof_path) return { error: 'That order has no payment proof attached.' }
+
+  const { data, error: signError } = await supabase.storage
+    .from(PROOF_BUCKET)
+    .createSignedUrl(order.payment_proof_path, 60 * 5)
+
+  if (signError) return { error: signError.message }
+  return { data: data.signedUrl }
 }

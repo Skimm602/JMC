@@ -12,7 +12,7 @@ import { hasInstallerPricing, isPriced, quote } from '@/utils/pricing'
  *
  * Every write re-reads the product it touches rather than trusting a stale
  * price or stock figure a caller might be holding, the same discipline
- * createGatewayCheckout() uses. RLS restricts every row to its own owner;
+ * createOrder() uses. RLS restricts every row to its own owner;
  * the .eq('user_id', ...) filters here are belt-and-braces, not the actual
  * guard.
  */

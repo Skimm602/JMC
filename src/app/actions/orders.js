@@ -23,7 +23,8 @@ export async function getOrders() {
   const { data: orders, error } = await supabase
     .from('orders')
     .select(
-      'id, user_id, status, payment_method, payment_reference, total, created_at, paid_at, ' +
+      'id, user_id, status, payment_method, payment_reference, total, created_at, paid_at, approved_at, ' +
+        'payment_proof_path, payment_proof_uploaded_at, ' +
         'street_address, city, province, postal_code, courier, tracking_number, admin_notes, ' +
         'order_items(id, quantity, price_at_purchase, products(id, name, image_url))',
     )

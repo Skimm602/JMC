@@ -2,7 +2,7 @@
  * Order pricing — one module, two callers.
  *
  * The product page prices a quote in the browser so the summary appears the
- * moment someone presses Checkout, and createGatewayCheckout() recomputes the
+ * moment someone presses Checkout, and createOrder() recomputes the
  * identical figures on the server from the database's own prices before it
  * writes an order. Because both run this code, the number a customer agreed
  * to and the number they are charged cannot drift — the browser's copy is
@@ -34,7 +34,7 @@ export const formatPeso = (amount) =>
 /**
  * Who gets trade pricing.
  *
- * Deliberately the same test createGatewayCheckout() has used since it was
+ * Deliberately the same test createOrder() has used since it was
  * written — customer_type alone, not verification_status — so the price on
  * the product page is the price the order is written at. Requiring a cleared
  * verification before trade pricing applies is a policy change rather than a
@@ -53,7 +53,7 @@ export function hasInstallerPricing(profile) {
  * retail_price 0, which is not a price: nothing here is free, so zero can
  * only mean "not yet priced".
  *
- * The storefront asks this before it shows a figure, and createGatewayCheckout
+ * The storefront asks this before it shows a figure, and createOrder
  * asks it again before it writes an order, so an unpriced product can be read
  * about but not bought. Setting a real price is the only thing needed to turn
  * one into a live line — there is no second flag to remember.

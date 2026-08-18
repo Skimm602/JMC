@@ -26,7 +26,7 @@ export async function generateMetadata({ params }) {
  * which is the order someone reads in anyway.
  *
  * `isInstaller` is resolved on the server and passed down as a plain boolean.
- * It decides what the page *shows*; createGatewayCheckout() resolves it again
+ * It decides what the page *shows*; createOrder() resolves it again
  * from the session before it writes anything, so a browser that lies about it
  * gets a prettier page and the same invoice.
  */
