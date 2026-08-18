@@ -1,10 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { attachPaymentProof } from '@/app/actions/checkout'
-import { Button, Rule, cx } from './ui.jsx'
-import { AlertIcon, CheckIcon, FileIcon, SpinnerIcon, UploadIcon } from './icons.jsx'
+import { Rule, cx } from './ui.jsx'
+import { FileIcon } from './icons.jsx'
+import PaymentPanel from './PaymentPanel.jsx'
 
 /**
  * Six statuses, three answers.
@@ -51,6 +50,15 @@ const TONE = {
 const peso = (n) =>
   n == null ? '—' : new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(n))
 
+/**
+ * An order placed against a product with no catalogue price carries a zero
+ * total until an admin enters the figure agreed on the call. Rendering that
+ * zero as ₱0.00 tells the customer their equipment is free, so everywhere a
+ * money figure appears it goes through here first.
+ */
+const isQuoted = (n) => !(Number(n) > 0)
+const money = (n) => (isQuoted(n) ? 'to be confirmed' : peso(n))
+
 const when = (iso) =>
   iso ? new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
@@ -58,97 +66,6 @@ const when = (iso) =>
  *  GATEWAY_PAYMENT_METHODS. `qr_ph`, not `qrph`: the mismatch meant a QR Ph
  *  order showed the raw column value on its own receipt. */
 const METHOD = { gcash: 'GCash', qr_ph: 'QR Ph', pesonet: 'PesoNet' }
-
-/**
- * Where a confirmed order gets paid for.
- *
- * Only ever shown on an `approved` order — the call has happened, the figure
- * is settled, and this is the one thing left for the customer to do. Uploading
- * does not mark anything paid: an admin reads the proof and moves the order,
- * because "the customer says they paid" and "the money arrived" are different
- * facts and only one of them belongs to the customer.
- */
-function PaymentPanel({ order }) {
-  const router = useRouter()
-  const [proof, setProof] = useState(null)
-  const [error, setError] = useState(null)
-  const [pending, setPending] = useState(false)
-
-  const already = Boolean(order.payment_proof_uploaded_at)
-
-  const send = async (event) => {
-    event.preventDefault()
-    if (!proof) {
-      setError('Attach a photo or screenshot of the payment.')
-      return
-    }
-
-    setError(null)
-    setPending(true)
-
-    const data = new FormData()
-    data.set('orderId', order.id)
-    data.set('proof', proof)
-
-    const result = await attachPaymentProof(data)
-    setPending(false)
-
-    if (result?.error) {
-      setError(result.error)
-      return
-    }
-    setProof(null)
-    router.refresh()
-  }
-
-  return (
-    <form onSubmit={send} className="border-cool-600/40 bg-cool-600/[0.05] mt-5 border p-5">
-      <p className="text-ink flex items-center gap-2.5 font-medium">
-        {already ? <CheckIcon className="text-cool-600 h-5 w-5 shrink-0" /> : null}
-        {already ? 'Payment sent to us' : 'Confirmed — ready for payment'}
-      </p>
-
-      <p className="text-ink-soft mt-3 text-sm leading-relaxed">
-        {already
-          ? `We have your proof of payment and are checking it against the account. The order moves to paid once it clears — you do not need to do anything else. Sent ${when(order.payment_proof_uploaded_at)}.`
-          : `We have called and confirmed this order. Pay the ${peso(order.total)} however we agreed on the call, then attach a photo or screenshot of it here.`}
-      </p>
-
-      <label className="border-rule-strong hover:border-ink-soft bg-glare mt-4 flex cursor-pointer items-center gap-3 border border-dashed px-4 py-3.5 transition-colors">
-        <UploadIcon className="text-ink-soft h-4 w-4 shrink-0" />
-        <span className="min-w-0 flex-1 text-sm">
-          {proof ? (
-            <span className="text-ink block truncate font-medium">{proof.name}</span>
-          ) : (
-            <span className="text-ink-soft">{already ? 'Replace with a clearer one' : 'Choose an image or PDF'}</span>
-          )}
-        </span>
-        <span className="label text-ink-soft shrink-0">{proof ? 'Change' : 'Browse'}</span>
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
-          className="sr-only"
-          onChange={(e) => {
-            setProof(e.target.files?.[0] ?? null)
-            setError(null)
-          }}
-        />
-      </label>
-
-      {error && (
-        <p role="alert" className="border-hot-600 text-hot-600 mt-4 flex items-start gap-2 border px-3.5 py-2.5 text-sm">
-          <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
-          {error}
-        </p>
-      )}
-
-      <Button type="submit" size="sm" disabled={pending || !proof} className="mt-4">
-        {pending && <SpinnerIcon className="h-4 w-4" />}
-        {pending ? 'Sending…' : already ? 'Send the new one' : 'Send proof of payment'}
-      </Button>
-    </form>
-  )
-}
 
 function Stage({ status }) {
   const stage = STAGE[status] ?? { label: status, tone: 'neutral' }
@@ -169,7 +86,7 @@ function Order({ order }) {
         <div>
           <p className="label text-ink-soft">Ordered {when(order.created_at)}</p>
           <p className="text-ink mt-2 font-mono text-sm">
-            {count} {count === 1 ? 'item' : 'items'} · {peso(order.total)}
+            {count} {count === 1 ? 'item' : 'items'} · {money(order.total)}
           </p>
           {order.payment_method && (
             <p className="text-ink-soft mt-1.5 text-xs">
@@ -214,12 +131,12 @@ function Order({ order }) {
               <span className="min-w-0 flex-1">
                 <span className="text-ink block truncate text-sm">{item.products?.name ?? 'Product removed'}</span>
                 <span className="text-ink-soft block font-mono text-xs">
-                  {item.quantity} × {peso(item.price_at_purchase)}
+                  {item.quantity} × {money(item.price_at_purchase)}
                 </span>
               </span>
 
               <span className="text-ink shrink-0 font-mono text-sm tabular-nums">
-                {peso(Number(item.price_at_purchase) * item.quantity)}
+                {money(Number(item.price_at_purchase) * item.quantity)}
               </span>
             </li>
           ))
