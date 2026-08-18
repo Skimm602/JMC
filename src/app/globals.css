@@ -386,6 +386,32 @@
     border-bottom: 1px solid;
   }
 
+  /* A graduated scale, the way it is printed along the edge of a measuring
+     instrument: a short tick every 10px and a tall one every 50th, both
+     standing on the same baseline.
+
+     Two background layers rather than fifty elements — the marks are
+     decoration and should cost nothing in the DOM or in a screen reader.
+     currentColor, so a run of them picks up whatever band it sits in. */
+  .scale-marks {
+    background-image:
+      repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 10px),
+      repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 50px);
+    background-size:
+      100% 5px,
+      100% 11px;
+    background-position:
+      bottom left,
+      bottom left;
+    background-repeat: repeat-x;
+  }
+
+  /* Mirrored, so a run on the right-hand side reads as the far end of the
+     same scale rather than a second one starting over. */
+  .scale-marks-end {
+    transform: scaleX(-1);
+  }
+
   /* Lets a child escape the content column and run to the viewport edge. */
   .bleed-right {
     margin-right: calc(50% - 50vw);

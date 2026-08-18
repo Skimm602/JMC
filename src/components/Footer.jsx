@@ -95,9 +95,18 @@ export default function Footer() {
           </div>
         </div>
 
-        <Rule tone="shade" className="my-12" />
+        <Rule tone="shade" className="mt-12 mb-8" />
 
-        <div className="text-glint-soft flex flex-col gap-4 text-xs sm:flex-row sm:items-center sm:justify-between">
+        {/* The graduations along the bottom edge, read from both ends. They
+            carry no information — they are the instrument-panel voice the rest
+            of the site is drawn in, and the one place a footer can hold it
+            without adding another thing to read. aria-hidden for that reason. */}
+        <div aria-hidden="true" className="text-rule-shade flex items-end gap-6">
+          <span className="scale-marks h-3 flex-1" />
+          <span className="scale-marks scale-marks-end h-3 flex-1" />
+        </div>
+
+        <div className="text-glint-soft mt-8 flex flex-col gap-4 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Vip Solar. All rights reserved.</p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {['Privacy', 'Terms of sale', 'Cookies', 'Compliance'].map((l) => (
