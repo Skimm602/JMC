@@ -4,8 +4,14 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Rule, cx } from '../ui.jsx'
 import { Field, TextInput } from '../form.jsx'
-import { AlertIcon, FileIcon, SpinnerIcon } from '../icons.jsx'
-import { setOrderStatus, updateOrderAddress, updateOrderNotes, updateOrderTracking } from '@/app/actions/orders'
+import { AlertIcon, FileIcon, HeadsetIcon, SpinnerIcon } from '../icons.jsx'
+import {
+  setOrderStatus,
+  setOrderTotal,
+  updateOrderAddress,
+  updateOrderNotes,
+  updateOrderTracking,
+} from '@/app/actions/orders'
 import { getPaymentProofUrl } from '@/app/actions/checkout'
 
 const when = (iso) =>
@@ -104,6 +110,66 @@ function ProofLink({ orderId }) {
       </Button>
       {error && <span className="text-hot-600 text-xs">{error}</span>}
     </>
+  )
+}
+
+/**
+ * The figure agreed on the confirmation call.
+ *
+ * Only appears on a pending order that has none — a product with no catalogue
+ * price can still be ordered, because the call is where the price is settled.
+ * VAT is added by the database, so this asks for the VAT-exclusive figure and
+ * says so; two people typing a VAT-inclusive number into a VAT-exclusive
+ * field is how a total ends up 12 % wrong.
+ */
+function PriceEditor({ order }) {
+  const router = useRouter()
+  const [value, setValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const save = async () => {
+    setBusy(true)
+    setError(null)
+    const result = await setOrderTotal(order.id, value)
+    setBusy(false)
+
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    router.refresh()
+  }
+
+  return (
+    <div className="border-hot-400/50 bg-hot-600/[0.05] mb-4 w-full border px-3.5 py-3">
+      <p className="label text-ink-soft">Price agreed on the call</p>
+      <p className="text-ink-soft mt-2 text-sm leading-relaxed">
+        This order was placed against a product with no catalogue price, so it has no total yet. Enter what was
+        agreed, VAT-exclusive — the 12 % is added on top. It cannot be approved until this is set.
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <label className="min-w-[10rem]">
+          <span className="label text-ink-soft">Subtotal (₱, VAT-exclusive)</span>
+          <TextInput
+            type="number"
+            inputMode="decimal"
+            min="1"
+            step="0.01"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="mt-2"
+          />
+        </label>
+        <Button onClick={save} disabled={busy || !value}>
+          {busy && <SpinnerIcon className="h-4 w-4" />}
+          {busy ? 'Saving…' : 'Set the price'}
+        </Button>
+      </div>
+
+      {error && <p className="text-hot-600 mt-3 text-xs">{error}</p>}
+    </div>
   )
 }
 
@@ -346,6 +412,11 @@ function Order({ order, onChanged }) {
 
   const items = order.order_items ?? []
   const busy = status !== 'idle'
+
+  // Placed against a product with no catalogue price, so the figure from the
+  // call has not been entered yet. Approving would tell the customer to pay a
+  // total of zero, so the button stays shut until it is.
+  const needsPrice = order.status === 'pending' && !(Number(order.total) > 0)
   const options = NEXT_STATUSES[order.status] ?? []
   const customer = order.customer
 
@@ -457,6 +528,19 @@ function Order({ order, onChanged }) {
       {options.length > 0 && (
         <>
           <Rule className="my-6" />
+
+          {/* Context before controls: what the customer said, then the figure
+              the call settled, then the buttons that act on both. Sitting
+              inside the button row they read as controls themselves. */}
+          {order.customer_note && (
+            <div className="border-rule bg-sheet/60 mb-4 border px-3.5 py-3">
+              <p className="label text-ink-soft">What they told us</p>
+              <p className="text-ink mt-2 text-sm leading-relaxed whitespace-pre-line">{order.customer_note}</p>
+            </div>
+          )}
+
+          {needsPrice && <PriceEditor order={order} />}
+
           <div className="flex flex-wrap items-center gap-3">
             {options
               .filter((s) => s !== 'cancelled')
@@ -472,6 +556,12 @@ function Order({ order, onChanged }) {
                   )}
                 </Button>
               ))}
+            {order.contact_phone && (
+              <Button as="a" variant="outline" href={`tel:${order.contact_phone}`}>
+                <HeadsetIcon className="h-4 w-4" />
+                Call {order.contact_phone}
+              </Button>
+            )}
             {order.payment_proof_path && <ProofLink orderId={order.id} />}
             <Button variant="ghost" onClick={() => move('cancelled')} disabled={busy}>
               {status === 'cancelled' ? 'Cancelling…' : 'Cancel order'}

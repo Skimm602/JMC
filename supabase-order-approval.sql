@@ -38,9 +38,43 @@ begin;
 --    database column is a receipt anybody who guesses the path can read.
 -- ===========================================================================
 
+-- The confirmation call is the centre of this flow, so the number to ring is
+-- part of the order rather than something to go hunting for on the profile.
+-- Asked at checkout, next to the address, because a customer filling in where
+-- the equipment goes is already telling us how to reach them.
+alter table public.orders add column if not exists contact_phone             text;
+
+-- What the customer said when they ordered — roof, existing system, a time
+-- they can take a call. It makes the call shorter and it belongs to the order
+-- rather than to a support thread nobody opens.
+alter table public.orders add column if not exists customer_note             text;
+
 alter table public.orders add column if not exists payment_proof_path        text;
 alter table public.orders add column if not exists payment_proof_uploaded_at timestamptz;
 alter table public.orders add column if not exists approved_at               timestamptz;
+
+-- The status CHECK constraint has to learn the new value before anything can
+-- be moved to it. `orders` was created in the Table Editor rather than in a
+-- migration, so this constraint lives only in the database — dropping and
+-- recreating it by name is the only way to reach it from here.
+--
+-- Every historical value is kept. Dropping one would fail the moment an old
+-- order still sitting at it was touched.
+alter table public.orders drop constraint if exists orders_status_check;
+
+alter table public.orders
+  add constraint orders_status_check check (
+    status in (
+      'pending',
+      'pending_bank_transfer',
+      'approved',
+      'paid',
+      'processing',
+      'shipped',
+      'completed',
+      'cancelled'
+    )
+  );
 
 -- payment_method was NOT NULL for the old gateway's three values. Orders now
 -- arrive without one — the proof shows what was used — so the constraint has
@@ -139,7 +173,65 @@ grant execute on function public.admin_set_order_status(uuid, text) to authentic
 
 
 -- ===========================================================================
--- 3. THE CUSTOMER ATTACHES THEIR PAYMENT
+-- 3. THE PRICE AGREED ON THE CALL
+--
+--    A product with no price yet can still be ordered — the call is where the
+--    figure is agreed — so the order lands at zero and an admin enters what
+--    was settled. Only while it is still `pending`: once approved, the
+--    customer has been told a number and it must not move under them.
+--
+--    VAT is recomputed here rather than taken from the caller, for the same
+--    reason createOrder() re-prices the cart: the arithmetic belongs on one
+--    side of the wire, and it is this one.
+-- ===========================================================================
+
+create or replace function public.admin_set_order_total(p_order_id uuid, p_subtotal numeric)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $price$
+declare
+  v_current text;
+  v_vat     numeric;
+begin
+  if not public.is_admin() then
+    return false;
+  end if;
+
+  if p_subtotal is null or p_subtotal <= 0 then
+    raise exception 'A price has to be greater than zero.' using errcode = 'check_violation';
+  end if;
+
+  select status into v_current from public.orders where id = p_order_id for update;
+  if v_current is null then
+    return false;
+  end if;
+
+  if v_current <> 'pending' then
+    raise exception 'Order % is %, so its price can no longer be changed.', p_order_id, v_current
+      using errcode = 'check_violation';
+  end if;
+
+  -- 12 %, rounded once at the bottom — the same rule @/utils/pricing applies.
+  v_vat := round(p_subtotal * 0.12, 2);
+
+  update public.orders
+     set subtotal = p_subtotal,
+         discount = 0,
+         vat      = v_vat,
+         total    = p_subtotal + v_vat
+   where id = p_order_id;
+
+  return true;
+end;
+$price$;
+
+grant execute on function public.admin_set_order_total(uuid, numeric) to authenticated;
+
+
+-- ===========================================================================
+-- 4. THE CUSTOMER ATTACHES THEIR PAYMENT
 --
 --    Only on their own order, and only while it is approved — before the call
 --    there is nothing to pay for, and after `paid` the record should not move.
@@ -155,7 +247,7 @@ create policy "Customers attach payment to an approved order" on public.orders
 
 
 -- ===========================================================================
--- 4. THE PAYMENT-PROOF BUCKET
+-- 5. THE PAYMENT-PROOF BUCKET
 --
 --    Private. Files are filed under the customer's own uuid, and the policies
 --    are what make that prefix mean something: a customer writes into their
@@ -184,7 +276,7 @@ create policy "Admins read every payment proof" on storage.objects
 
 
 -- ===========================================================================
--- 5. UNDO THE AGENT-GATE EXPERIMENT
+-- 6. UNDO THE AGENT-GATE EXPERIMENT
 --
 --    An earlier design put the call *before* checkout, behind a consultations
 --    table that also gated order_items. The call is a step inside the order
@@ -210,7 +302,8 @@ commit;
 -- ---------------------------------------------------------------------------
 select column_name from information_schema.columns
  where table_schema = 'public' and table_name = 'orders'
-   and column_name in ('payment_proof_path', 'payment_proof_uploaded_at', 'approved_at');
+   and column_name in ('contact_phone', 'customer_note', 'payment_proof_path',
+                       'payment_proof_uploaded_at', 'approved_at');
 
 select status, count(*) from public.orders group by status order by status;
 

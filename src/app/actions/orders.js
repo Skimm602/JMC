@@ -24,7 +24,7 @@ export async function getOrders() {
     .from('orders')
     .select(
       'id, user_id, status, payment_method, payment_reference, total, created_at, paid_at, approved_at, ' +
-        'payment_proof_path, payment_proof_uploaded_at, ' +
+        'payment_proof_path, payment_proof_uploaded_at, contact_phone, customer_note, ' +
         'street_address, city, province, postal_code, courier, tracking_number, admin_notes, ' +
         'order_items(id, quantity, price_at_purchase, products(id, name, image_url))',
     )
@@ -131,6 +131,34 @@ export async function updateOrderNotes(orderId, notes) {
   const { data: changed, error } = await supabase.rpc('admin_update_order_notes', {
     p_order_id: orderId,
     p_notes: notes ?? '',
+  })
+
+  if (error) return { error: error.message }
+  if (!changed) return { error: 'That order could not be updated.' }
+
+  return { success: true }
+}
+
+/**
+ * setOrderTotal(orderId, subtotal)
+ *
+ * The price agreed on the confirmation call, for an order placed against a
+ * product that had none. VAT is added by the database rather than sent from
+ * here — the arithmetic belongs on one side of the wire, and every other
+ * total on this site is reached the same way.
+ *
+ * Only while the order is still pending: once it is approved the customer has
+ * been told a figure, and it must not move under them.
+ */
+export async function setOrderTotal(orderId, subtotal) {
+  const supabase = await createClient()
+
+  const value = Number(subtotal)
+  if (!Number.isFinite(value) || value <= 0) return { error: 'Enter a price greater than zero.' }
+
+  const { data: changed, error } = await supabase.rpc('admin_set_order_total', {
+    p_order_id: orderId,
+    p_subtotal: value,
   })
 
   if (error) return { error: error.message }

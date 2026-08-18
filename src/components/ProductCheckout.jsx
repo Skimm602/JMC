@@ -7,7 +7,7 @@ import { createOrder } from '@/app/actions/checkout'
 import { addToCart } from '@/app/actions/cart'
 import { formatPeso, isPriced, quote, VAT_RATE } from '@/utils/pricing'
 import NoRefundsDialog from './NoRefundsDialog.jsx'
-import { Checkbox, Field, TextInput } from './form.jsx'
+import { Checkbox, Field, Textarea, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
 import { AlertIcon, ArrowRightIcon, CartIcon, CheckIcon, SpinnerIcon } from './icons.jsx'
 
@@ -67,44 +67,17 @@ function Notice({ children }) {
 
 /* -------------------------------- component ------------------------------- */
 
-/**
- * What stands in for the order form on a product that has no price yet.
- *
- * The range is loaded from the manufacturer's datasheets before anybody sets
- * the pesos, so for a while a real product can be fully documented and not
- * yet for sale. Showing the form anyway would let someone fill in an address
- * for an order the server is going to refuse; showing nothing would leave the
- * column blank next to a full specification. This says where the page stands
- * and gives the one action that does work.
- */
-function QuotePanel({ product }) {
-  return (
-    <div className="border-rule bg-glare border p-6">
-      <p className="label text-ink-soft">Not yet priced</p>
-      <p className="display-wide text-display-3 text-ink mt-3 font-semibold">Price on request</p>
-      <p className="text-ink-soft mt-4 text-sm leading-relaxed">
-        {product.name} is in the catalogue with its full specification and the manufacturer&apos;s datasheet, but it
-        is not on general sale yet. Ask us and we will quote it — including delivery, and installation if you need
-        it.
-      </p>
-      <Rule className="mt-6" />
-      <p className="text-ink-soft mt-6 text-sm leading-relaxed">
-        Use the support button in the corner if you are signed in, or email{' '}
-        <a href="mailto:jmcsolarph@gmail.com" className="text-ink font-mono underline underline-offset-2">
-          jmcsolarph@gmail.com
-        </a>
-        .
-      </p>
-    </div>
-  )
-}
-
 export default function ProductCheckout({ product, isInstaller, signedIn }) {
   const router = useRouter()
 
   const [step, setStep] = useState('address')
   const [quantity, setQuantity] = useState(1)
   const [address, setAddress] = useState({ streetAddress: '', city: '', province: '', postalCode: '' })
+  // The confirmation call is the next step after this form, so the number to
+  // ring is asked for here rather than looked up later. The note is what makes
+  // that call short.
+  const [phone, setPhone] = useState('')
+  const [note, setNote] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [agreementError, setAgreementError] = useState(null)
   const [error, setError] = useState(null)
@@ -116,6 +89,11 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
 
   const stock = product.stock_quantity
   const soldOut = stock === 0
+
+  // A catalogued product with no price yet. It can still be ordered — the
+  // confirmation call is where the figure is agreed — but nothing on this
+  // screen may pretend to know what it costs.
+  const quoted = !isPriced(product)
 
   const priced = useMemo(
     () => quote({ lines: [{ product, quantity }], isInstaller }),
@@ -167,6 +145,8 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
     const data = new FormData()
     data.set('items', JSON.stringify([{ productId: product.id, quantity }]))
     data.set('shipping', JSON.stringify(address))
+    data.set('phone', phone.trim())
+    data.set('note', note.trim())
     data.set('acceptedTerms', 'true')
 
     const result = await createOrder(data)
@@ -217,8 +197,6 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
     )
   }
 
-  if (!isPriced(product)) return <QuotePanel product={product} />
-
   /* --------------------------------- placed -------------------------------- */
 
   if (step === 'placed') {
@@ -244,7 +222,9 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
           </div>
           <div className="flex items-baseline justify-between gap-6">
             <dt className="label text-ink-soft">Total due</dt>
-            <dd className="text-ink font-mono text-lg font-semibold tabular-nums">{formatPeso(placed?.total)}</dd>
+            <dd className={quoted ? 'text-ink-soft text-sm' : 'text-ink font-mono text-lg font-semibold tabular-nums'}>
+              {quoted ? 'confirmed on the call' : formatPeso(placed?.total)}
+            </dd>
           </div>
         </dl>
 
@@ -285,7 +265,17 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
 
           <Rule />
 
-          <Money label="Total due" value={priced.total} strong />
+          {quoted ? (
+            /* No figure exists yet, so none is shown. Rendering ₱0.00 as a
+               "total due" would be a number nobody agreed to on a screen whose
+               whole job is agreeing to one. */
+            <div className="flex items-baseline justify-between gap-6 py-2.5">
+              <span className="text-ink text-sm font-medium">Total due</span>
+              <span className="text-ink-soft shrink-0 text-sm">confirmed on the call</span>
+            </div>
+          ) : (
+            <Money label="Total due" value={priced.total} strong />
+          )}
         </div>
 
         <Rule className="my-6" />
@@ -297,6 +287,9 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
             <br />
             {address.city}, {address.province} {address.postalCode}
           </address>
+          <p className="text-ink-soft mt-3 text-xs">
+            We will call <span className="text-ink font-mono">{phone}</span> to confirm before any payment.
+          </p>
         </div>
 
         <Rule className="my-6" />
@@ -312,8 +305,16 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
             if (next) setAgreementError(null)
           }}
           error={agreementError}
-          label={`I agree to pay ${formatPeso(priced.total)} for this order.`}
-          description="This amount is due in full and this sale is final — once the order is placed, payments are not refunded and equipment is not taken back. Check the address, the quantity and the total above before you continue."
+          label={
+            quoted
+              ? 'I understand the price will be confirmed on the call before I pay anything.'
+              : `I agree to pay ${formatPeso(priced.total)} for this order.`
+          }
+          description={
+            quoted
+              ? 'Nothing is charged when you submit this. We call to confirm the specification and the price, and only then are you asked to pay. Once you have paid, the sale is final — payments are not refunded and equipment is not taken back.'
+              : 'This amount is due in full and this sale is final — once the order is placed, payments are not refunded and equipment is not taken back. Check the address, the quantity and the total above before you continue.'
+          }
         />
 
         {error && <div className="mt-6">
@@ -364,13 +365,22 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
               <s>{formatPeso(priced.items[0].retailUnitPrice)}</s>
             </p>
           )}
-          <p className="text-ink text-display-3 mt-1 font-mono font-semibold tabular-nums">
-            {formatPeso(priced.items[0].unitPrice)}
-          </p>
-          <p className="text-ink-soft mt-1.5 text-xs">
-            {priced.discount > 0 && <span className="text-cool-600 font-medium">Installer price · </span>}
-            per unit, VAT-exclusive
-          </p>
+          {quoted ? (
+            <>
+              <p className="display-wide text-display-3 text-ink mt-1 font-semibold">Price on request</p>
+              <p className="text-ink-soft mt-1.5 text-xs">agreed on the confirmation call</p>
+            </>
+          ) : (
+            <>
+              <p className="text-ink text-display-3 mt-1 font-mono font-semibold tabular-nums">
+                {formatPeso(priced.items[0].unitPrice)}
+              </p>
+              <p className="text-ink-soft mt-1.5 text-xs">
+                {priced.discount > 0 && <span className="text-cool-600 font-medium">Installer price · </span>}
+                per unit, VAT-exclusive
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -440,6 +450,30 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
             {/* Four digits, and the pattern says so before the server has to.
                 inputMode="numeric" rather than type="number" — a ZIP is a
                 label, not a quantity, and spinner arrows on one are nonsense. */}
+            <Field label="Phone number" required span={2} hint="We call to confirm the order before any payment.">
+              {(p) => (
+                <TextInput
+                  {...p}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="09XX XXX XXXX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              )}
+            </Field>
+
+            <Field
+              label="Anything we should know?"
+              span={2}
+              hint="Roof type, existing system, or the time of day you can take a call. It makes the call shorter."
+            >
+              {(p) => (
+                <Textarea {...p} rows={3} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} />
+              )}
+            </Field>
+
             <Field label="ZIP code" required hint="Four digits.">
               {(p) => (
                 <TextInput

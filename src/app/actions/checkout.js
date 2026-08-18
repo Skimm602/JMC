@@ -2,7 +2,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@/utils/supabase/server'
-import { hasInstallerPricing, isPriced, quote } from '@/utils/pricing'
+import { hasInstallerPricing, quote } from '@/utils/pricing'
 
 /**
  * Placing an order, and attaching the payment afterwards.
@@ -78,6 +78,8 @@ function extensionOf(file) {
  *                  many, never prices. Prices are re-read from `products`
  *                  server-side; the browser only says what it wants.
  *   shipping       JSON { streetAddress, city, province, postalCode }
+ *   phone          the number to ring for the confirmation call
+ *   note           optional — roof, existing system, when they can take a call
  *   acceptedTerms  'true' — the customer ticking "I agree to pay, and I
  *                  understand this is not refundable". The summary they read
  *                  it under is computed by the same pricing module used here,
@@ -112,6 +114,13 @@ export async function createOrder(formData) {
 
   const { row: shippingRow, error: shippingError } = readShippingAddress(shipping)
   if (shippingError) return { error: shippingError }
+
+  // The whole flow turns on somebody being able to ring this customer, so an
+  // order without a number is not one the back office can act on.
+  const phone = String(formData.get('phone') ?? '').trim().slice(0, 40)
+  if (!phone) return { error: 'Leave a number we can call to confirm the order.' }
+
+  const note = String(formData.get('note') ?? '').trim().slice(0, 1000)
 
   const quantityByProductId = new Map()
   for (const item of items ?? []) {
@@ -150,12 +159,12 @@ export async function createOrder(formData) {
   for (const product of products) {
     const quantity = quantityByProductId.get(product.id)
 
-    // A catalogued product with no price yet. The storefront never offers
-    // these, so reaching here means a stale tab — and writing the order
-    // anyway would bill somebody zero pesos for hardware.
-    if (!isPriced(product)) {
-      return { error: `${product.name} is not priced yet. Ask us for a quote before ordering it.` }
-    }
+    // A product with no price yet is allowed through. It has to be: the
+    // confirmation call is where the figure is agreed, and refusing the order
+    // would mean refusing the conversation that sets the price. The order
+    // carries a zero total until an admin enters the agreed figure, and the
+    // customer is never shown that zero as a price — see `quoted` in
+    // ProductCheckout. Nothing can be paid or approved on a zero.
 
     if (product.stock_quantity != null && quantity > product.stock_quantity) {
       return { error: `Only ${product.stock_quantity} left in stock for ${product.name}.` }
@@ -177,6 +186,8 @@ export async function createOrder(formData) {
     // itself, and no money is asked for until it has been.
     status: 'pending',
     ...shippingRow,
+    contact_phone: phone,
+    customer_note: note || null,
     subtotal: priced.subtotal,
     discount: priced.discount,
     vat: priced.vat,

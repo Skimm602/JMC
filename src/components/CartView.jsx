@@ -7,7 +7,7 @@ import { createOrder } from '@/app/actions/checkout'
 import { clearCart, removeFromCart, updateCartItem } from '@/app/actions/cart'
 import { formatPeso, VAT_RATE } from '@/utils/pricing'
 import NoRefundsDialog from './NoRefundsDialog.jsx'
-import { Checkbox, Field, TextInput } from './form.jsx'
+import { Checkbox, Field, Textarea, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, FileIcon, SpinnerIcon, XIcon } from './icons.jsx'
 
@@ -68,10 +68,17 @@ function Notice({ children }) {
 }
 
 export default function CartView({ data, signedIn }) {
+  // Any line with no price yet. The confirmation call is where those figures
+  // are agreed, so the cart still checks out — it just may not claim a total.
+  const quotedCart = (data?.items ?? []).some((item) => !(Number(item.product?.retail_price) > 0))
   const router = useRouter()
 
   const [step, setStep] = useState('cart')
   const [address, setAddress] = useState(EMPTY_ADDRESS)
+  // The confirmation call comes next, so the number to ring is asked for here
+  // rather than looked up later.
+  const [phone, setPhone] = useState('')
+  const [note, setNote] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [agreementError, setAgreementError] = useState(null)
   const [error, setError] = useState(null)
@@ -139,6 +146,8 @@ export default function CartView({ data, signedIn }) {
     const payload = new FormData()
     payload.set('items', JSON.stringify(items.map((item) => ({ productId: item.product.id, quantity: item.quantity }))))
     payload.set('shipping', JSON.stringify(address))
+    payload.set('phone', phone.trim())
+    payload.set('note', note.trim())
     payload.set('acceptedTerms', 'true')
 
     const result = await createOrder(payload)
@@ -277,7 +286,11 @@ export default function CartView({ data, signedIn }) {
             if (next) setAgreementError(null)
           }}
           error={agreementError}
-          label={`I agree to pay ${formatPeso(data.total)} for this order.`}
+          label={
+            quotedCart
+              ? 'I understand the price will be confirmed on the call before I pay anything.'
+              : `I agree to pay ${formatPeso(data.total)} for this order.`
+          }
           description="This amount is due in full and this sale is final — once the order is placed, payments are not refunded and equipment is not taken back. Check the address, the quantities and the total above before you continue."
         />
 
@@ -466,6 +479,29 @@ export default function CartView({ data, signedIn }) {
               )}
             </Field>
           </div>
+
+          <Field label="Phone number" required hint="We call to confirm the order before any payment.">
+            {(p) => (
+              <TextInput
+                {...p}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="09XX XXX XXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            )}
+          </Field>
+
+          <Field
+            label="Anything we should know?"
+            hint="Roof type, existing system, or the time of day you can take a call."
+          >
+            {(p) => (
+              <Textarea {...p} rows={3} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} />
+            )}
+          </Field>
 
           <Field label="ZIP code" required hint="Four digits.">
             {(p) => (
