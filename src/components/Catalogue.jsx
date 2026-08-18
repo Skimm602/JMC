@@ -87,7 +87,7 @@ export function StockNote({ stock, className }) {
   return (
     <p
       className={cx(
-        'label inline-flex items-center border px-2 py-1',
+        'label inline-flex items-center rounded-full border px-2 py-1',
         out
           ? 'border-hot-600/45 bg-hot-600/[0.06] text-hot-700'
           : low
@@ -130,9 +130,9 @@ function ProductCard({ product, isInstaller }) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group border-rule bg-glare hover:border-ink-soft flex flex-col border p-6 transition-colors duration-200"
+      className="group border-rule bg-glare hover:border-ink-soft rounded-panel flex flex-col border p-6 transition-colors duration-200"
     >
-      <div className="bg-sheet flex h-44 items-center justify-center p-4">
+      <div className="bg-sheet rounded-card flex h-44 items-center justify-center p-4">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -148,12 +148,12 @@ function ProductCard({ product, isInstaller }) {
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <StockNote stock={product.stock_quantity} />
         {product.is_bulk_only && (
-          <span className="label border-rule-strong bg-sheet text-ink-soft inline-flex items-center border px-2 py-1">
+          <span className="label border-rule-strong bg-sheet text-ink-soft inline-flex items-center rounded-full border px-2 py-1">
             Bulk order
           </span>
         )}
         {product.category && (
-          <span className="label border-rule-strong bg-sheet text-ink-soft inline-flex items-center border px-2 py-1">
+          <span className="label border-rule-strong bg-sheet text-ink-soft inline-flex items-center rounded-full border px-2 py-1">
             {CATEGORY_LABEL[product.category]}
             {product.voltage_class ? ` · ${VOLTAGE_LABEL[product.voltage_class]}` : ''}
           </span>
@@ -199,7 +199,7 @@ function FilterOption({ active, onClick, children }) {
       onClick={onClick}
       aria-pressed={active}
       className={cx(
-        'border px-3 py-1.5 text-xs font-medium transition-colors duration-200',
+        'rounded-row border px-3 py-1.5 text-xs font-medium transition-colors duration-200',
         active
           ? 'border-cool-600 bg-cool-600 text-glare'
           : 'border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink',

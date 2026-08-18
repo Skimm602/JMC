@@ -55,13 +55,13 @@ export default async function ProductPage({ params }) {
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <StockNote stock={product.stock_quantity} />
                 {product.is_bulk_only && (
-                  <span className="label border-rule-strong bg-glare text-ink-soft inline-flex items-center border px-2 py-1">
+                  <span className="label border-rule-strong bg-glare text-ink-soft inline-flex items-center rounded-full border px-2 py-1">
                     Bulk order
                   </span>
                 )}
               </div>
 
-              <div className="border-rule bg-glare mt-8 flex items-center justify-center border p-8">
+              <div className="border-rule bg-glare rounded-panel mt-8 flex items-center justify-center border p-8">
                 {product.image_url ? (
                   <img
                     src={product.image_url}
@@ -90,7 +90,7 @@ export default async function ProductPage({ params }) {
                     underneath.
                   </p>
 
-                  <dl className="mt-8">
+                  <dl className="border-rule rounded-panel mt-8 overflow-hidden border">
                     {product.specifications.map((spec, i) => {
                       // A datasheet is grouped — PV input, battery, efficiency,
                       // general data — and forty rows read as a wall without
@@ -100,7 +100,7 @@ export default async function ProductPage({ params }) {
                         return (
                           <div
                             key={i}
-                            className="border-rule bg-sheet/60 border-t border-b px-3.5 py-2 first:border-t-0"
+                            className="border-rule bg-sheet/60 border-y px-4 py-2 first:border-t-0"
                           >
                             <dt className="label text-ink font-medium">{spec.replace(/^#+\s*/, '')}</dt>
                           </div>
@@ -114,7 +114,7 @@ export default async function ProductPage({ params }) {
                       return (
                         <div
                           key={i}
-                          className="border-rule flex flex-col gap-1 border-b px-3.5 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+                          className="border-rule flex flex-col gap-1 border-b px-4 py-3 last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
                         >
                           {label && <dt className="label text-ink-soft sm:shrink-0">{label}</dt>}
                           {/* Some rows are a paragraph of protections rather

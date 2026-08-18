@@ -34,7 +34,7 @@ const when = (iso) =>
 function ProofField({ proof, setProof, onSubmit, pending, error, replace }) {
   return (
     <form onSubmit={onSubmit} className="mt-4">
-      <label className="border-rule-strong hover:border-ink-soft bg-glare flex cursor-pointer items-center gap-3 border border-dashed px-4 py-3.5 transition-colors">
+      <label className="border-rule-strong hover:border-ink-soft bg-glare rounded-row flex cursor-pointer items-center gap-3 border border-dashed px-4 py-3.5 transition-colors">
         <UploadIcon className="text-ink-soft h-4 w-4 shrink-0" />
         <span className="min-w-0 flex-1 text-sm">
           {proof ? (
@@ -93,7 +93,7 @@ function MethodDetails({ method, orderId }) {
   if (!method) return null
 
   return (
-    <div className="border-rule bg-glare mt-4 border p-4">
+    <div className="border-rule bg-glare rounded-card mt-4 border p-4">
       <p className="text-ink-soft text-sm leading-relaxed">{method.hint}</p>
 
       {hasQr && (
@@ -101,7 +101,7 @@ function MethodDetails({ method, orderId }) {
           src={`/payment/${method.id}.png`}
           alt={`${method.label} QR code`}
           onError={() => setHasQr(false)}
-          className="border-rule bg-glare mt-4 h-44 w-44 border object-contain p-2"
+          className="border-rule bg-glare rounded-card mt-4 h-44 w-44 border object-contain p-2"
         />
       )}
 
@@ -188,7 +188,7 @@ export default function PaymentPanel({ order }) {
 
   if (already) {
     return (
-      <div className="border-cool-600/40 bg-cool-600/[0.05] mt-5 border p-5">
+      <div className="border-cool-600/40 bg-cool-600/[0.05] rounded-panel mt-5 border p-5">
         <p className="text-ink flex items-center gap-2.5 font-medium">
           <CheckIcon className="text-cool-600 h-5 w-5 shrink-0" />
           Payment sent to us
@@ -217,7 +217,7 @@ export default function PaymentPanel({ order }) {
 
   if (!open) {
     return (
-      <div className="border-cool-600/40 bg-cool-600/[0.05] mt-5 border p-5">
+      <div className="border-cool-600/40 bg-cool-600/[0.05] rounded-panel mt-5 border p-5">
         <p className="text-ink font-medium">Confirmed — ready for payment</p>
         <p className="text-ink-soft mt-3 text-sm leading-relaxed">
           We have called and confirmed this order. {money(order.total)} is due — pay it however suits you from the
@@ -233,7 +233,7 @@ export default function PaymentPanel({ order }) {
   /* ------------------------- steps two and three --------------------------- */
 
   return (
-    <div className="border-cool-600/40 bg-cool-600/[0.05] mt-5 border p-5">
+    <div className="border-cool-600/40 bg-cool-600/[0.05] rounded-panel mt-5 border p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-ink font-medium">Pay {money(order.total)}</p>
         <button
@@ -257,7 +257,7 @@ export default function PaymentPanel({ order }) {
             onClick={() => setMethod(m.id === method ? null : m.id)}
             aria-pressed={m.id === method}
             className={cx(
-              'border px-3 py-1.5 text-xs font-medium transition-colors',
+              'rounded-row border px-3 py-1.5 text-xs font-medium transition-colors',
               m.id === method
                 ? 'border-cool-600 bg-cool-600 text-glare'
                 : 'border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink',

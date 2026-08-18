@@ -171,7 +171,7 @@ export default function CartView({ data, signedIn }) {
 
   if (!signedIn) {
     return (
-      <div className="border-rule bg-glare max-w-md border p-6 sm:p-8">
+      <div className="border-rule bg-glare rounded-panel max-w-md border p-6 sm:p-8">
         <p className="text-ink-soft text-sm leading-relaxed">
           Your cart is tied to your account, so it is there on whichever device you sign in on. Log in to see it.
         </p>
@@ -192,7 +192,7 @@ export default function CartView({ data, signedIn }) {
 
   if (step === 'placed') {
     return (
-      <div className="border-cool-600/40 bg-cool-600/[0.05] animate-reveal max-w-xl border p-6 sm:p-8">
+      <div className="border-cool-600/40 bg-cool-600/[0.05] animate-reveal rounded-panel max-w-xl border p-6 sm:p-8">
         <p className="text-ink flex items-center gap-2.5 font-medium">
           <CheckIcon className="text-cool-600 h-5 w-5 shrink-0" strokeWidth={2.4} />
           Order placed

@@ -44,7 +44,7 @@ export function Lede({ children, className, tone = 'ink' }) {
 /* --------------------------------- button --------------------------------- */
 
 const buttonBase =
-  'group/btn relative inline-flex items-center justify-center gap-2.5 font-medium tracking-[0.01em] transition-[background-color,color,border-color,transform] duration-200 disabled:cursor-not-allowed disabled:opacity-45 active:translate-y-px'
+  'group/btn relative inline-flex items-center justify-center gap-2.5 rounded-row font-medium tracking-[0.01em] transition-[background-color,color,border-color,transform] duration-200 disabled:cursor-not-allowed disabled:opacity-45 active:translate-y-px'
 
 const buttonSizes = {
   sm: 'px-4 py-2 text-[0.8125rem]',
