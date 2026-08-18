@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Rule, cx } from '../ui.jsx'
 import { Field, TextInput } from '../form.jsx'
-import { AlertIcon, FileIcon, HeadsetIcon, SpinnerIcon } from '../icons.jsx'
+import { AlertIcon, CheckIcon, FileIcon, HeadsetIcon, SpinnerIcon } from '../icons.jsx'
 import {
   setOrderStatus,
   setOrderTotal,
@@ -78,18 +78,25 @@ const STATUS_LABEL = {
 const MOVE_LABEL = { approved: 'Confirmed on the call', paid: 'Confirm payment received' }
 
 /**
- * Opens the customer's payment proof.
+ * Shows the customer's payment proof inline, so an admin can check it against
+ * the order without leaving the page.
  *
- * The link is minted on demand rather than stored: the bucket is private and
+ * The URL is minted on demand rather than stored: the bucket is private and
  * the signature lasts five minutes, so a URL that ends up in a chat log or a
  * browser history is not a standing key to somebody's bank screenshot. It is
- * the same arrangement verification documents use.
+ * the same arrangement verification documents use. Toggling closed and back
+ * open re-fetches rather than reusing the old URL, since it may have expired.
  */
 function ProofLink({ orderId }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [url, setUrl] = useState(null)
 
-  const open = async () => {
+  const toggle = async () => {
+    if (url) {
+      setUrl(null)
+      return
+    }
     setBusy(true)
     setError(null)
     const result = await getPaymentProofUrl(orderId)
@@ -99,16 +106,21 @@ function ProofLink({ orderId }) {
       setError(result.error)
       return
     }
-    window.open(result.data, '_blank', 'noopener,noreferrer')
+    setUrl(result.data)
   }
 
   return (
     <>
-      <Button variant="outline" onClick={open} disabled={busy}>
+      <Button variant="outline" onClick={toggle} disabled={busy}>
         {busy ? <SpinnerIcon className="h-4 w-4" /> : <FileIcon className="h-4 w-4" />}
-        {busy ? 'Opening…' : 'View payment proof'}
+        {busy ? 'Opening…' : url ? 'Hide payment proof' : 'View payment proof'}
       </Button>
       {error && <span className="text-hot-600 text-xs">{error}</span>}
+      {url && (
+        <div className="border-rule bg-sheet/60 mt-3 w-full border p-3">
+          <img src={url} alt="Customer's payment proof" className="max-h-[32rem] w-auto max-w-full object-contain" />
+        </div>
+      )}
     </>
   )
 }
@@ -445,7 +457,15 @@ function Order({ order, onChanged }) {
           </p>
         </div>
         <div className="text-right">
-          <StatusChip status={order.status} />
+          <div className="flex items-center justify-end gap-2">
+            {order.status === 'approved' && order.payment_proof_path && (
+              <span className="label border-cool-600/45 bg-cool-600/[0.07] text-cool-700 inline-flex items-center gap-1 border px-2 py-1">
+                <CheckIcon className="h-3 w-3" />
+                Proof received
+              </span>
+            )}
+            <StatusChip status={order.status} />
+          </div>
           <p className="text-ink-soft mt-2 text-xs">{when(order.created_at)}</p>
         </div>
       </div>
