@@ -75,7 +75,11 @@ const STATUS_LABEL = {
 /** The button copy for moving *to* this status — "Confirm payment received"
  *  reads correctly whether the money was GCash, QR Ph or a bank transfer
  *  read off a statement, so it is not worded around any one method. */
-const MOVE_LABEL = { approved: 'Confirmed on the call', paid: 'Confirm payment received' }
+const MOVE_LABEL = {
+  approved: 'Confirmed on the call',
+  paid: 'Confirm payment received',
+  completed: 'Close without confirmation',
+}
 
 /**
  * Shows the customer's payment proof inline, so an admin can check it against
@@ -551,28 +555,53 @@ function Order({ order, onChanged }) {
       <Rule className="my-6" />
       <NotesEditor order={order} onChanged={onChanged} />
 
-      {/* Proof that it arrived, sitting in the body rather than the control row
-          below. A confirmed delivery is always a completed order, completed has
-          no next status, and the control row does not render without one — so
-          down there this is invisible at exactly the moment it is the thing
-          somebody came to check. It is a record, not a control, and it stays
-          readable for as long as the order does. */}
-      {order.delivery_proof_path && (
+      {/* Proof that it arrived, in the body rather than the control row below.
+          A completed order has no next status, so that row does not render at
+          all — down there this would be invisible at exactly the moment
+          somebody came to check it.
+
+          It renders on every shipped and completed order, including the ones
+          with nothing to show. "Closed, no photo" and "closed, here is the
+          photo" are different facts about an order, and an admin who only ever
+          sees the second cannot tell which of the two they are looking at. */}
+      {(order.status === 'shipped' || order.status === 'completed') && (
         <>
           <Rule className="my-6" />
-          <div className="border-cool-600/45 bg-cool-600/[0.06] flex flex-wrap items-center gap-x-4 gap-y-3 border px-4 py-3.5">
-            <div className="min-w-0 flex-1">
+          <p className="label text-ink-soft mb-2">Proof of delivery</p>
+
+          {order.delivery_proof_path ? (
+            <div className="border-cool-600/45 bg-cool-600/[0.06] flex flex-wrap items-center gap-x-4 gap-y-3 border px-4 py-3.5">
+              <div className="min-w-0 flex-1">
+                <p className="text-ink flex items-center gap-2 text-sm font-medium">
+                  <CheckIcon className="text-cool-600 h-4 w-4 shrink-0" />
+                  Customer confirmed delivery
+                </p>
+                <p className="text-ink-soft mt-1.5 text-xs leading-relaxed">
+                  Received {when(order.delivery_confirmed_at)} — they pressed Received and attached a photo of what
+                  turned up.
+                </p>
+              </div>
+              <ProofLink orderId={order.id} kind="delivery" />
+            </div>
+          ) : order.status === 'completed' ? (
+            <div className="border-hot-400/50 bg-hot-600/[0.05] border px-4 py-3.5">
               <p className="text-ink flex items-center gap-2 text-sm font-medium">
-                <CheckIcon className="text-cool-600 h-4 w-4 shrink-0" />
-                Customer confirmed delivery
+                <AlertIcon className="text-hot-600 h-4 w-4 shrink-0" />
+                Closed without customer confirmation
               </p>
               <p className="text-ink-soft mt-1.5 text-xs leading-relaxed">
-                Received {when(order.delivery_confirmed_at)} — they pressed Received and attached a photo of what
-                turned up.
+                This order was marked completed from this panel, so there is no photo and nothing on record saying
+                the customer ever received it. Only the customer pressing Received attaches one.
               </p>
             </div>
-            <ProofLink orderId={order.id} kind="delivery" />
-          </div>
+          ) : (
+            <div className="border-rule bg-sheet/60 border px-4 py-3.5">
+              <p className="text-ink-soft text-xs leading-relaxed">
+                Waiting for the customer to press Received and attach a photo. That is what closes the order and puts
+                the proof here.
+              </p>
+            </div>
+          )}
         </>
       )}
 
