@@ -5,7 +5,7 @@ import { cx } from './ui.jsx'
 import { AlertIcon, ChevronDownIcon, CheckIcon, EyeIcon, EyeOffIcon } from './icons.jsx'
 
 const controlBase =
-  'w-full bg-glare border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft transition-colors duration-200 outline-none'
+  'w-full bg-glare rounded-row border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft transition-colors duration-200 outline-none'
 
 /**
  * Focus resolves toward ink rather than the cool pole. Cool means verified

@@ -121,6 +121,23 @@
   --container-page: 74rem;
   --container-measure: 34rem;
 
+  /* Geometry.
+
+     The hero set this vocabulary and the rest of the page was still square,
+     so the two halves read as different sites. Three steps, scaled to what
+     the shape holds rather than picked per component:
+
+       panel  a surface you put things on — a card, a quote, a large CTA
+       card   something inset inside one — a dropdown, a nested panel
+       row    a single line of content — a menu item, an input, a chip
+
+     Named rather than literal so the scale can be re-tuned in one place; the
+     old square geometry is still reachable as `rounded-none` where a shape
+     genuinely wants a corner. */
+  --radius-panel: 1.75rem;
+  --radius-card: 1.25rem;
+  --radius-row: 0.875rem;
+
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }

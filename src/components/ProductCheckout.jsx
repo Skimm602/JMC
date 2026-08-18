@@ -168,7 +168,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
 
   if (!signedIn) {
     return (
-      <div className="border-rule bg-glare border p-6 sm:p-8">
+      <div className="border-rule bg-glare rounded-panel border p-6 sm:p-8">
         <p className="label text-ink-soft">Price</p>
         <p className="text-ink text-display-3 mt-2 font-mono font-semibold tabular-nums">
           {formatPeso(Number(product.retail_price))}
@@ -201,7 +201,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
 
   if (step === 'placed') {
     return (
-      <div className="border-cool-600/40 bg-cool-600/[0.05] animate-reveal border p-6 sm:p-8">
+      <div className="border-cool-600/40 bg-cool-600/[0.05] animate-reveal rounded-panel border p-6 sm:p-8">
         <p className="text-ink flex items-center gap-2.5 font-medium">
           <CheckIcon className="text-cool-600 h-5 w-5 shrink-0" strokeWidth={2.4} />
           Order placed
@@ -240,7 +240,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
 
   if (step === 'summary') {
     return (
-      <form onSubmit={place} className="border-rule bg-glare animate-reveal border p-6 sm:p-8">
+      <form onSubmit={place} className="border-rule bg-glare animate-reveal rounded-panel border p-6 sm:p-8">
         <p className="label text-ink-soft">Step 2 of 2</p>
         <h2 className="display-wide text-ink mt-2 text-xl font-semibold">What you are paying</h2>
 
@@ -346,7 +346,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
   /* -------------------------------- address -------------------------------- */
 
   return (
-    <form onSubmit={review} className="border-rule bg-glare border p-6 sm:p-8">
+    <form onSubmit={review} className="border-rule bg-glare rounded-panel border p-6 sm:p-8">
       <NoRefundsDialog
         open={refundWarningOpen}
         onConfirm={() => {

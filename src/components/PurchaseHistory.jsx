@@ -70,7 +70,7 @@ const METHOD = { gcash: 'GCash', qr_ph: 'QR Ph', pesonet: 'PesoNet' }
 function Stage({ status }) {
   const stage = STAGE[status] ?? { label: status, tone: 'neutral' }
   return (
-    <span className={cx('label inline-flex items-center border px-2 py-1', TONE[stage.tone])}>{stage.label}</span>
+    <span className={cx('label inline-flex items-center rounded-full border px-2 py-1', TONE[stage.tone])}>{stage.label}</span>
   )
 }
 
@@ -81,7 +81,7 @@ function Order({ order }) {
   const count = items.reduce((n, i) => n + i.quantity, 0)
 
   return (
-    <article className="border-rule bg-glare border p-6 sm:p-8">
+    <article className="border-rule bg-glare rounded-panel border p-6 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="label text-ink-soft">Ordered {when(order.created_at)}</p>

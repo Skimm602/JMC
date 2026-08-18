@@ -118,8 +118,8 @@ const SECTIONS = [
  */
 function Question({ q, a }) {
   return (
-    <details className="group border-rule border-b">
-      <summary className="text-ink hover:text-cool-600 flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-[0.9375rem] font-medium transition-colors [&::-webkit-details-marker]:hidden">
+    <details className="group border-rule bg-glare rounded-row mb-2 border px-4 open:shadow-[0_1px_0_0_rgba(11,31,56,0.04)]">
+      <summary className="text-ink hover:text-cool-600 flex cursor-pointer list-none items-start justify-between gap-6 py-4 text-[0.9375rem] font-medium transition-colors [&::-webkit-details-marker]:hidden">
         {q}
         <ChevronDownIcon
           aria-hidden="true"
@@ -163,7 +163,7 @@ export default function FaqsPage() {
                 <Eyebrow>{section.eyebrow}</Eyebrow>
                 <h2 className="display-wide text-display-3 text-ink mt-4 font-semibold">{section.heading}</h2>
 
-                <div className="border-rule mt-8 border-t">
+                <div className="mt-8">
                   {section.questions.map((question) => (
                     <Question key={question.q} {...question} />
                   ))}

@@ -65,7 +65,7 @@ export default async function ProductsPage() {
           {error ? (
             <p
               role="alert"
-              className="border-hot-600/40 bg-hot-600/[0.06] text-ink mt-10 flex items-start gap-2.5 border px-3.5 py-3 text-sm leading-relaxed"
+              className="border-hot-600/40 bg-hot-600/[0.06] text-ink rounded-row mt-10 flex items-start gap-2.5 border px-3.5 py-3 text-sm leading-relaxed"
             >
               <AlertIcon className="text-hot-600 mt-0.5 h-4 w-4 shrink-0" />
               The catalogue could not be loaded: {error}
