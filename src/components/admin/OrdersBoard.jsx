@@ -55,7 +55,7 @@ const NEXT_STATUSES = {
   pending_bank_transfer: ['approved', 'cancelled'],
   approved: ['paid', 'cancelled'],
   paid: ['processing', 'shipped', 'completed', 'cancelled'],
-  processing: ['shipped', 'completed', 'cancelled'],
+  processing: ['shipped', 'cancelled'],
   shipped: ['completed', 'cancelled'],
   completed: [],
   cancelled: [],
@@ -436,11 +436,27 @@ function Order({ order, onChanged }) {
     setStatus(nextStatus)
     setError('')
     const result = await setOrderStatus(order.id, nextStatus)
-    setStatus('idle')
     if (result?.error) {
+      setStatus('idle')
       setError(result.error)
       return
     }
+
+    // Confirming payment folds two DB transitions into one click: approved ->
+    // paid (which is what actually deducts stock, in admin_set_order_status)
+    // immediately followed by paid -> processing, so the order lands where
+    // fulfilment begins rather than sitting in "paid" — a status the board no
+    // longer has a tab for.
+    if (order.status === 'approved' && nextStatus === 'paid') {
+      const advance = await setOrderStatus(order.id, 'processing')
+      if (advance?.error) {
+        setStatus('idle')
+        setError(advance.error)
+        return
+      }
+    }
+
+    setStatus('idle')
     onChanged()
   }
 
@@ -604,9 +620,8 @@ function Order({ order, onChanged }) {
 /* --------------------------------- screen --------------------------------- */
 
 const FILTERS = [
-  { id: 'pending', label: 'Awaiting payment' },
+  { id: 'pending', label: 'Awaiting confirmation' },
   { id: 'approved', label: 'Awaiting proof of payment' },
-  { id: 'paid', label: 'Awaiting fulfilment' },
   { id: 'processing', label: 'Processing' },
   { id: 'shipped', label: 'Shipped' },
   { id: 'completed', label: 'Completed' },
@@ -663,12 +678,10 @@ export default function OrdersBoard({ orders }) {
             <FileIcon className="text-hush h-8 w-8" />
             <p className="text-ink mt-5 font-medium">
               {filter === 'pending'
-                ? 'Nothing awaiting payment'
+                ? 'Nothing awaiting confirmation'
                 : filter === 'approved'
                   ? 'Nothing awaiting proof of payment'
-                  : filter === 'paid'
-                    ? 'Nothing awaiting fulfilment'
-                    : 'Nothing here'}
+                  : 'Nothing here'}
             </p>
             <p className="text-ink-soft max-w-measure mt-2 text-sm leading-relaxed">
               {orders.length === 0
