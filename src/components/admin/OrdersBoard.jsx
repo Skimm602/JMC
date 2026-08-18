@@ -551,6 +551,31 @@ function Order({ order, onChanged }) {
       <Rule className="my-6" />
       <NotesEditor order={order} onChanged={onChanged} />
 
+      {/* Proof that it arrived, sitting in the body rather than the control row
+          below. A confirmed delivery is always a completed order, completed has
+          no next status, and the control row does not render without one — so
+          down there this is invisible at exactly the moment it is the thing
+          somebody came to check. It is a record, not a control, and it stays
+          readable for as long as the order does. */}
+      {order.delivery_proof_path && (
+        <>
+          <Rule className="my-6" />
+          <div className="border-cool-600/45 bg-cool-600/[0.06] flex flex-wrap items-center gap-x-4 gap-y-3 border px-4 py-3.5">
+            <div className="min-w-0 flex-1">
+              <p className="text-ink flex items-center gap-2 text-sm font-medium">
+                <CheckIcon className="text-cool-600 h-4 w-4 shrink-0" />
+                Customer confirmed delivery
+              </p>
+              <p className="text-ink-soft mt-1.5 text-xs leading-relaxed">
+                Received {when(order.delivery_confirmed_at)} — they pressed Received and attached a photo of what
+                turned up.
+              </p>
+            </div>
+            <ProofLink orderId={order.id} kind="delivery" />
+          </div>
+        </>
+      )}
+
       {error && (
         <p
           role="alert"
@@ -599,7 +624,6 @@ function Order({ order, onChanged }) {
               </Button>
             )}
             {order.payment_proof_path && <ProofLink orderId={order.id} />}
-            {order.delivery_proof_path && <ProofLink orderId={order.id} kind="delivery" />}
             <Button variant="ghost" onClick={() => move('cancelled')} disabled={busy}>
               {status === 'cancelled' ? 'Cancelling…' : 'Cancel order'}
             </Button>
