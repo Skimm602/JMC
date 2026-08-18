@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createGatewayCheckout } from '@/app/actions/checkout'
+import { createOrder } from '@/app/actions/checkout'
 import { clearCart, removeFromCart, updateCartItem } from '@/app/actions/cart'
 import { formatPeso, VAT_RATE } from '@/utils/pricing'
 import NoRefundsDialog from './NoRefundsDialog.jsx'
-import { Checkbox, Field, Select, TextInput } from './form.jsx'
+import { Checkbox, Field, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
 import { AlertIcon, ArrowRightIcon, CheckIcon, FileIcon, SpinnerIcon, XIcon } from './icons.jsx'
 
@@ -25,16 +25,11 @@ import { AlertIcon, ArrowRightIcon, CheckIcon, FileIcon, SpinnerIcon, XIcon } fr
  * rather than keeping a second copy of the cart in state — the row a button
  * is on is the only thing that needs to know it is mid-request.
  *
- * createGatewayCheckout() re-reads and re-prices every line itself before it
+ * createOrder() re-reads and re-prices every line itself before it
  * writes anything, the same as the single-product flow, so nothing pulled
  * from `data` here is trusted further than drawing the screen.
  */
 
-const PAYMENT_METHODS = [
-  { value: 'gcash', label: 'GCash' },
-  { value: 'qr_ph', label: 'QR Ph' },
-  { value: 'pesonet', label: 'PesoNet bank transfer' },
-]
 
 const EMPTY_ADDRESS = { streetAddress: '', city: '', province: '', postalCode: '' }
 
@@ -77,7 +72,6 @@ export default function CartView({ data, signedIn }) {
 
   const [step, setStep] = useState('cart')
   const [address, setAddress] = useState(EMPTY_ADDRESS)
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].value)
   const [agreed, setAgreed] = useState(false)
   const [agreementError, setAgreementError] = useState(null)
   const [error, setError] = useState(null)
@@ -140,12 +134,14 @@ export default function CartView({ data, signedIn }) {
     setError(null)
     setPending(true)
 
-    const result = await createGatewayCheckout({
-      items: items.map((item) => ({ productId: item.product.id, quantity: item.quantity })),
-      paymentMethod,
-      shipping: address,
-      acceptedTerms: true,
-    })
+    // FormData rather than a plain object: a File cannot cross a
+    // server-action boundary inside JSON.
+    const payload = new FormData()
+    payload.set('items', JSON.stringify(items.map((item) => ({ productId: item.product.id, quantity: item.quantity }))))
+    payload.set('shipping', JSON.stringify(address))
+    payload.set('acceptedTerms', 'true')
+
+    const result = await createOrder(payload)
 
     if (result?.error) {
       setPending(false)
@@ -195,7 +191,7 @@ export default function CartView({ data, signedIn }) {
 
         <p className="text-ink-soft mt-4 text-sm leading-relaxed">
           Going to {address.city}, {address.province}. It stays unpaid until the{' '}
-          {PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label} payment lands, and nothing leaves the
+          team has called to confirm it and the payment has cleared, and nothing leaves the
           warehouse before then.
         </p>
 
@@ -268,12 +264,10 @@ export default function CartView({ data, signedIn }) {
             <br />
             {address.city}, {address.province} {address.postalCode}
           </address>
-          <p className="text-ink-soft mt-3 text-xs">
-            Paying by {PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label}
-          </p>
         </div>
 
         <Rule className="my-6" />
+
 
         <Checkbox
           tone="hot"
@@ -486,18 +480,6 @@ export default function CartView({ data, signedIn }) {
                 value={address.postalCode}
                 onChange={set('postalCode')}
               />
-            )}
-          </Field>
-
-          <Field label="Payment method" required>
-            {(p) => (
-              <Select {...p} value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                {PAYMENT_METHODS.map((method) => (
-                  <option key={method.value} value={method.value}>
-                    {method.label}
-                  </option>
-                ))}
-              </Select>
             )}
           </Field>
         </div>

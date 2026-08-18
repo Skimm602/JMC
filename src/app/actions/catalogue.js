@@ -73,7 +73,7 @@ async function readPricingContext(supabase) {
  * that.
  *
  * A discontinued product is filtered out here rather than greyed out, and
- * createGatewayCheckout() applies the same filter independently, so a stale
+ * createOrder() applies the same filter independently, so a stale
  * tab cannot order something that has since been pulled.
  */
 export async function getStorefront() {

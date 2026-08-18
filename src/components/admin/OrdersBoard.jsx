@@ -6,6 +6,7 @@ import { Button, Rule, cx } from '../ui.jsx'
 import { Field, TextInput } from '../form.jsx'
 import { AlertIcon, FileIcon, SpinnerIcon } from '../icons.jsx'
 import { setOrderStatus, updateOrderAddress, updateOrderNotes, updateOrderTracking } from '@/app/actions/orders'
+import { getPaymentProofUrl } from '@/app/actions/checkout'
 
 const when = (iso) =>
   iso
@@ -22,6 +23,7 @@ const peso = (n) =>
   n == null ? '—' : new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(n))
 
 const STATUS_TONE = {
+  approved: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
   pending: 'border-rule-strong bg-sheet text-ink-soft',
   pending_bank_transfer: 'border-rule-strong bg-sheet text-ink-soft',
   paid: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
@@ -40,8 +42,12 @@ const STATUS_TONE = {
  * admin_set_order_status() in supabase-admin-order-management.sql.
  */
 const NEXT_STATUSES = {
-  pending: ['paid', 'cancelled'],
-  pending_bank_transfer: ['paid', 'cancelled'],
+  // A pending order is approved, never paid directly: the confirmation call
+  // is the step between them, and skipping it here would let the back office
+  // do exactly what the flow exists to prevent.
+  pending: ['approved', 'cancelled'],
+  pending_bank_transfer: ['approved', 'cancelled'],
+  approved: ['paid', 'cancelled'],
   paid: ['processing', 'shipped', 'completed', 'cancelled'],
   processing: ['shipped', 'completed', 'cancelled'],
   shipped: ['completed', 'cancelled'],
@@ -50,8 +56,9 @@ const NEXT_STATUSES = {
 }
 
 const STATUS_LABEL = {
-  pending: 'pending',
+  pending: 'awaiting call',
   pending_bank_transfer: 'pending (bank transfer)',
+  approved: 'approved — awaiting payment',
   paid: 'paid',
   processing: 'processing',
   shipped: 'shipped',
@@ -62,7 +69,43 @@ const STATUS_LABEL = {
 /** The button copy for moving *to* this status — "Confirm payment received"
  *  reads correctly whether the money was GCash, QR Ph or a bank transfer
  *  read off a statement, so it is not worded around any one method. */
-const MOVE_LABEL = { paid: 'Confirm payment received' }
+const MOVE_LABEL = { approved: 'Confirmed on the call', paid: 'Confirm payment received' }
+
+/**
+ * Opens the customer's payment proof.
+ *
+ * The link is minted on demand rather than stored: the bucket is private and
+ * the signature lasts five minutes, so a URL that ends up in a chat log or a
+ * browser history is not a standing key to somebody's bank screenshot. It is
+ * the same arrangement verification documents use.
+ */
+function ProofLink({ orderId }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const open = async () => {
+    setBusy(true)
+    setError(null)
+    const result = await getPaymentProofUrl(orderId)
+    setBusy(false)
+
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    window.open(result.data, '_blank', 'noopener,noreferrer')
+  }
+
+  return (
+    <>
+      <Button variant="outline" onClick={open} disabled={busy}>
+        {busy ? <SpinnerIcon className="h-4 w-4" /> : <FileIcon className="h-4 w-4" />}
+        {busy ? 'Opening…' : 'View payment proof'}
+      </Button>
+      {error && <span className="text-hot-600 text-xs">{error}</span>}
+    </>
+  )
+}
 
 function StatusChip({ status }) {
   return (
@@ -429,9 +472,15 @@ function Order({ order, onChanged }) {
                   )}
                 </Button>
               ))}
+            {order.payment_proof_path && <ProofLink orderId={order.id} />}
             <Button variant="ghost" onClick={() => move('cancelled')} disabled={busy}>
               {status === 'cancelled' ? 'Cancelling…' : 'Cancel order'}
             </Button>
+            {order.status === 'approved' && !order.payment_proof_path && (
+              <p className="text-ink-soft ml-auto text-xs">
+                Nothing attached yet — the customer has not sent proof of payment.
+              </p>
+            )}
             {order.status === 'paid' && (
               <p className="text-ink-soft ml-auto text-xs">Moving this off "paid" takes its quantities out of stock.</p>
             )}

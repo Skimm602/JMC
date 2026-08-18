@@ -3,11 +3,11 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createGatewayCheckout } from '@/app/actions/checkout'
+import { createOrder } from '@/app/actions/checkout'
 import { addToCart } from '@/app/actions/cart'
 import { formatPeso, isPriced, quote, VAT_RATE } from '@/utils/pricing'
 import NoRefundsDialog from './NoRefundsDialog.jsx'
-import { Checkbox, Field, Select, TextInput } from './form.jsx'
+import { Checkbox, Field, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
 import { AlertIcon, ArrowRightIcon, CartIcon, CheckIcon, SpinnerIcon } from './icons.jsx'
 
@@ -25,18 +25,9 @@ import { AlertIcon, ArrowRightIcon, CartIcon, CheckIcon, SpinnerIcon } from './i
  * right up to that point.
  *
  * Every figure shown here is computed by @/utils/pricing, which is the same
- * module createGatewayCheckout() runs server-side against the database's own
+ * module createOrder() runs server-side against the database's own
  * prices. This screen cannot set a price; it can only predict one.
  */
-
-/** Mirrors GATEWAY_PAYMENT_METHODS in @/utils/payments/gateway. */
-const PAYMENT_METHODS = [
-  { value: 'gcash', label: 'GCash' },
-  { value: 'qr_ph', label: 'QR Ph' },
-  { value: 'pesonet', label: 'PesoNet bank transfer' },
-]
-
-const EMPTY_ADDRESS = { streetAddress: '', city: '', province: '', postalCode: '' }
 
 /* --------------------------------- pieces --------------------------------- */
 
@@ -113,8 +104,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
 
   const [step, setStep] = useState('address')
   const [quantity, setQuantity] = useState(1)
-  const [address, setAddress] = useState(EMPTY_ADDRESS)
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].value)
+  const [address, setAddress] = useState({ streetAddress: '', city: '', province: '', postalCode: '' })
   const [agreed, setAgreed] = useState(false)
   const [agreementError, setAgreementError] = useState(null)
   const [error, setError] = useState(null)
@@ -131,11 +121,6 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
     () => quote({ lines: [{ product, quantity }], isInstaller }),
     [product, quantity, isInstaller],
   )
-
-  // After every hook, never before one: this component's state is declared
-  // unconditionally so that a product gaining a price mid-session does not
-  // change the order of the hooks React is tracking.
-  if (!isPriced(product)) return <QuotePanel product={product} />
 
   const set = (key) => (event) => setAddress((current) => ({ ...current, [key]: event.target.value }))
 
@@ -177,12 +162,14 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
     setError(null)
     setPending(true)
 
-    const result = await createGatewayCheckout({
-      items: [{ productId: product.id, quantity }],
-      paymentMethod,
-      shipping: address,
-      acceptedTerms: true,
-    })
+    // FormData rather than a plain object: a File cannot cross a server-action
+    // boundary inside JSON.
+    const data = new FormData()
+    data.set('items', JSON.stringify([{ productId: product.id, quantity }]))
+    data.set('shipping', JSON.stringify(address))
+    data.set('acceptedTerms', 'true')
+
+    const result = await createOrder(data)
 
     setPending(false)
 
@@ -230,6 +217,8 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
     )
   }
 
+  if (!isPriced(product)) return <QuotePanel product={product} />
+
   /* --------------------------------- placed -------------------------------- */
 
   if (step === 'placed') {
@@ -241,9 +230,9 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
         </p>
 
         <p className="text-ink-soft mt-4 text-sm leading-relaxed">
-          {quantity} × {product.name}, going to {address.city}, {address.province}. It stays unpaid until the{' '}
-          {PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label} payment lands, and nothing leaves the
-          warehouse before then.
+          {quantity} × {product.name}, going to {address.city}, {address.province}. Somebody from VIP will call you
+          to confirm the details before anything is charged — sizing, installation and delivery. Payment comes after
+          that call, and nothing leaves the warehouse until it clears.
         </p>
 
         <Rule className="my-6" />
@@ -308,12 +297,10 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
             <br />
             {address.city}, {address.province} {address.postalCode}
           </address>
-          <p className="text-ink-soft mt-3 text-xs">
-            Paying by {PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label}
-          </p>
         </div>
 
         <Rule className="my-6" />
+
 
         {/* tone="hot" is reserved on this site for the control that changes
             what is being agreed to, and this is that control. */}
@@ -469,17 +456,6 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
               )}
             </Field>
 
-            <Field label="Payment method" required>
-              {(p) => (
-                <Select {...p} value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                  {PAYMENT_METHODS.map((method) => (
-                    <option key={method.value} value={method.value}>
-                      {method.label}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </Field>
           </div>
 
           {stock != null && quantity > stock && (

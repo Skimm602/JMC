@@ -21,7 +21,7 @@ export async function getMyOrders() {
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id, status, payment_method, payment_reference, total, created_at, paid_at, order_items(id, quantity, price_at_purchase, products(id, name, image_url))',
+      'id, status, payment_method, payment_reference, total, created_at, paid_at, approved_at, payment_proof_uploaded_at, order_items(id, quantity, price_at_purchase, products(id, name, image_url))',
     )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
