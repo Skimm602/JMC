@@ -585,6 +585,7 @@ function Order({ order, onChanged }) {
 
 const FILTERS = [
   { id: 'pending', label: 'Awaiting payment' },
+  { id: 'approved', label: 'Awaiting proof of payment' },
   { id: 'paid', label: 'Awaiting fulfilment' },
   { id: 'processing', label: 'Processing' },
   { id: 'shipped', label: 'Shipped' },
@@ -641,7 +642,13 @@ export default function OrdersBoard({ orders }) {
           <div className="border-rule bg-glare flex flex-col items-center border border-dashed px-6 py-20 text-center">
             <FileIcon className="text-hush h-8 w-8" />
             <p className="text-ink mt-5 font-medium">
-              {filter === 'pending' ? 'Nothing awaiting payment' : filter === 'paid' ? 'Nothing awaiting fulfilment' : 'Nothing here'}
+              {filter === 'pending'
+                ? 'Nothing awaiting payment'
+                : filter === 'approved'
+                  ? 'Nothing awaiting proof of payment'
+                  : filter === 'paid'
+                    ? 'Nothing awaiting fulfilment'
+                    : 'Nothing here'}
             </p>
             <p className="text-ink-soft max-w-measure mt-2 text-sm leading-relaxed">
               {orders.length === 0
