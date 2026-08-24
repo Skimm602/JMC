@@ -119,6 +119,108 @@ export function computeOverview(orders, products) {
 }
 
 /**
+ * Site traffic. Rows arrive from admin_page_view_daily() already aggregated —
+ * one per day that had anybody on it, carrying a Manila date, a visitor count
+ * and a page-view count. This turns that sparse list into the two series the
+ * traffic section draws.
+ */
+
+/** The daily chart's window. Thirty days is as many bars as fit at chart
+    width while each still reads as its own day rather than a texture. */
+export const TRAFFIC_DAYS = 30
+
+/** Manila's date, wherever this runs. Vercel's servers keep UTC, so asking
+    the host what day it is would roll "today" over at eight in the morning. */
+const manilaToday = () =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date())
+
+/** 'YYYY-MM-DD' to a Date at local midnight. new Date(iso) reads a bare date
+    as UTC and lands on the day before for everyone east of Greenwich, which
+    is every visitor this site has. */
+function parseDay(iso) {
+  const [year, month, day] = iso.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+const dayKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+/**
+ * computeTraffic(rows, { days, months })
+ *
+ * The traffic section's data: a bar per day for the last month, a total per
+ * month for the last year, and the few figures worth reading at a glance.
+ */
+export function computeTraffic(rows, { days = TRAFFIC_DAYS, months = 12 } = {}) {
+  const byDay = new Map(
+    (rows ?? []).map((r) => [
+      r.viewed_on,
+      { visitors: Number(r.visitors ?? 0), views: Number(r.views ?? 0) },
+    ]),
+  )
+
+  const today = parseDay(manilaToday())
+
+  // Every day in the window, quiet ones included. A missing bar reads as "no
+  // data"; a zero-height one reads as "nobody came", and only the second is
+  // what an empty day means.
+  const daily = Array.from({ length: days }, (_, i) => {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1 - i))
+    const found = byDay.get(dayKey(date)) ?? { visitors: 0, views: 0 }
+    return {
+      key: dayKey(date),
+      label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      tickLabel: String(date.getDate()),
+      visitors: found.visitors,
+      views: found.views,
+    }
+  })
+
+  // Monthly totals sum the daily counts, so somebody who came back on three
+  // separate days counts three times. That is deliberate, and it is the only
+  // total these rows can honestly produce: recognising one person across a
+  // whole month would mean keeping something that identifies them for a
+  // month, which is the thing page_views is built not to do.
+  const buckets = new Map()
+  for (const [iso, value] of byDay) {
+    const key = iso.slice(0, 7)
+    const entry = buckets.get(key) ?? { visitors: 0, views: 0 }
+    entry.visitors += value.visitors
+    entry.views += value.views
+    buckets.set(key, entry)
+  }
+
+  const monthly = Array.from({ length: months }, (_, i) => {
+    const d = new Date(today.getFullYear(), today.getMonth() - (months - 1 - i), 1)
+    const found = buckets.get(monthKey(d)) ?? { visitors: 0, views: 0 }
+    return {
+      key: monthKey(d),
+      label: monthLabel(d),
+      tickLabel: monthLabel(d).split(' ')[0],
+      visitors: found.visitors,
+      views: found.views,
+    }
+  })
+
+  const currentMonth = monthly[monthly.length - 1]
+  const todayRow = daily[daily.length - 1]
+  const busiest = daily.reduce((best, d) => (d.visitors > best.visitors ? d : best), daily[0])
+
+  return {
+    daily,
+    monthly,
+    totals: {
+      today: todayRow.visitors,
+      thisMonth: currentMonth.visitors,
+      thisMonthViews: currentMonth.views,
+      thisMonthLabel: currentMonth.label,
+      busiest,
+      windowVisitors: daily.reduce((sum, d) => sum + d.visitors, 0),
+    },
+  }
+}
+
+/**
  * computeReport(orders, products, { period, year, month })
  *
  * period: 'monthly' (needs `year` and `month`, 1-12) or 'yearly' (needs `year`).

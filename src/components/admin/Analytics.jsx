@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react'
 import { Button, cx } from '../ui.jsx'
 import { Select } from '../form.jsx'
-import { AlertIcon, ChartIcon, DownloadIcon, TableIcon } from '../icons.jsx'
+import { AlertIcon, ChartIcon, DownloadIcon, InfoIcon, TableIcon } from '../icons.jsx'
 import RevenueChart from './charts/RevenueChart.jsx'
 import RankedBars from './charts/RankedBars.jsx'
+import TrafficChart from './charts/TrafficChart.jsx'
 
 /**
  * The analytics tab: revenue trend, top products and low stock, each
@@ -155,7 +156,147 @@ function ReportDownload() {
   )
 }
 
-export default function Analytics({ data }) {
+/** The counter's table is an install step, not a fault. An admin who lands
+    here before running it should read what to do, not a Postgres code. */
+function TrafficSetupNotice() {
+  return (
+    <section className="border-rule bg-glare border p-6">
+      <h2 className="text-ink text-lg font-semibold">Site traffic</h2>
+      <p className="text-ink-soft border-rule mt-4 flex items-start gap-2.5 border-l-2 pl-3.5 text-sm leading-relaxed">
+        <InfoIcon className="text-ink-soft mt-0.5 h-4 w-4 shrink-0" />
+        <span>
+          Visitor counting is not switched on yet. Run{' '}
+          <code className="text-ink font-mono text-xs">supabase-page-views.sql</code> in the Supabase SQL editor to
+          create the table, and this section starts filling in from the next visit onward.
+        </span>
+      </p>
+    </section>
+  )
+}
+
+/**
+ * Site traffic: a bar per day for the last month, a bar per month for the
+ * last year, and the running total for the month currently in progress.
+ *
+ * Visitors, not page views, is the headline figure in every tile — one person
+ * reading six pages is one visit, and counting it as six would flatter the
+ * number without telling anyone anything. Page views ride alongside in the
+ * tables and on hover, where the difference between the two is legible.
+ */
+function TrafficSections({ traffic }) {
+  const [dailyView, setDailyView] = useState('graph')
+  const [monthlyView, setMonthlyView] = useState('graph')
+
+  if (traffic?.notInstalled) return <TrafficSetupNotice />
+
+  if (traffic?.error) {
+    return (
+      <section className="border-rule bg-glare border p-6">
+        <h2 className="text-ink text-lg font-semibold">Site traffic</h2>
+        <p
+          role="alert"
+          className="border-hot-600/40 bg-hot-600/[0.06] text-ink mt-4 flex items-start gap-2.5 border px-3.5 py-3 text-sm leading-relaxed"
+        >
+          <AlertIcon className="text-hot-600 mt-0.5 h-4 w-4 shrink-0" />
+          {traffic.error}
+        </p>
+      </section>
+    )
+  }
+
+  if (!traffic?.data) return null
+
+  const { daily, monthly, totals } = traffic.data
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatTile label="Visitors today" value={totals.today} />
+        <StatTile label={`Visitors · ${totals.thisMonthLabel}`} value={totals.thisMonth} />
+        <StatTile label={`Page views · ${totals.thisMonthLabel}`} value={totals.thisMonthViews} />
+        <StatTile
+          label="Busiest day · last 30"
+          value={totals.busiest.visitors > 0 ? `${totals.busiest.visitors}` : '—'}
+        />
+      </div>
+
+      <Section
+        title="Visitors by day"
+        description="One bar per day for the last 30 days, on Manila dates. A visitor is counted once a day however many pages they open."
+        view={dailyView}
+        onViewChange={setDailyView}
+      >
+        {totals.windowVisitors === 0 ? (
+          <p className="text-ink-soft text-sm">No visits recorded yet in the last 30 days.</p>
+        ) : dailyView === 'graph' ? (
+          <TrafficChart points={daily} tickEvery={5} unit="day" />
+        ) : (
+          <div className="max-h-96 overflow-auto">
+            <table className="w-full min-w-[24rem] border-collapse text-left">
+              <thead>
+                <tr className="border-rule border-b">
+                  {['Day', 'Visitors', 'Page views'].map((h) => (
+                    <th key={h} className={cx('label text-ink-soft px-3 py-2 font-medium', h !== 'Day' && 'text-right')}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...daily].reverse().map((d) => (
+                  <tr key={d.key} className="border-rule border-b last:border-b-0">
+                    <td className="text-ink px-3 py-2 text-sm">{d.label}</td>
+                    <td className="text-ink px-3 py-2 text-right font-mono text-sm">{d.visitors}</td>
+                    <td className="text-ink-soft px-3 py-2 text-right font-mono text-xs">{d.views}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+
+      <Section
+        title="Visitors by month"
+        description="The last 12 months, totalled from the daily counts. Somebody who came back on three days counts three times — these are visits, not people."
+        view={monthlyView}
+        onViewChange={setMonthlyView}
+      >
+        {monthlyView === 'graph' ? (
+          <TrafficChart points={monthly} tickEvery={1} unit="month" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[24rem] border-collapse text-left">
+              <thead>
+                <tr className="border-rule border-b">
+                  {['Month', 'Visitors', 'Page views'].map((h) => (
+                    <th
+                      key={h}
+                      className={cx('label text-ink-soft px-3 py-2 font-medium', h !== 'Month' && 'text-right')}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...monthly].reverse().map((m) => (
+                  <tr key={m.key} className="border-rule border-b last:border-b-0">
+                    <td className="text-ink px-3 py-2 text-sm">{m.label}</td>
+                    <td className="text-ink px-3 py-2 text-right font-mono text-sm">{m.visitors}</td>
+                    <td className="text-ink-soft px-3 py-2 text-right font-mono text-xs">{m.views}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+    </>
+  )
+}
+
+export default function Analytics({ data, traffic }) {
   const [revenueView, setRevenueView] = useState('graph')
   const [productsView, setProductsView] = useState('graph')
   const [stockView, setStockView] = useState('table')
@@ -288,6 +429,8 @@ export default function Analytics({ data }) {
           </div>
         )}
       </Section>
+
+      <TrafficSections traffic={traffic} />
 
       <ReportDownload />
     </div>
