@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { createClient } from '@/utils/supabase/server'
 
 /**
@@ -9,13 +10,24 @@ import { createClient } from '@/utils/supabase/server'
  * function granted to anon (see supabase-orders-checkout.sql) rather than
  * an authenticated update.
  *
- * NOT PRODUCTION-SAFE YET: this trusts the request body as-is. Before
- * pointing a real provider at this route, verify its signed callback header
- * (Xendit's `x-callback-token`, Maya's checkout webhook secret, etc.) here,
- * before calling mark_order_paid — matching the reference-based guard
- * that function currently uses as its only check.
+ * Because that function's only other check is the payment reference, the
+ * route is gated on a shared secret and is off unless one is configured:
+ * with no PAYMENTS_WEBHOOK_SECRET set it answers 404, so a public
+ * deployment exposes nothing until a provider is actually wired up.
+ *
+ * When a real PSP is connected, replace the shared-secret check with that
+ * provider's own signed-callback verification (Xendit's `x-callback-token`,
+ * Maya's checkout webhook secret, ...).
  */
 export async function POST(request) {
+  const secret = process.env.PAYMENTS_WEBHOOK_SECRET
+  if (!secret) {
+    return Response.json({ error: 'Not found' }, { status: 404 })
+  }
+  if (!matchesSecret(request.headers.get('x-webhook-secret'), secret)) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   let body
   try {
     body = await request.json()
@@ -38,4 +50,16 @@ export async function POST(request) {
   if (!marked) return Response.json({ error: 'No matching pending order for that reference' }, { status: 404 })
 
   return Response.json({ success: true })
+}
+
+/**
+ * Constant-time header comparison, so a caller can't recover the secret one
+ * byte at a time by timing the rejection.
+ */
+function matchesSecret(provided, expected) {
+  if (!provided) return false
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
 }
