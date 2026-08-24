@@ -102,6 +102,146 @@ const FAMILIES = [
     datasheet: 'https://webfile.hyxipower.com/soft/20260416/HYX-E160-L_Datasheet_V1.0-20260123_EN.pdf',
     manual: 'https://webfile.hyxipower.com/soft/20260513/UM_HYX-E160-L_User-manual_V1.0-20260330_EN.pdf',
   },
+
+  /* ------------------------------------------------------------------------
+   * The second-source brands. Same rule as above: every figure is read off
+   * the manufacturer's own datasheet, and `models` names only the ratings the
+   * catalogue actually carries — not every rating the series is published in
+   * — so the menu never offers a unit the shop cannot quote.
+   * --------------------------------------------------------------------- */
+  {
+    id: 'lux-gen2-3-6k',
+    series: 'LuxpowerTek GEN2-LB-EU 3-6K',
+    models: 'GEN2-LB-EU 6K',
+    name: 'Low-voltage hybrid inverter',
+    tagline: 'Generator, smart load or AC coupling',
+    photo: '/products/luxpowertek-gen2-lb-eu-6k.webp',
+    copy: 'One dedicated port covers a generator, a smart load or AC coupling onto an existing grid-tie array, so a retrofit does not mean replacing what is already on the roof. Two MPPTs reach 9.6 kW, ten units run in parallel, and the transfer to backup is 7 ms.',
+    specs: [
+      ['Rated output', '6.0 kW'],
+      ['Max PV input', '9.6 kW'],
+      ['Battery voltage', '48 V · 40 – 60 V'],
+      ['Max charge / discharge', '125 / 140 A'],
+      ['MPPT', '2 × 1 string · 150 – 425 V'],
+      ['Max efficiency', '97.3 %'],
+      ['Switch time', '7 ms'],
+      ['Enclosure', 'IP66 · 25 kg'],
+      ['Warranty', '5 / 10 yr'],
+    ],
+    datasheet: 'https://luxpowertek.com/wp-content/uploads/2025/10/GEN2-LB-EU-3-6K-Datasheet.pdf',
+    manual:
+      'https://luxpowertek.com/wp-content/uploads/2025/12/LuxpowerTek-GEN2-LB-EU-3-6K-User-manual-ENGLISH-Hybrid-SINGLE-Phase-inverter.pdf',
+  },
+  {
+    id: 'lux-gen2-7-14k',
+    series: 'LuxpowerTek GEN2-LB-EU 7-14K',
+    models: 'GEN2-LB-EU 10K · GEN2-LB-EU 12K',
+    name: 'Low-voltage hybrid inverter',
+    tagline: 'Three MPPTs, 18 kW of array',
+    photo: '/products/luxpowertek-gen2-lb-eu-7-14k-front.webp',
+    copy: 'The larger GEN2 platform: three independent MPPTs carrying 18 kW of array, 250 A of battery current, and automatic generator control that will exercise and boost the set rather than only start it. Tariff-aware charging shifts the load to the cheap hours on its own.',
+    specs: [
+      ['Rated output', '10.0 / 12.0 kW'],
+      ['Max PV input', '18.0 kW'],
+      ['Battery voltage', '48 V · 40 – 60 V'],
+      ['Max charge / discharge', '147 – 250 A'],
+      ['MPPT', '3 × 1 string · 120 – 440 V'],
+      ['Switch time', '10 ms · 20 ms parallel'],
+      ['Parallel', 'Up to 10 units'],
+      ['Enclosure', 'IP66 · 47.5 kg'],
+      ['Warranty', '5 / 10 yr'],
+    ],
+    datasheet: 'https://luxpowertek.com/wp-content/uploads/2026/02/GEN2-LB-EU-7-14K-Datasheet20260206.pdf',
+    manual: 'https://luxpowertek.com/wp-content/uploads/2026/03/GEN2-LB-EU-7-14K-User-Manual-2025.7.1.pdf',
+  },
+  {
+    id: 'solis-s6-3-10k',
+    series: 'Solis S6-EH1P (3-10)K-L-PLUS',
+    models: 'S6-EH1P 6K · S6-EH1P 8K',
+    name: 'Low-voltage hybrid inverter',
+    tagline: 'Runs on any 40 – 60 V battery',
+    photo: '/products/solis-s6-eh1p-3-10k-l-plus.png',
+    copy: 'Battery-agnostic across the whole 40 – 60 V band, so the pack is a commercial decision rather than a locked one. Takes 160 % of its own DC rating in array, holds 200 % overload for ten seconds to start a pump or a compressor, and hands over to backup in under 10 ms.',
+    specs: [
+      ['Rated output', '6.0 / 8.0 kW'],
+      ['Max usable PV input', '9.6 / 12.8 kW'],
+      ['Battery voltage', '40 – 60 V'],
+      ['Max charge / discharge', '135 / 190 A'],
+      ['MPPT', '2 · 90 – 435 V'],
+      ['Max efficiency', '96.2 %'],
+      ['Switch time', '< 10 ms'],
+      ['Parallel', 'Up to 6 units'],
+      ['Enclosure', 'IP66 · 23 kg'],
+    ],
+    datasheet: 'https://www.solisinverters.com/uploads/file/S6-EH1P(3-10)K-PH-Flyer-V2,0.pdf',
+    manual: 'https://www.solisinverters.com/uploads/file/Solis_Manual_S6-EH1P(3-8)K-L-PLUS_EUR_V1,3(20260402).pdf',
+  },
+  {
+    id: 'solis-s6-12-18k',
+    series: 'Solis S6-EH1P (12-18)K-L',
+    models: 'S6-EH1P 12K · S6-EH1P 16K',
+    name: 'Low-voltage hybrid inverter',
+    tagline: 'Large residential, generator ready',
+    photo: '/products/solis-s6-eh1p-12-18k-l.png',
+    copy: 'Three MPPTs at 40 A apiece, sized for the 182 mm and 210 mm cells rather than derating them. Built for the large house that still keeps a generator: automatic multi-method generator control, 90 A of AC passthrough, and redundant fan cooling so one failed fan is not a stopped inverter.',
+    specs: [
+      ['Rated output', '12.0 / 16.0 kW'],
+      ['Max usable PV input', '19.2 / 25.6 kW'],
+      ['Battery voltage', '40 – 60 V'],
+      ['Max charge / discharge', '250 / 290 A'],
+      ['MPPT', '3 · 80 – 520 V'],
+      ['Max efficiency', '97.6 %'],
+      ['Switch time', '< 10 ms'],
+      ['Parallel', 'Up to 6 units'],
+      ['Enclosure', 'IP66 · 55.5 kg'],
+    ],
+    datasheet: 'https://www.solisinverters.com/uploads/file/S6-EH1P(12-18)K-PH-Flyer-V2,1.pdf',
+    manual:
+      'https://www.solisinverters.com/uploads/file/Solis_Manual_S6-EH1P(12-18)K03-NV-YD-L_EUR_V1,3(20251030).pdf',
+  },
+  {
+    id: 'goodwe-es-uniq',
+    series: 'GoodWe ES Uniq Series',
+    models: 'GW6000-ES-C10 · GW12K-ES-C10',
+    name: 'Low-voltage hybrid inverter',
+    tagline: 'One port, three jobs',
+    photo: '/products/goodwe-es-uniq.png',
+    copy: 'A single 3-in-1 port takes a generator, a smart load or an existing grid-tie inverter, which is one termination to make instead of three. Transfer to backup is under 4 ms — fast enough that a desktop machine does not notice — and the AFCI detects the arc rather than waiting for a current threshold.',
+    specs: [
+      ['Rated output', '6.0 / 12.0 kW'],
+      ['Max PV input', '12.0 / 24.0 kW'],
+      ['Battery voltage', '48 V · 40 – 60 V'],
+      ['Max charge / discharge', '140 / 240 A'],
+      ['MPPT', '2 · 60 – 550 V'],
+      ['Max efficiency', '97.6 %'],
+      ['Switch time', '< 4 ms'],
+      ['Parallel', 'Up to 6 units'],
+      ['Enclosure', 'IP66 · 15.5 / 29 kg'],
+    ],
+    datasheet: 'https://en.goodwe.com/Skippower/downloadFileF?id=2373&mid=60',
+    manual: 'https://en.goodwe.com/Skippower/downloadFileF?id=2923&mid=60',
+  },
+  {
+    id: 'solax-t-bat-d150',
+    series: 'SolaX T-BAT-SYS-LV D150',
+    models: 'T-BAT-SYS-LV D150',
+    name: 'Low-voltage battery',
+    tagline: '15 kWh a unit, 16 in parallel',
+    photo: '/products/solax-t-bat-sys-lv-d150.png',
+    copy: '15 kWh in one floor-standing LFP cabinet, 13.5 kWh of it usable, and sixteen of them on a single 48 V bus if the site asks for it. The 310 A ten-second peak is what carries a motor start, and faults are readable remotely rather than off a panel somebody has to walk to.',
+    specs: [
+      ['Nominal energy', '15.0 kWh'],
+      ['Usable energy', '13.5 kWh · 90 % DoD'],
+      ['Rated capacity', '314 Ah'],
+      ['Nominal voltage', '48 V · 42 – 54 V'],
+      ['Max charge / discharge', '155 A'],
+      ['Peak discharge', '310 A · 10 s'],
+      ['Cycle life', '> 6000 · 90 % DoD'],
+      ['Parallel', 'Up to 16 units · 240 kWh'],
+      ['Enclosure', 'IP65 · 125 kg'],
+    ],
+    datasheet: 'https://www.solaxpower.com/uploads/file/solax-t-bat-sys-lv-d150-datasheet-en.pdf',
+  },
 ]
 
 /**
@@ -291,9 +431,14 @@ export default function Products() {
                 <ArrowLink href={active.datasheet} target="_blank" rel="noopener noreferrer">
                   Datasheet (PDF)
                 </ArrowLink>
-                <ArrowLink href={active.manual} target="_blank" rel="noopener noreferrer">
-                  User manual (PDF)
-                </ArrowLink>
+                {/* Not every manufacturer publishes an installation manual at
+                    a stable public URL — SolaX does not — so the link appears
+                    only where there is genuinely a file behind it. */}
+                {active.manual && (
+                  <ArrowLink href={active.manual} target="_blank" rel="noopener noreferrer">
+                    User manual (PDF)
+                  </ArrowLink>
+                )}
                 <ArrowLink href="/products">See prices and order</ArrowLink>
               </div>
             </div>

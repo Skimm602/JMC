@@ -234,35 +234,44 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                       >
                         {/* Same three things the range section leads with —
                             the unit, its model number, what it is — so the
-                            menu and the page name the products identically. */}
-                        {PRODUCT_NAV.map((f, i) => (
-                          <a
-                            key={f.id}
-                            href={`/#product-${f.id}`}
-                            ref={(el) => {
-                              itemRefs.current[i] = el
-                            }}
-                            onClick={() => {
-                              setProducts(false)
-                              goToFamily(f.id)
-                            }}
-                            onKeyDown={(e) => onMenuKeyDown(e, i)}
-                            className="hover:bg-sheet group/item flex items-center gap-3.5 rounded-[0.875rem] px-3.5 py-3 transition-colors"
-                          >
-                            <img
-                              src={f.photo}
-                              alt=""
-                              loading="lazy"
-                              className="h-11 w-11 shrink-0 object-contain opacity-80 transition-opacity group-hover/item:opacity-100"
-                            />
-                            <span className="min-w-0">
-                              <span className="text-ink block font-mono text-[0.8125rem] font-medium">{f.models}</span>
-                              <span className="text-ink-soft group-hover/item:text-cool-600 mt-1 block text-sm transition-colors">
-                                {f.name}
+                            menu and the page name the products identically.
+
+                            Ten families is taller than a laptop viewport, so
+                            the list scrolls inside the menu and the "all
+                            products" link below it stays reachable instead of
+                            being pushed off the bottom of the screen. */}
+                        <div className="max-h-[min(60vh,28rem)] overflow-y-auto">
+                          {PRODUCT_NAV.map((f, i) => (
+                            <a
+                              key={f.id}
+                              href={`/#product-${f.id}`}
+                              ref={(el) => {
+                                itemRefs.current[i] = el
+                              }}
+                              onClick={() => {
+                                setProducts(false)
+                                goToFamily(f.id)
+                              }}
+                              onKeyDown={(e) => onMenuKeyDown(e, i)}
+                              className="hover:bg-sheet group/item flex items-center gap-3.5 rounded-[0.875rem] px-3.5 py-3 transition-colors"
+                            >
+                              <img
+                                src={f.photo}
+                                alt=""
+                                loading="lazy"
+                                className="h-11 w-11 shrink-0 object-contain opacity-80 transition-opacity group-hover/item:opacity-100"
+                              />
+                              <span className="min-w-0">
+                                <span className="text-ink block font-mono text-[0.8125rem] font-medium">
+                                  {f.models}
+                                </span>
+                                <span className="text-ink-soft group-hover/item:text-cool-600 mt-1 block text-sm transition-colors">
+                                  {f.name}
+                                </span>
                               </span>
-                            </span>
-                          </a>
-                        ))}
+                            </a>
+                          ))}
+                        </div>
 
                         <a
                           href="/products"
