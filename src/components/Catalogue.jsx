@@ -211,12 +211,13 @@ function FilterOption({ active, onClick, children }) {
 }
 
 const RATING_OPTIONS = [4, 3, 2, 1]
-const DEFAULT_FILTERS = { category: 'all', voltage: 'all', minRating: 0, minPrice: '', maxPrice: '' }
+const DEFAULT_FILTERS = { query: '', category: 'all', voltage: 'all', minRating: 0, minPrice: '', maxPrice: '' }
 
 function FilterBar({ filters, setFilters, priceBounds }) {
   const set = (patch) => setFilters((f) => ({ ...f, ...patch }))
 
   const active =
+    filters.query !== '' ||
     filters.category !== 'all' ||
     filters.voltage !== 'all' ||
     filters.minRating !== 0 ||
@@ -225,6 +226,17 @@ function FilterBar({ filters, setFilters, priceBounds }) {
 
   return (
     <div className="border-rule bg-sheet/50 mt-10 flex flex-wrap items-end gap-x-8 gap-y-5 border p-5">
+      <div className="w-full">
+        <span className="label text-ink-soft mb-2 block">Search</span>
+        <input
+          type="search"
+          value={filters.query}
+          onChange={(e) => set({ query: e.target.value })}
+          placeholder="Model, wattage, brand, feature…"
+          className="border-rule-strong bg-glare text-ink focus:border-ink w-full max-w-md border px-3.5 py-2 text-sm outline-none"
+        />
+      </div>
+
       <div>
         <span className="label text-ink-soft mb-2 block">Type</span>
         <div className="flex flex-wrap gap-2">
@@ -322,8 +334,27 @@ export default function Catalogue({ products, isInstaller }) {
   const filtered = useMemo(() => {
     const min = filters.minPrice === '' ? null : Number(filters.minPrice)
     const max = filters.maxPrice === '' ? null : Number(filters.maxPrice)
+    const query = filters.query.trim().toLowerCase()
 
     return (products ?? []).filter((product) => {
+      // Name, description and the spec sheet itself — a customer typing
+      // "IP66" or "40-60V" is searching the datasheet, not the blurb, and
+      // the spec lines are exactly that, already on the row.
+      if (query) {
+        const haystack = [
+          product.name,
+          product.description,
+          CATEGORY_LABEL[product.category],
+          VOLTAGE_LABEL[product.voltage_class],
+          ...(product.specifications ?? []),
+        ]
+          .filter(Boolean)
+          .join(' \n ')
+          .toLowerCase()
+
+        if (!haystack.includes(query)) return false
+      }
+
       if (filters.category !== 'all' && product.category !== filters.category) return false
       if (filters.voltage !== 'all' && product.voltage_class !== filters.voltage) return false
       if (filters.minRating > 0 && !(Number(product.rating) >= filters.minRating)) return false
@@ -363,7 +394,7 @@ export default function Catalogue({ products, isInstaller }) {
         <div className="border-rule bg-glare mt-6 flex flex-col items-center border border-dashed px-6 py-16 text-center">
           <FileIcon className="text-hush h-8 w-8" />
           <p className="text-ink-soft max-w-measure mt-5 text-sm leading-relaxed">
-            Nothing matches those filters. Try widening the price range or clearing a filter.
+            Nothing matches that. Try a different search term, widening the price range, or clearing a filter.
           </p>
           <button
             type="button"
