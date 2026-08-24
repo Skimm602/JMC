@@ -36,3 +36,6 @@ Thumbs.db
 
 # misc
 *.tsbuildinfo
+
+# vercel
+.vercel
