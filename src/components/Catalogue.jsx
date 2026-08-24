@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { formatPeso, isPriced, unitPriceOf, VAT_RATE } from '@/utils/pricing'
+import { formatPeso, isPriced, unitPriceOf, withVat } from '@/utils/pricing'
 import { cx } from './ui.jsx'
 import { ArrowRightIcon, FileIcon, StarIcon } from './icons.jsx'
 
@@ -51,7 +51,7 @@ export function PriceTag({ product, isInstaller, size = 'md' }) {
       {discounted && (
         <p className="text-ink-soft font-mono text-sm">
           <span className="sr-only">List price </span>
-          <s>{formatPeso(list)}</s>
+          <s>{formatPeso(withVat(list))}</s>
         </p>
       )}
 
@@ -61,12 +61,12 @@ export function PriceTag({ product, isInstaller, size = 'md' }) {
           size === 'lg' ? 'text-display-3 mt-1' : 'mt-0.5 text-lg',
         )}
       >
-        {formatPeso(price)}
+        {formatPeso(withVat(price))}
       </p>
 
       <p className="text-ink-soft mt-1.5 text-xs">
         {discounted && <span className="text-cool-600 font-medium">Installer price · </span>}
-        VAT-exclusive · {Math.round(VAT_RATE * 100)} % added at checkout
+        VAT-inclusive
       </p>
     </div>
   )

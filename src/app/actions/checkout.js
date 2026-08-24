@@ -25,6 +25,7 @@ import { hasInstallerPricing, quote } from '@/utils/pricing'
 
 const PROOF_BUCKET = 'payment-proofs'
 const DELIVERY_BUCKET = 'delivery-proofs'
+const VAT_PROOF_BUCKET = 'vat-exemption-proofs'
 
 /** Big enough for a phone screenshot at full resolution, small enough that a
     mistaken video upload is refused rather than waited on. */
@@ -293,6 +294,57 @@ export async function attachPaymentProof(formData) {
     // than leave an orphan nobody will ever look at.
     await supabase.storage.from(PROOF_BUCKET).remove([proofPath])
     return { error: updateError.message }
+  }
+
+  return { success: true }
+}
+
+/**
+ * attachVatExemptionProof(formData)
+ *
+ * formData fields: orderId, proof (File).
+ *
+ * Optional, and only while an order is still `pending` — a senior citizen,
+ * PWD or other documented exemption raised on the confirmation call. This
+ * only attaches the photo or scan; it does not remove VAT itself. An admin
+ * reviews it and decides, the same way a payment proof does not mark an
+ * order paid on its own — see admin_set_order_vat_exempt() and
+ * VatExemptEditor in admin/OrdersBoard.jsx.
+ */
+export async function attachVatExemptionProof(formData) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Log in to attach a document.' }
+
+  const orderId = String(formData.get('orderId') ?? '')
+  if (!orderId) return { error: 'Something went wrong. Try again.' }
+
+  const proof = formData.get('proof')
+  if (!proof || typeof proof === 'string' || proof.size === 0) {
+    return { error: 'Attach a photo or scan of the ID or certificate.' }
+  }
+  if (proof.size > MAX_PROOF_BYTES) return { error: 'That file is over 8 MB. A photo or scan is enough.' }
+  if (proof.type && !PROOF_TYPES.has(proof.type)) return { error: 'Attach an image or a PDF.' }
+
+  const proofPath = `${user.id}/${orderId}_${Date.now()}.${extensionOf(proof)}`
+
+  const { error: uploadError } = await supabase.storage.from(VAT_PROOF_BUCKET).upload(proofPath, proof, {
+    contentType: proof.type || undefined,
+    upsert: false,
+  })
+  if (uploadError) return { error: `Could not upload that: ${uploadError.message}` }
+
+  const { data: attached, error } = await supabase.rpc('attach_vat_exemption_proof', {
+    p_order_id: orderId,
+    p_proof_path: proofPath,
+  })
+
+  if (error || !attached) {
+    await supabase.storage.from(VAT_PROOF_BUCKET).remove([proofPath])
+    return { error: error?.message ?? 'That order could not be updated.' }
   }
 
   return { success: true }

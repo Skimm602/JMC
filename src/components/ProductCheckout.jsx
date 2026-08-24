@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createOrder } from '@/app/actions/checkout'
 import { addToCart } from '@/app/actions/cart'
-import { formatPeso, isPriced, quote, VAT_RATE } from '@/utils/pricing'
+import { formatPeso, isPriced, quote, VAT_RATE, withVat } from '@/utils/pricing'
 import NoRefundsDialog from './NoRefundsDialog.jsx'
 import { Checkbox, Field, Textarea, TextInput } from './form.jsx'
 import { Button, Rule, cx } from './ui.jsx'
@@ -171,11 +171,9 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
       <div className="border-rule bg-glare rounded-panel border p-6 sm:p-8">
         <p className="label text-ink-soft">Price</p>
         <p className="text-ink text-display-3 mt-2 font-mono font-semibold tabular-nums">
-          {formatPeso(Number(product.retail_price))}
+          {formatPeso(withVat(Number(product.retail_price)))}
         </p>
-        <p className="text-ink-soft mt-1.5 text-xs">
-          VAT-exclusive · {Math.round(VAT_RATE * 100)} % added at checkout
-        </p>
+        <p className="text-ink-soft mt-1.5 text-xs">VAT-inclusive</p>
 
         <Rule className="my-6" />
 
@@ -362,7 +360,7 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
           {priced.discount > 0 && (
             <p className="text-ink-soft font-mono text-sm">
               <span className="sr-only">List price </span>
-              <s>{formatPeso(priced.items[0].retailUnitPrice)}</s>
+              <s>{formatPeso(withVat(priced.items[0].retailUnitPrice))}</s>
             </p>
           )}
           {quoted ? (
@@ -373,11 +371,11 @@ export default function ProductCheckout({ product, isInstaller, signedIn }) {
           ) : (
             <>
               <p className="text-ink text-display-3 mt-1 font-mono font-semibold tabular-nums">
-                {formatPeso(priced.items[0].unitPrice)}
+                {formatPeso(withVat(priced.items[0].unitPrice))}
               </p>
               <p className="text-ink-soft mt-1.5 text-xs">
                 {priced.discount > 0 && <span className="text-cool-600 font-medium">Installer price · </span>}
-                per unit, VAT-exclusive
+                per unit, VAT-inclusive
               </p>
             </>
           )}

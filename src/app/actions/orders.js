@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { readAdminSession } from '@/utils/admin-session'
 
+const VAT_PROOF_BUCKET = 'vat-exemption-proofs'
+
 /**
  * Orders, from the admin's side.
  *
@@ -23,7 +25,8 @@ export async function getOrders() {
   const { data: orders, error } = await supabase
     .from('orders')
     .select(
-      'id, user_id, status, payment_method, payment_reference, total, created_at, paid_at, approved_at, ' +
+      'id, user_id, status, payment_method, payment_reference, subtotal, vat, total, created_at, paid_at, approved_at, ' +
+        'vat_exempt, vat_exempt_proof_path, ' +
         'payment_proof_path, payment_proof_uploaded_at, contact_phone, customer_note, ' +
         'delivery_proof_path, delivery_confirmed_at, ' +
         'street_address, city, province, postal_code, courier, tracking_number, admin_notes, ' +
@@ -166,4 +169,59 @@ export async function setOrderTotal(orderId, subtotal) {
   if (!changed) return { error: 'That order could not be updated.' }
 
   return { success: true }
+}
+
+/**
+ * setOrderVatExempt(orderId, exempt)
+ *
+ * The exemption a customer raised on the confirmation call — senior citizen,
+ * PWD, or another documented case — decided after reading what they attached
+ * from their own account (see attachVatExemptionProof() in checkout.js).
+ * This only flips the flag and recomputes vat/total; admin_set_order_vat_exempt()
+ * refuses to turn it on if there is nothing attached to have reviewed.
+ *
+ * Only while the order is still pending, for the same reason setOrderTotal()
+ * is: once approved, the customer has been told a total and it must not move
+ * under them.
+ */
+export async function setOrderVatExempt(orderId, exempt) {
+  const supabase = await createClient()
+
+  const { data: changed, error } = await supabase.rpc('admin_set_order_vat_exempt', {
+    p_order_id: orderId,
+    p_exempt: exempt,
+  })
+
+  if (error) return { error: error.message }
+  if (!changed) return { error: 'That order could not be updated.' }
+
+  return { success: true }
+}
+
+/**
+ * getVatExemptionProofUrl(orderId)
+ *
+ * A short-lived link to what an order's VAT exemption rests on, for the back
+ * office to check it before approving. Five minutes, the same as payment and
+ * delivery proofs, and for the same reason.
+ */
+export async function getVatExemptionProofUrl(orderId) {
+  const { supabase, isAdmin } = await readAdminSession()
+  if (!isAdmin) return { error: 'Not authorized' }
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('vat_exempt_proof_path')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (error) return { error: error.message }
+  if (!order?.vat_exempt_proof_path) return { error: 'That order has no VAT-exemption attachment.' }
+
+  const { data, error: signError } = await supabase.storage
+    .from(VAT_PROOF_BUCKET)
+    .createSignedUrl(order.vat_exempt_proof_path, 60 * 5)
+
+  if (signError) return { error: signError.message }
+  return { data: data.signedUrl }
 }

@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Rule, cx } from '../ui.jsx'
-import { Field, TextInput } from '../form.jsx'
+import { Checkbox, Field, TextInput } from '../form.jsx'
 import { AlertIcon, CheckIcon, FileIcon, HeadsetIcon, SpinnerIcon } from '../icons.jsx'
 import {
+  getVatExemptionProofUrl,
   setOrderStatus,
   setOrderTotal,
+  setOrderVatExempt,
   updateOrderAddress,
   updateOrderNotes,
   updateOrderTracking,
@@ -91,10 +93,21 @@ const MOVE_LABEL = {
  * the same arrangement verification documents use. Toggling closed and back
  * open re-fetches rather than reusing the old URL, since it may have expired.
  */
+const PROOF_KINDS = {
+  payment: { fetch: getPaymentProofUrl, noun: 'payment proof', alt: "Customer's payment proof" },
+  delivery: { fetch: getDeliveryProofUrl, noun: 'delivery photo', alt: "Customer's photo of the delivery" },
+  'vat-exemption': {
+    fetch: getVatExemptionProofUrl,
+    noun: 'exemption attachment',
+    alt: 'What the VAT exemption rests on',
+  },
+}
+
 function ProofLink({ orderId, kind = 'payment' }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [url, setUrl] = useState(null)
+  const { fetch: fetchUrl, noun, alt } = PROOF_KINDS[kind]
 
   const toggle = async () => {
     if (url) {
@@ -103,7 +116,7 @@ function ProofLink({ orderId, kind = 'payment' }) {
     }
     setBusy(true)
     setError(null)
-    const result = kind === 'delivery' ? await getDeliveryProofUrl(orderId) : await getPaymentProofUrl(orderId)
+    const result = await fetchUrl(orderId)
     setBusy(false)
 
     if (result?.error) {
@@ -117,12 +130,12 @@ function ProofLink({ orderId, kind = 'payment' }) {
     <>
       <Button variant="outline" onClick={toggle} disabled={busy}>
         {busy ? <SpinnerIcon className="h-4 w-4" /> : <FileIcon className="h-4 w-4" />}
-        {busy ? 'Opening…' : `${url ? 'Hide' : 'View'} ${kind === 'delivery' ? 'delivery photo' : 'payment proof'}`}
+        {busy ? 'Opening…' : `${url ? 'Hide' : 'View'} ${noun}`}
       </Button>
       {error && <span className="text-hot-600 text-xs">{error}</span>}
       {url && (
         <div className="border-rule bg-sheet/60 rounded-card mt-3 w-full border p-3">
-          <img src={url} alt={kind === 'delivery' ? "Customer's photo of the delivery" : "Customer's payment proof"} className="max-h-[32rem] w-auto max-w-full object-contain" />
+          <img src={url} alt={alt} className="max-h-[32rem] w-auto max-w-full object-contain" />
         </div>
       )}
     </>
@@ -181,6 +194,80 @@ function PriceEditor({ order }) {
         <Button onClick={save} disabled={busy || !value}>
           {busy && <SpinnerIcon className="h-4 w-4" />}
           {busy ? 'Saving…' : 'Set the price'}
+        </Button>
+      </div>
+
+      {error && <p className="text-hot-600 mt-3 text-xs">{error}</p>}
+    </div>
+  )
+}
+
+/**
+ * The exemption a customer raises on the confirmation call — senior citizen,
+ * PWD, or another documented case. Only appears once a price exists to
+ * recompute VAT against; a product still awaiting its call-agreed price goes
+ * through PriceEditor first.
+ *
+ * The customer attaches the document from their own account (see
+ * attachVatExemptionProof() in checkout.js) — this panel is where an admin
+ * reads it and decides. Turning the box on is refused, both here and in
+ * admin_set_order_vat_exempt(), until there is actually something attached
+ * to have reviewed. Turning it back off does not clear the attachment; it
+ * stays on the order either way, so flipping the box twice does not need the
+ * customer to send it again.
+ */
+function VatExemptEditor({ order }) {
+  const router = useRouter()
+  const [exempt, setExempt] = useState(Boolean(order.vat_exempt))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const hasProof = Boolean(order.vat_exempt_proof_path)
+  const dirty = exempt !== Boolean(order.vat_exempt)
+  const blocked = exempt && !hasProof
+
+  const save = async () => {
+    setBusy(true)
+    setError(null)
+
+    const result = await setOrderVatExempt(order.id, exempt)
+    setBusy(false)
+
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    router.refresh()
+  }
+
+  return (
+    <div className="border-rule bg-sheet/60 mb-4 w-full border px-3.5 py-3">
+      <p className="label text-ink-soft">VAT</p>
+      <p className="text-ink-soft mt-2 text-sm leading-relaxed">
+        If they raised a senior citizen, PWD or other documented exemption on the call, ask them to attach it from
+        their account, review it below, then tick this. Applies to this order only.
+      </p>
+
+      {hasProof ? (
+        <div className="mt-3">
+          <ProofLink orderId={order.id} kind="vat-exemption" />
+        </div>
+      ) : (
+        <p className="text-ink-soft mt-3 text-xs leading-relaxed">
+          Nothing attached yet — the customer hasn't sent a document on this order.
+        </p>
+      )}
+
+      <div className="mt-3">
+        <Checkbox checked={exempt} onChange={setExempt} label="VAT-exempt" />
+      </div>
+
+      {blocked && <p className="text-hot-600 mt-2 text-xs">Needs an attachment before this can be turned on.</p>}
+
+      <div className="mt-3 flex items-center gap-3">
+        <Button onClick={save} disabled={busy || !dirty || blocked} size="sm">
+          {busy && <SpinnerIcon className="h-3.5 w-3.5" />}
+          {busy ? 'Saving…' : 'Save'}
         </Button>
       </div>
 
@@ -534,6 +621,26 @@ function Order({ order, onChanged }) {
           )}
         </tbody>
         <tfoot>
+          {order.subtotal != null && (
+            <tr>
+              <td colSpan={3} className="label text-ink-soft pt-3 text-right font-normal">
+                Subtotal
+              </td>
+              <td className="text-ink-soft pt-3 text-right font-mono text-xs tabular-nums">
+                {peso(order.subtotal)}
+              </td>
+            </tr>
+          )}
+          {order.subtotal != null && (
+            <tr>
+              <td className="label text-ink-soft pt-1.5 text-right font-normal" colSpan={3}>
+                VAT{order.vat_exempt && <span className="text-cool-600"> — exempt</span>}
+              </td>
+              <td className="text-ink-soft pt-1.5 text-right font-mono text-xs tabular-nums">
+                {peso(order.vat)}
+              </td>
+            </tr>
+          )}
           <tr>
             <td colSpan={3} className="label text-ink-soft pt-3 text-right">
               Total
@@ -630,6 +737,7 @@ function Order({ order, onChanged }) {
           )}
 
           {needsPrice && <PriceEditor order={order} />}
+          {!needsPrice && order.status === 'pending' && <VatExemptEditor order={order} />}
 
           <div className="flex flex-wrap items-center gap-3">
             {options

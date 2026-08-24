@@ -6,6 +6,7 @@ import { FileIcon } from './icons.jsx'
 import PaymentPanel from './PaymentPanel.jsx'
 import OrderFlow from './OrderFlow.jsx'
 import DeliveryPanel from './DeliveryPanel.jsx'
+import VatExemptionPanel from './VatExemptionPanel.jsx'
 
 /**
  * Six statuses, three answers.
@@ -108,10 +109,13 @@ function Order({ order }) {
       </div>
 
       {order.status === 'pending' && (
-        <p className="border-rule bg-sheet/60 text-ink-soft mt-5 border px-3.5 py-3 text-sm leading-relaxed">
-          Somebody from VIP will call you to confirm this order — sizing, installation and delivery. Payment comes
-          after that call, and we will ask for it here.
-        </p>
+        <div className="mt-5">
+          <p className="border-rule bg-sheet/60 text-ink-soft border px-3.5 py-3 text-sm leading-relaxed">
+            Somebody from VIP will call you to confirm this order — sizing, installation and delivery. Payment comes
+            after that call, and we will ask for it here.
+          </p>
+          <VatExemptionPanel order={order} />
+        </div>
       )}
 
       {order.status === 'approved' && <PaymentPanel order={order} />}

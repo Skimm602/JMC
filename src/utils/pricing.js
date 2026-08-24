@@ -32,6 +32,15 @@ export const formatPeso = (amount) =>
   amount == null ? '—' : new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(amount))
 
 /**
+ * The shelf price — VAT folded in, the way DTI's price-tag rules expect what
+ * a shopper reads on a listing to already be what they pay. Catalogue prices
+ * stay VAT-exclusive in the database and in quote() itself, so the receipt
+ * can still itemise the tax separately at the point of commitment; this is
+ * only for the figure shown before that, on the grid and the product page.
+ */
+export const withVat = (amount) => toPesos(Math.round(toCentavos(amount) * (1 + VAT_RATE)))
+
+/**
  * Who gets trade pricing.
  *
  * Deliberately the same test createOrder() has used since it was
