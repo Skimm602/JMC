@@ -17,6 +17,41 @@
 -- address is ever stored.
 -- ---------------------------------------------------------------------------
 
+-- ---------------------------------------------------------------------------
+-- Preflight. A page_views table built by hand in the table editor will not
+-- have the columns below, and "create table if not exists" would skip right
+-- past it and leave record_page_view() failing on every visit with nothing
+-- on screen to say why. Better to stop here and say so.
+--
+-- If this raises: the hand-made table holds nothing worth keeping, so drop it
+-- and run this file again --  drop table public.page_views cascade;
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  v_missing text;
+begin
+  if to_regclass('public.page_views') is null then
+    return; -- nothing there yet, which is the normal case
+  end if;
+
+  select string_agg(needed, ', ')
+    into v_missing
+    from unnest(array['viewed_on', 'visitor_hash', 'hits']) as needed
+   where not exists (
+     select 1 from information_schema.columns
+      where table_schema = 'public'
+        and table_name   = 'page_views'
+        and column_name  = needed
+   );
+
+  if v_missing is not null then
+    raise exception
+      'A public.page_views table already exists but is missing: %. It was not built by this script. Run "drop table public.page_views cascade;" and then run this file again.',
+      v_missing;
+  end if;
+end $$;
+
+
 create table if not exists public.page_views (
   id            uuid primary key default gen_random_uuid(),
   viewed_on     date        not null,

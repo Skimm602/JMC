@@ -25,11 +25,25 @@ export async function getAnalyticsOverview() {
 }
 
 /**
- * Postgres for "that function does not exist" and "that table does not
- * exist". Both mean supabase-page-views.sql has not been run yet, which is a
- * setup step rather than a fault — see getTrafficOverview below.
+ * "supabase-page-views.sql has not been run yet", in the several dialects the
+ * failure arrives in.
+ *
+ * PGRST202 is the one that actually shows up: PostgREST resolves RPC names
+ * against a cached view of the schema and reports a name it has never seen as
+ * missing from that cache, without ever reaching Postgres. The SQLSTATEs
+ * below are what surfaces when it does reach Postgres — an undefined function
+ * or an undefined table — which is the path a dropped object takes after the
+ * cache has already learned about it.
+ *
+ * The message check is the backstop. Codes are the contract, but this is a
+ * setup notice rather than a security decision, and showing an admin a raw
+ * "could not find the function" string helps nobody.
  */
-const NOT_INSTALLED = ['42883', '42P01']
+const NOT_INSTALLED_CODES = ['PGRST202', 'PGRST203', '42883', '42P01']
+
+const isNotInstalled = (error) =>
+  NOT_INSTALLED_CODES.includes(error.code) ||
+  /schema cache|does not exist|could not find the function/i.test(error.message ?? '')
 
 /**
  * getTrafficOverview()
@@ -49,7 +63,7 @@ export async function getTrafficOverview() {
   const { data, error } = await supabase.rpc('admin_page_view_daily', { p_days: 365 })
 
   if (error) {
-    if (NOT_INSTALLED.includes(error.code)) return { notInstalled: true }
+    if (isNotInstalled(error)) return { notInstalled: true }
     return { error: error.message }
   }
 
