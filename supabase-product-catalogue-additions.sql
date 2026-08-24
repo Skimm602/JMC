@@ -56,7 +56,7 @@ values
   'GEN2-LB-EU 6K',
   'LuxpowerTek single-phase hybrid inverter, 6 kW. Two MPPTs share a 530 V window with a 100 V start-up, so the array is producing early in the day. Dedicated generator and smart-load ports plus AC coupling cover a retrofit onto an existing grid-tie system, and up to ten units run in parallel for both on- and off-grid installs.',
   0, null, null, true,
-  '/products/luxpowertek-gen2-lb-eu-3-6k.webp',
+  '/products/luxpowertek-gen2-lb-eu-6k.webp',
   'https://luxpowertek.com/wp-content/uploads/2025/10/GEN2-LB-EU-3-6K-Datasheet.pdf',
   'https://luxpowertek.com/wp-content/uploads/2025/12/LuxpowerTek-GEN2-LB-EU-3-6K-User-manual-ENGLISH-Hybrid-SINGLE-Phase-inverter.pdf',
   array[
@@ -128,7 +128,7 @@ values
   'GEN2-LB-EU 10K',
   'LuxpowerTek single-phase hybrid inverter, 10 kW, the larger GEN2 platform built for bigger residential and small-commercial loads. Three MPPTs cover an 18 kW array, generator, smart-load and AC-coupling ports are each independent, and AI-driven time-of-use optimisation shifts load against tariff automatically. Up to ten units run in parallel.',
   0, null, null, true,
-  '/products/luxpowertek-gen2-lb-eu-7-14k.webp',
+  '/products/luxpowertek-gen2-lb-eu-7-14k-front.webp',
   'https://luxpowertek.com/wp-content/uploads/2026/02/GEN2-LB-EU-7-14K-Datasheet20260206.pdf',
   'https://luxpowertek.com/wp-content/uploads/2026/03/GEN2-LB-EU-7-14K-User-Manual-2025.7.1.pdf',
   array[
@@ -199,7 +199,7 @@ values
   'GEN2-LB-EU 12K',
   'LuxpowerTek single-phase hybrid inverter, 12 kW, the larger GEN2 platform built for bigger residential and small-commercial loads. Three MPPTs cover an 18 kW array, generator, smart-load and AC-coupling ports are each independent, and AI-driven time-of-use optimisation shifts load against tariff automatically. Up to ten units run in parallel.',
   0, null, null, true,
-  '/products/luxpowertek-gen2-lb-eu-7-14k.webp',
+  '/products/luxpowertek-gen2-lb-eu-7-14k-front.webp',
   'https://luxpowertek.com/wp-content/uploads/2026/02/GEN2-LB-EU-7-14K-Datasheet20260206.pdf',
   'https://luxpowertek.com/wp-content/uploads/2026/03/GEN2-LB-EU-7-14K-User-Manual-2025.7.1.pdf',
   array[
