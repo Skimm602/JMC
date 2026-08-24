@@ -52,6 +52,9 @@ export async function adminSignIn(formData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { error: REJECTED }
 
+  // Best-effort — see record_login() in signIn() and supabase-login-history.sql.
+  await supabase.rpc('record_login')
+
   const { isAdmin } = await readAdminSession()
   return { success: true, isAdmin }
 }
@@ -200,6 +203,10 @@ export async function setAdmin(targetId, value) {
 
 export async function adminSignOut() {
   const supabase = await createClient()
+
+  // Before signOut() — see the note in signOut(), auth.js.
+  await supabase.rpc('close_login_session')
+
   const { error } = await supabase.auth.signOut()
   if (error) return { error: error.message }
   return { success: true }
@@ -232,4 +239,26 @@ export async function getAccountsOverview() {
   const admins = new Set(adminIds ?? [])
 
   return { data: (profiles ?? []).map((p) => ({ ...p, is_admin: admins.has(p.id) })) }
+}
+
+/**
+ * getLoginHistory(userId)
+ *
+ * Admin only. One account's recent sessions, newest first — see
+ * supabase-login-history.sql. Capped at 20: this answers "when did they last
+ * use the site", not an audit log meant to be paged through.
+ */
+export async function getLoginHistory(userId) {
+  const { supabase, isAdmin } = await readAdminSession()
+  if (!isAdmin) return { error: 'Not authorized' }
+
+  const { data, error } = await supabase
+    .from('login_events')
+    .select('id, signed_in_at, last_seen_at, signed_out_at')
+    .eq('user_id', userId)
+    .order('signed_in_at', { ascending: false })
+    .limit(20)
+
+  if (error) return { error: error.message }
+  return { data }
 }

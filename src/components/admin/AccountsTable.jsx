@@ -1,13 +1,114 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, cx } from '../ui.jsx'
 import { AlertIcon, SpinnerIcon, XIcon } from '../icons.jsx'
-import { deleteUserAccount, setAdmin } from '@/app/actions/admin'
+import { deleteUserAccount, getLoginHistory, setAdmin } from '@/app/actions/admin'
 
 const when = (iso) =>
   iso ? new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+
+const whenExact = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '—'
+
+/** How recent last_seen_at has to be for an open session to read as "active
+    now" rather than "left open" — a little past touch_login_session()'s own
+    five-minute throttle, so a session that is genuinely still open never
+    flickers to "left open" between two heartbeats. */
+const ACTIVE_WINDOW_MINUTES = 6
+
+function formatDuration(ms) {
+  const minutes = Math.max(1, Math.round(ms / 60_000))
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const restMinutes = minutes % 60
+  if (hours < 24) return restMinutes ? `${hours}h ${restMinutes}m` : `${hours}h`
+  const days = Math.floor(hours / 24)
+  const restHours = hours % 24
+  return restHours ? `${days}d ${restHours}h` : `${days}d`
+}
+
+/**
+ * What one row of login history says, given a session may never have been
+ * explicitly closed. signed_out_at set is the clean case; unset means either
+ * still open (last_seen_at is recent) or abandoned — a closed tab, an
+ * expired token — in which case last_seen_at is the best available answer
+ * for "until when" and duration is read off that instead.
+ */
+function sessionSummary(session) {
+  const start = new Date(session.signed_in_at)
+  const end = new Date(session.signed_out_at ?? session.last_seen_at)
+  const duration = formatDuration(end - start)
+
+  if (session.signed_out_at) return { label: 'Signed out', duration }
+
+  const isActive = Date.now() - new Date(session.last_seen_at).getTime() < ACTIVE_WINDOW_MINUTES * 60_000
+  return { label: isActive ? 'Active now' : 'Left open, no sign-out recorded', duration }
+}
+
+/**
+ * One account's recent sign-ins, fetched the moment the row is expanded
+ * rather than for every row up front — most of these panels are never
+ * opened, and the accounts table can get long.
+ */
+function LoginHistory({ userId }) {
+  const [state, setState] = useState({ status: 'loading', sessions: [], error: null })
+
+  useEffect(() => {
+    let cancelled = false
+
+    getLoginHistory(userId).then((result) => {
+      if (cancelled) return
+      if (result?.error) {
+        setState({ status: 'error', sessions: [], error: result.error })
+        return
+      }
+      setState({ status: 'ready', sessions: result.data ?? [], error: null })
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
+  if (state.status === 'loading') {
+    return <p className="text-ink-soft mt-3 text-xs">Loading…</p>
+  }
+  if (state.status === 'error') {
+    return <p className="text-hot-600 mt-3 text-xs">{state.error}</p>
+  }
+  if (state.sessions.length === 0) {
+    return <p className="text-ink-soft mt-3 text-xs">No sign-ins on record yet.</p>
+  }
+
+  return (
+    <ul className="mt-3 grid max-w-md gap-1.5">
+      {state.sessions.map((session) => {
+        const { label, duration } = sessionSummary(session)
+        return (
+          <li
+            key={session.id}
+            className="border-rule bg-sheet/60 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border px-3 py-2 text-xs"
+          >
+            <span className="text-ink font-mono">{whenExact(session.signed_in_at)}</span>
+            <span className="text-ink-soft">
+              {label} · {duration}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
 
 const STATUS_TONE = {
   approved: 'border-cool-600/45 bg-cool-600/[0.07] text-cool-700',
@@ -127,6 +228,7 @@ function AdminToggle({ account, isSelf, onChanged }) {
 export default function AccountsTable({ accounts, currentUserId }) {
   const router = useRouter()
   const [confirming, setConfirming] = useState(null)
+  const [historyFor, setHistoryFor] = useState(null)
 
   const refresh = () => {
     setConfirming(null)
@@ -177,7 +279,17 @@ export default function AccountsTable({ accounts, currentUserId }) {
                     <td className="px-4 py-3">
                       <StatusChip status={account.verification_status} />
                     </td>
-                    <td className="text-ink-soft px-4 py-3 font-mono text-xs">{when(account.created_at)}</td>
+                    <td className="text-ink-soft px-4 py-3 font-mono text-xs">
+                      {when(account.created_at)}
+                      <button
+                        type="button"
+                        onClick={() => setHistoryFor(historyFor === account.id ? null : account.id)}
+                        className="text-ink-soft hover:text-ink mt-1.5 block font-sans text-xs font-medium underline underline-offset-2"
+                      >
+                        {historyFor === account.id ? 'Hide sessions' : 'Sessions'}
+                      </button>
+                      {historyFor === account.id && <LoginHistory userId={account.id} />}
+                    </td>
                     <td className="px-4 py-3">
                       <AdminToggle account={account} isSelf={isSelf} onChanged={refresh} />
                     </td>

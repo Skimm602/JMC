@@ -136,6 +136,10 @@ export async function signIn(formData) {
     return { error: signInError.message }
   }
 
+  // Best-effort: a login history write failing must never turn into a
+  // rejected sign-in. See supabase-login-history.sql.
+  await supabase.rpc('record_login')
+
   // Whether this account runs the site lives in `admins`, not on the profile
   // row — is_admin() is the same question every RLS policy asks.
   const { data: isAdmin } = await supabase.rpc('is_admin')
@@ -162,6 +166,12 @@ export async function signIn(formData) {
  */
 export async function signOut() {
   const supabase = await createClient()
+
+  // Before signOut(), not after — it needs the session that is about to be
+  // invalidated to know whose row to close. Best-effort, same reasoning as
+  // record_login(): a history write failing must not block signing out.
+  await supabase.rpc('close_login_session')
+
   const { error } = await supabase.auth.signOut()
 
   if (error) {

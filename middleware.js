@@ -25,7 +25,23 @@ export async function middleware(request) {
 
   // Refreshes the session if expired — required for Server Components,
   // which can't set cookies themselves.
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // The heartbeat behind "how long did they stay" in the login history admin
+  // panel — see touch_login_session() in supabase-login-history.sql, which
+  // throttles the actual write to once per five minutes so this is cheap on
+  // every other request. Wrapped rather than just awaited: this runs on
+  // every request site-wide, so a network hiccup here — or the migration
+  // simply not having been run yet — must never turn into a broken page.
+  if (user) {
+    try {
+      await supabase.rpc('touch_login_session')
+    } catch {
+      // Best-effort. See above.
+    }
+  }
 
   return supabaseResponse
 }
