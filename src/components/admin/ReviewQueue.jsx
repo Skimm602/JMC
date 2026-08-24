@@ -53,14 +53,23 @@ function StatusChip({ status }) {
  * The bucket is private and stays private: the admin gets a five-minute
  * signed URL, minted per click and shown inline, rather than a link into a
  * new tab or a page holding live links to somebody else's licence for as
- * long as it stays open. Same shape as ProofLink in admin/OrdersBoard.jsx —
- * verification documents are always stored as .jpg (see submitVerification()
- * in actions/verification.js), so an <img> is always the right preview.
+ * long as it stays open. Same shape as ProofLink in admin/OrdersBoard.jsx.
+ *
+ * The preview cannot go by the path. submitVerification() names every upload
+ * .jpg whatever was chosen, and the form accepts PDFs and Word files too, so
+ * a licence saved as a PDF is sitting behind a .jpg path right now. Rather
+ * than guess, it asks the browser: an <img> first, an <object> for whatever
+ * that could not decode — which reads the Content-Type the bucket actually
+ * served, and is the built-in PDF viewer in practice — and a plain link for
+ * the formats nothing renders inline.
  */
 function DocumentLink({ label, path }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [url, setUrl] = useState(null)
+
+  // Every fresh open starts at the common case and falls back only on failure.
+  const [render, setRender] = useState('image')
 
   if (!path) {
     return (
@@ -86,6 +95,7 @@ function DocumentLink({ label, path }) {
       setError(result?.error || 'Could not open that document.')
       return
     }
+    setRender('image')
     setUrl(result.url)
   }
 
@@ -113,7 +123,29 @@ function DocumentLink({ label, path }) {
       )}
       {url && (
         <div className="border-rule bg-sheet/60 rounded-card mt-3 w-full border p-3">
-          <img src={url} alt={label} className="max-h-[32rem] w-auto max-w-full object-contain" />
+          {render === 'image' ? (
+            <img
+              src={url}
+              alt={label}
+              onError={() => setRender('embed')}
+              className="max-h-[32rem] w-auto max-w-full object-contain"
+            />
+          ) : (
+            <object data={url} className="h-[32rem] w-full">
+              <p className="text-ink-soft text-xs leading-relaxed">
+                This file cannot be shown in the page.{' '}
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cool-600 border-b border-current/40 pb-px"
+                >
+                  Open it in a new tab
+                </a>
+                .
+              </p>
+            </object>
+          )}
         </div>
       )}
     </div>
