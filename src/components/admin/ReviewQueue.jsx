@@ -50,16 +50,17 @@ function StatusChip({ status }) {
 /* ------------------------------ document link ----------------------------- */
 
 /**
- * The bucket is private and stays private: the admin gets a five-minute signed
- * URL, minted per click, rather than the page holding a set of live links to
- * other people's licences for as long as it is open.
- *
- * The tab is opened synchronously and pointed afterwards. Opening it once the
- * signed URL has come back would be a popup, and would be blocked.
+ * The bucket is private and stays private: the admin gets a five-minute
+ * signed URL, minted per click and shown inline, rather than a link into a
+ * new tab or a page holding live links to somebody else's licence for as
+ * long as it stays open. Same shape as ProofLink in admin/OrdersBoard.jsx —
+ * verification documents are always stored as .jpg (see submitVerification()
+ * in actions/verification.js), so an <img> is always the right preview.
  */
 function DocumentLink({ label, path }) {
-  const [status, setStatus] = useState('idle')
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [url, setUrl] = useState(null)
 
   if (!path) {
     return (
@@ -70,45 +71,50 @@ function DocumentLink({ label, path }) {
     )
   }
 
-  const open = async () => {
-    const tab = window.open('', '_blank', 'noopener,noreferrer')
-    setStatus('loading')
+  const toggle = async () => {
+    if (url) {
+      setUrl(null)
+      return
+    }
+    setBusy(true)
     setError('')
 
     const result = await getSignedDocUrl(path)
-    setStatus('idle')
+    setBusy(false)
 
     if (result?.error || !result?.url) {
-      tab?.close()
       setError(result?.error || 'Could not open that document.')
       return
     }
-
-    if (tab) tab.location = result.url
-    else window.location.href = result.url
+    setUrl(result.url)
   }
 
   return (
     <div>
       <button
         type="button"
-        onClick={open}
-        disabled={status === 'loading'}
+        onClick={toggle}
+        disabled={busy}
         className="border-rule-strong bg-glare hover:border-cool-600 hover:bg-cool-600/[0.05] flex w-full items-center gap-2.5 border px-3.5 py-3 text-left text-xs transition-colors disabled:opacity-60"
       >
-        {status === 'loading' ? (
+        {busy ? (
           <SpinnerIcon className="text-cool-600 h-4 w-4 shrink-0" />
         ) : (
           <FileIcon className="text-cool-600 h-4 w-4 shrink-0" />
         )}
         <span className="text-ink min-w-0 flex-1 font-medium">{label}</span>
-        <span className="label text-cool-600">View</span>
+        <span className="label text-cool-600">{busy ? 'Opening…' : url ? 'Hide' : 'View'}</span>
       </button>
       {error && (
         <p role="alert" className="text-hot-600 mt-2 flex items-center gap-1.5 text-xs">
           <AlertIcon className="h-3.5 w-3.5 shrink-0" />
           {error}
         </p>
+      )}
+      {url && (
+        <div className="border-rule bg-sheet/60 rounded-card mt-3 w-full border p-3">
+          <img src={url} alt={label} className="max-h-[32rem] w-auto max-w-full object-contain" />
+        </div>
       )}
     </div>
   )
