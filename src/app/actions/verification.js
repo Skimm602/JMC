@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { notifyApplicantRejected } from '@/utils/support/notify'
 
 const BUCKET = 'verification-docs'
 const TABLE = 'installer_verifications'
@@ -210,6 +211,14 @@ export async function rejectVerification(profileId, reason, filePaths) {
     return { error: 'Say why. It stays on record after the account itself is gone.' }
   }
 
+  // Read before anything below deletes it — this is the only chance to tell
+  // the applicant why, and delete_user_account() takes their address with it.
+  const { data: applicant } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', profileId)
+    .maybeSingle()
+
   if (filePaths?.length) {
     await supabase.storage.from(BUCKET).remove(filePaths)
   }
@@ -234,12 +243,20 @@ export async function rejectVerification(profileId, reason, filePaths) {
 
   if (verificationError) return { error: verificationError.message }
 
+  // Best-effort, and before the delete — a mail provider having a bad
+  // afternoon must not block a rejection the admin has already decided on,
+  // but this is the last point at which there is an address to send it to.
+  if (applicant?.email) {
+    await notifyApplicantRejected({
+      name: applicant.full_name || 'there',
+      email: applicant.email,
+      reason: trimmedReason,
+    })
+  }
+
   const { data: deleted, error } = await supabase.rpc('delete_user_account', { p_target: profileId })
   if (error) return { error: error.message }
   if (!deleted) return { error: 'That account could not be deleted.' }
-
-  // TODO: send rejection email via Resend here, before the account (and its
-  // only record of the applicant's address) is gone.
 
   return { success: true }
 }

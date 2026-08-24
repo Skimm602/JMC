@@ -133,3 +133,48 @@ export async function notifySupportTeam({ name, email, account, subject, message
 
   return { ok: true, delivered: recipients, id: data?.id }
 }
+
+/**
+ * Tells a rejected installer applicant why, before their account (and this
+ * one chance to reach them) is gone — see rejectVerification() in
+ * app/actions/verification.js, which reads the address to hand here before
+ * it calls delete_user_account().
+ *
+ * Never throws, same as notifySupportTeam(): a mail provider having a bad
+ * afternoon must not turn a decided rejection into a stuck one.
+ */
+export async function notifyApplicantRejected({ name, email, reason }) {
+  const apiKey = process.env.RESEND_API_KEY?.trim()
+  const from = process.env.SUPPORT_FROM_EMAIL?.trim() || 'onboarding@resend.dev'
+
+  if (!apiKey) {
+    console.warn('[verification] RESEND_API_KEY is not set — the applicant was not emailed.')
+    return { ok: false, reason: 'not-configured' }
+  }
+  if (!email) {
+    console.warn('[verification] no address on file for this applicant — nothing was emailed.')
+    return { ok: false, reason: 'no-address' }
+  }
+
+  const resend = new Resend(apiKey)
+
+  const text = `Hi ${name},\n\nWe were not able to approve your installer verification.\n\nReason: ${reason}\n\nYou are welcome to register again once this is addressed.`
+  const html = `<p>Hi ${escapeHtml(name)},</p><p>We were not able to approve your installer verification.</p><p><strong>Reason:</strong> ${escapeHtml(
+    reason
+  )}</p><p>You are welcome to register again once this is addressed.</p>`
+
+  const { data, error } = await resend.emails.send({
+    from,
+    to: email,
+    subject: 'Your VIP Solar installer verification',
+    text,
+    html,
+  })
+
+  if (error) {
+    console.error('[verification] Resend refused the rejection email:', error.message)
+    return { ok: false, reason: error.message }
+  }
+
+  return { ok: true, id: data?.id }
+}

@@ -110,6 +110,21 @@ begin
     end loop;
   end if;
 
+  -- The mirror of the block above: stock already left the shelf the moment
+  -- this order first moved off 'paid' (processing or shipped), so cancelling
+  -- it from either of those has to put it back. A deleted product has
+  -- nothing to credit, and that is fine — its row is gone, not its history.
+  if v_current in ('processing', 'shipped') and p_status = 'cancelled' then
+    for v_item in
+      select oi.product_id, sum(oi.quantity) as qty
+      from public.order_items oi
+      where oi.order_id = p_order_id
+      group by oi.product_id
+    loop
+      update public.products set stock_quantity = stock_quantity + v_item.qty where id = v_item.product_id;
+    end loop;
+  end if;
+
   update public.orders set status = p_status where id = p_order_id;
   return true;
 end;
