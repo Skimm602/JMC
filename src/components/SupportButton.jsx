@@ -97,10 +97,10 @@ function LauncherOption({ as: Tag = 'button', icon, label, ...rest }) {
       {...(Tag === 'button' ? { type: 'button' } : null)}
       {...rest}
       className={cx(
-        'bg-glare text-ink border-rule-strong flex items-center gap-2.5 border',
+        'bg-glare text-ink border-cool-600 flex items-center gap-2.5 border',
         'h-10 px-3.5 text-[0.8125rem] font-medium tracking-[0.01em]',
         'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.35)] transition-colors duration-200',
-        'hover:border-ink hover:bg-ink/[0.03] active:translate-y-px',
+        'hover:bg-cool-600 hover:text-glare active:translate-y-px',
       )}
     >
       {icon}
