@@ -46,12 +46,21 @@ export default function About() {
         </Lede>
       </div>
 
-      {/* Stand-in photo — the hero's own image, framed rather than shot for
-          this section. Swap for a real office/workshop photo when one
-          exists; a borrowed real photo is still honest, a blank frame would
-          only imply the section is unfinished. */}
+      {/* One of our own installs, which is the point of the section above it:
+          the claim is that we service what we sell, and a stock array would
+          undercut it. Cropped from a portrait phone photo, so the band shows
+          the middle of the array rather than the whole roof. */}
       <div className="border-rule-shade rounded-panel mt-12 overflow-hidden border">
-        <img src="/hero-array.jpg" alt="" className="h-64 w-full object-cover sm:h-80" />
+        <img
+          src="/about-install.jpg"
+          alt="A VIP Solar rooftop array on a home in the province, coconut palms behind the roofline."
+          /* Biased up the frame rather than centred. The photo is portrait and
+             the band is a wide strip, so a centred crop lands on bare panel
+             surface and reads as a stock texture; 38 % catches the roofline,
+             the parapet and the palms behind it, which is what makes it
+             legible as one of our own roofs. */
+          className="h-64 w-full object-cover object-[50%_38%] sm:h-80"
+        />
       </div>
 
       <div className="mt-16 grid gap-16 lg:grid-cols-12 lg:gap-10">
