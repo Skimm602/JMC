@@ -62,7 +62,12 @@ export default function SectionIndex() {
    * than buried mid-screen.
    */
   const SCROLL_TARGET = {
-    products: { id: 'products', mode: 'center' },
+    products: { id: 'products', mode: 'center', at: 0.5 },
+    // A touch below dead-centre: at 0.5 the section's own bottom edge sat
+    // close enough to the viewport's bottom that About's dark band showed
+    // as a sliver underneath it. Landing slightly higher up the page keeps
+    // that out of view without the section reading as top-aligned.
+    'why-choose': { id: 'why-choose', mode: 'center', at: 0.56 },
     about: { id: 'about-heading', mode: 'top', offset: 96 },
   }
 
@@ -75,7 +80,7 @@ export default function SectionIndex() {
 
     const rect = el.getBoundingClientRect()
     const delta =
-      target.mode === 'top' ? rect.top - target.offset : rect.top + rect.height / 2 - window.innerHeight / 2
+      target.mode === 'top' ? rect.top - target.offset : rect.top + rect.height / 2 - window.innerHeight * target.at
     window.scrollBy({ top: delta, behavior: 'smooth' })
     history.pushState(null, '', `#${id}`)
   }
