@@ -121,7 +121,7 @@ export function RatingStars({ rating, className }) {
   )
 }
 
-const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery' }
+const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery', accessory: 'Accessory' }
 const VOLTAGE_LABEL = { low: 'Low voltage', high: 'High voltage' }
 
 /**
@@ -241,8 +241,7 @@ function FilterOption({ active, onClick, children }) {
   )
 }
 
-const RATING_OPTIONS = [4, 3, 2, 1]
-const DEFAULT_FILTERS = { query: '', category: 'all', voltage: 'all', minRating: 0, minPrice: '', maxPrice: '' }
+const DEFAULT_FILTERS = { query: '', category: 'all', voltage: 'all', minPrice: '', maxPrice: '' }
 
 function FilterBar({ filters, setFilters, priceBounds }) {
   const set = (patch) => setFilters((f) => ({ ...f, ...patch }))
@@ -251,7 +250,6 @@ function FilterBar({ filters, setFilters, priceBounds }) {
     filters.query !== '' ||
     filters.category !== 'all' ||
     filters.voltage !== 'all' ||
-    filters.minRating !== 0 ||
     filters.minPrice !== '' ||
     filters.maxPrice !== ''
 
@@ -280,6 +278,9 @@ function FilterBar({ filters, setFilters, priceBounds }) {
           <FilterOption active={filters.category === 'battery'} onClick={() => set({ category: 'battery' })}>
             Batteries
           </FilterOption>
+          <FilterOption active={filters.category === 'accessory'} onClick={() => set({ category: 'accessory' })}>
+            Accessories
+          </FilterOption>
         </div>
       </div>
 
@@ -295,23 +296,6 @@ function FilterBar({ filters, setFilters, priceBounds }) {
           <FilterOption active={filters.voltage === 'high'} onClick={() => set({ voltage: 'high' })}>
             High voltage
           </FilterOption>
-        </div>
-      </div>
-
-      <div>
-        <span className="label text-ink-soft mb-2 block">Rating</span>
-        <div className="flex flex-wrap gap-2">
-          <FilterOption active={filters.minRating === 0} onClick={() => set({ minRating: 0 })}>
-            Any
-          </FilterOption>
-          {RATING_OPTIONS.map((n) => (
-            <FilterOption key={n} active={filters.minRating === n} onClick={() => set({ minRating: n })}>
-              <span className="inline-flex items-center gap-1">
-                {n}
-                <StarIcon filled className="h-3 w-3" />+
-              </span>
-            </FilterOption>
-          ))}
         </div>
       </div>
 
@@ -388,7 +372,6 @@ export default function Catalogue({ products, isInstaller }) {
 
       if (filters.category !== 'all' && product.category !== filters.category) return false
       if (filters.voltage !== 'all' && product.voltage_class !== filters.voltage) return false
-      if (filters.minRating > 0 && !(Number(product.rating) >= filters.minRating)) return false
 
       if (min != null || max != null) {
         if (!isPriced(product)) return false
