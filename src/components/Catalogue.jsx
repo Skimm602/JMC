@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatPeso, isPriced, unitPriceOf, withVat } from '@/utils/pricing'
-import { cx } from './ui.jsx'
+import { Rule, cx } from './ui.jsx'
 import { ArrowRightIcon, FileIcon, StarIcon } from './icons.jsx'
 
 /**
@@ -124,6 +124,37 @@ export function RatingStars({ rating, className }) {
 const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery' }
 const VOLTAGE_LABEL = { low: 'Low voltage', high: 'High voltage' }
 
+/**
+ * The shelves the shop is laid out on.
+ *
+ * One flat grid asks a customer to read every card before they learn that
+ * four of them are batteries and the rest are inverters. Splitting the grid
+ * says it up front, and the filter bar still narrows within it.
+ *
+ * A product whose type has not been set in the back office lands on the last
+ * shelf rather than disappearing: it is still stocked, still priced and still
+ * orderable, and dropping it silently would be the worst of the options.
+ */
+const CATEGORY_GROUPS = [
+  {
+    key: 'inverter',
+    heading: 'Inverters',
+    blurb: 'Hybrid inverters — the box between the array, the battery and the switchboard.',
+  },
+  {
+    key: 'battery',
+    heading: 'Batteries',
+    blurb: 'LiFePO₄ storage, low and high voltage, rack and cabinet.',
+  },
+  {
+    key: 'uncategorised',
+    heading: 'Other equipment',
+    blurb: 'Stocked lines that do not sit in either group above.',
+  },
+]
+
+const shelfOf = (product) => (CATEGORY_LABEL[product.category] ? product.category : 'uncategorised')
+
 function ProductCard({ product, isInstaller }) {
   const soldOut = product.stock_quantity === 0
 
@@ -160,9 +191,9 @@ function ProductCard({ product, isInstaller }) {
         )}
       </div>
 
-      <h2 className="text-ink group-hover:text-cool-600 mt-4 font-mono text-[0.9375rem] font-medium transition-colors">
+      <h3 className="text-ink group-hover:text-cool-600 mt-4 font-mono text-[0.9375rem] font-medium transition-colors">
         {product.name}
-      </h2>
+      </h3>
 
       {product.rating != null && <RatingStars rating={product.rating} className="mt-2" />}
 
@@ -370,6 +401,18 @@ export default function Catalogue({ products, isInstaller }) {
     })
   }, [products, filters, isInstaller])
 
+  // Empty shelves are left out rather than rendered as a heading over
+  // nothing — filtering to "Batteries" should not leave an Inverters bar
+  // sitting above a blank row.
+  const shelves = useMemo(
+    () =>
+      CATEGORY_GROUPS.map((group) => ({
+        ...group,
+        products: filtered.filter((product) => shelfOf(product) === group.key),
+      })).filter((group) => group.products.length > 0),
+    [filtered],
+  )
+
   if (!products?.length) {
     return (
       <div className="border-rule bg-glare mt-12 flex flex-col items-center border border-dashed px-6 py-20 text-center">
@@ -405,9 +448,50 @@ export default function Catalogue({ products, isInstaller }) {
           </button>
         </div>
       ) : (
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} isInstaller={isInstaller} />
+        <div>
+          {/* Jump links only earn their place when there is more than one
+              shelf to jump between. */}
+          {shelves.length > 1 && (
+            <nav aria-label="Product types" className="mt-6 flex flex-wrap gap-2">
+              {shelves.map((shelf) => (
+                <a
+                  key={shelf.key}
+                  href={`#shelf-${shelf.key}`}
+                  className="rounded-row border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink border px-3 py-1.5 text-xs font-medium transition-colors duration-200"
+                >
+                  {shelf.heading}
+                  <span className="text-hush ml-1.5 tabular-nums">{shelf.products.length}</span>
+                </a>
+              ))}
+            </nav>
+          )}
+
+          {shelves.map((shelf, i) => (
+            <section
+              key={shelf.key}
+              id={`shelf-${shelf.key}`}
+              aria-labelledby={`shelf-${shelf.key}-heading`}
+              className={cx('scroll-mt-28', i === 0 ? 'mt-8' : 'mt-16')}
+            >
+              <Rule />
+
+              <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                <h2 id={`shelf-${shelf.key}-heading`} className="display-wide text-ink text-xl font-semibold">
+                  {shelf.heading}
+                </h2>
+                <p className="text-ink-soft text-xs tabular-nums">
+                  {shelf.products.length} {shelf.products.length === 1 ? 'product' : 'products'}
+                </p>
+              </div>
+
+              <p className="text-ink-soft max-w-measure mt-2 text-sm leading-relaxed">{shelf.blurb}</p>
+
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {shelf.products.map((product) => (
+                  <ProductCard key={product.id} product={product} isInstaller={isInstaller} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}
