@@ -1,33 +1,39 @@
 import { Eyebrow, Lede, Section, SectionHeading } from './ui.jsx'
+import { HeadsetIcon, MonitorIcon, ShieldIcon, WrenchIcon } from './icons.jsx'
 
 /**
- * Spec-sheet rows rather than a grid of icon cards — four substantial
- * arguments beat six shallow ones.
+ * Four substantial arguments, icon-fronted, in a grid rather than stacked
+ * rows — an entry point someone can scan in a few seconds before deciding
+ * whether to read the paragraph.
  *
- * Each row is anchored by the figure that actually settles it. An index
- * number (01, 02, 03) would have carried no information; the measurement
- * is the reason the row exists, so the measurement gets the size.
+ * Each is still anchored by the figure that actually settles it. An index
+ * number (01, 02, 03) would have carried no information; the measurement is
+ * the reason the card exists, so the measurement keeps its size.
  */
 const ARGUMENTS = [
   {
+    icon: ShieldIcon,
     figure: '45',
     unit: '°C',
     title: 'Thermal headroom by default',
     copy: 'Full rated output held to 45 °C ambient, and the derating curve is published rather than buried in an appendix. Size the system once and stop re-checking it every heatwave.',
   },
   {
+    icon: WrenchIcon,
     figure: '1',
     unit: 'pass',
     title: 'Commissioning in one visit',
     copy: 'Bluetooth pairing, guided grid-code selection and an auto-generated handover PDF before the van doors close. No laptop, no dongle, no second visit for paperwork.',
   },
   {
+    icon: MonitorIcon,
     figure: '1',
     unit: 'login',
     title: 'The whole fleet in one view',
     copy: 'Every system you commission lands in a single dashboard with alarm routing by site or by crew — not one account per homeowner. There is a read API when you want the data in your own tooling.',
   },
   {
+    icon: HeadsetIcon,
     figure: '<4',
     unit: 'h',
     title: 'Engineers on the support line',
@@ -59,22 +65,21 @@ export default function WhyVip() {
       {/* No scroll reveal on these four. They are the section's substance, and
           fading body copy in on scroll delays the reading it exists for; the
           hero's drawn curve is the page's one authored moment. */}
-      <div className="mt-20">
+      <div className="mt-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {ARGUMENTS.map((a) => (
-          <article
-            key={a.title}
-            className="border-rule-shade grid items-baseline gap-x-10 gap-y-4 border-t py-10 last:border-b lg:grid-cols-12"
-          >
-            <p className="lg:col-span-2">
-              <span className="text-cool-400 font-mono text-[2.75rem] leading-none font-medium tabular-nums">
+          <article key={a.title} className="border-rule-shade rounded-panel border p-7">
+            <a.icon className="text-cool-400 h-7 w-7" />
+
+            <p className="mt-6">
+              <span className="text-cool-400 font-mono text-[2.25rem] leading-none font-medium tabular-nums">
                 {a.figure}
               </span>
               <span className="text-glint-soft ml-1.5 font-mono text-base">{a.unit}</span>
             </p>
 
-            <h3 className="display-wide text-display-3 text-glint font-semibold lg:col-span-4">{a.title}</h3>
+            <h3 className="display-wide text-glint mt-4 text-lg font-semibold">{a.title}</h3>
 
-            <p className="text-glint-soft leading-relaxed lg:col-span-6">{a.copy}</p>
+            <p className="text-glint-soft mt-3 text-sm leading-relaxed">{a.copy}</p>
           </article>
         ))}
       </div>

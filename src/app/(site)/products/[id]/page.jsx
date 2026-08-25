@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import { getStorefrontProduct } from '@/app/actions/catalogue'
-import { StockNote } from '@/components/Catalogue.jsx'
+import { CATEGORY_LABEL, StockNote } from '@/components/Catalogue.jsx'
 import ProductCheckout from '@/components/ProductCheckout.jsx'
-import { ArrowLink, Eyebrow, Rule } from '@/components/ui.jsx'
+import { ArrowLink, Breadcrumb, Eyebrow, Rule } from '@/components/ui.jsx'
 import { FileIcon } from '@/components/icons.jsx'
+import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
 
 export async function generateMetadata({ params }) {
   const { id } = await params
@@ -38,11 +39,22 @@ export default async function ProductPage({ params }) {
   // same event to a customer: this page is not here.
   if (!product) notFound()
 
+  const category = PRODUCT_CATEGORIES.find((c) => c.key === product.category) ?? null
+
   return (
     <main id="content" className="pt-nav">
       <section className="band-sheet rail py-16 lg:py-24">
         <div className="rail-inner">
-          <ArrowLink href="/products">
+          <Breadcrumb
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Products', href: category ? categoryHref(category) : '/products' },
+              ...(category ? [{ label: CATEGORY_LABEL[category.key] }] : []),
+              { label: product.name },
+            ]}
+          />
+
+          <ArrowLink href="/products" className="mt-6">
             <span className="sr-only">Back to </span>All products
           </ArrowLink>
 

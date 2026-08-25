@@ -189,7 +189,7 @@ export default function FaqsPage() {
 
             <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
               <ArrowLink href="/products">Products and pricing</ArrowLink>
-              <ArrowLink href="/#sizing">Size a system</ArrowLink>
+              <ArrowLink href="/#footer">Talk to us</ArrowLink>
             </div>
           </div>
         </div>

@@ -110,7 +110,7 @@ export default async function CategoryStorefront({ category }) {
               <p className="text-ink-soft max-w-measure text-sm leading-relaxed">{category.empty}</p>
               <div className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-3">
                 <ArrowLink href="/#footer">Ask us for a quote</ArrowLink>
-                <ArrowLink href="/#products">See the technical range</ArrowLink>
+                <ArrowLink href="/products">See what else is in stock</ArrowLink>
               </div>
             </div>
           ) : (
@@ -119,8 +119,8 @@ export default async function CategoryStorefront({ category }) {
 
           <Rule className="mt-16" />
           <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
-            <ArrowLink href="/#products">Full technical range and datasheets</ArrowLink>
-            <ArrowLink href="/#sizing">Size a system</ArrowLink>
+            <ArrowLink href="/faqs">FAQs</ArrowLink>
+            <ArrowLink href="/#footer">Talk to us</ArrowLink>
           </div>
         </div>
       </section>

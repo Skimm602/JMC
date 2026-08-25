@@ -1,4 +1,4 @@
-import { Eyebrow, Lede, Section, SectionHeading } from './ui.jsx'
+import { Button, Eyebrow, Lede, Section, SectionHeading } from './ui.jsx'
 
 /**
  * ============================================================================
@@ -33,7 +33,7 @@ const MILESTONES = [
 export default function About() {
   return (
     <Section id="about" className="band-shade">
-      <div className="grid gap-8 lg:grid-cols-12">
+      <div id="about-heading" className="grid gap-8 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <Eyebrow tone="shade">About us</Eyebrow>
           {/* Example — replace with the real headline. */}
@@ -46,7 +46,15 @@ export default function About() {
         </Lede>
       </div>
 
-      <div className="mt-20 grid gap-16 lg:grid-cols-12 lg:gap-10">
+      {/* Stand-in photo — the hero's own image, framed rather than shot for
+          this section. Swap for a real office/workshop photo when one
+          exists; a borrowed real photo is still honest, a blank frame would
+          only imply the section is unfinished. */}
+      <div className="border-rule-shade rounded-panel mt-12 overflow-hidden border">
+        <img src="/hero-array.jpg" alt="" className="h-64 w-full object-cover sm:h-80" />
+      </div>
+
+      <div className="mt-16 grid gap-16 lg:grid-cols-12 lg:gap-10">
         {/* the story, at reading measure rather than full band width */}
         <div className="max-w-measure grid gap-6 lg:col-span-7">
           {STORY.map((paragraph, i) => (
@@ -54,6 +62,15 @@ export default function About() {
               {paragraph}
             </p>
           ))}
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button as="a" href="/faqs" variant="outlineShade">
+              Read more
+            </Button>
+            <Button as="a" href="/#footer" variant="ghostShade">
+              Contact us
+            </Button>
+          </div>
         </div>
 
         {/* Milestones as a dated list rather than a drawn timeline: the dates

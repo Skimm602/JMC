@@ -1,17 +1,88 @@
-import { ArrowUpRightIcon } from './icons.jsx'
-import { Button } from './ui.jsx'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { categoryHref, categoryBySlug } from '@/utils/product-categories'
+import { cx } from './ui.jsx'
+
+const inverterCategory = categoryBySlug('inverters')
+const batteryCategory = categoryBySlug('batteries')
+
+/**
+ * The banner itself rotates, the way Suntree's does — the environment photo
+ * first, then one slide per category that actually has a photo to show
+ * (Accessories drops out, same reasoning as the shop cards below it). Each
+ * slide carries its own heading rather than one fixed argument sitting over
+ * all three — `accent` is always a real, published figure (the rated-output
+ * range and the parallel-capacity spec are both read off the spec tables in
+ * `Products.jsx`), never an invented promotional number.
+ *
+ * A product shot is a cutout on a plain ground, not a scene, so it does not
+ * belong in the full-bleed background layer at all — sized to fit there it
+ * either shrinks to nothing or grows wide enough to land under the text.
+ * It sits in its own grid column instead, next to the text rather than
+ * behind it, which rules out the overlap by construction. Below `lg` there
+ * is not room for both, so the column is dropped and the slide falls back
+ * to the same flat pit ground the text always reads against.
+ */
+const SLIDES = [
+  {
+    key: 'array',
+    kind: 'photo',
+    src: '/hero-array.jpg',
+    heading: 'VIP Solar',
+    sub: 'Grid-tie, hybrid and storage inverters for residential and commercial solar — engineered for the people who have to service them.',
+  },
+  {
+    key: 'inverter',
+    kind: 'product',
+    src: inverterCategory.photo,
+    label: inverterCategory.label,
+    href: categoryHref(inverterCategory),
+    heading: 'Hybrid inverters',
+    accent: '6 – 16 kW',
+    sub: 'Low and high voltage, single-phase.',
+  },
+  {
+    key: 'battery',
+    kind: 'product',
+    src: batteryCategory.photo,
+    label: batteryCategory.label,
+    href: categoryHref(batteryCategory),
+    heading: 'LiFePO₄ storage',
+    accent: 'Up to 240 kWh',
+    sub: 'Wall, rack and cabinet — parallel on one bus.',
+  },
+]
 
 export default function Hero() {
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+
+  useEffect(() => {
+    if (paused) return
+    const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 5000)
+    return () => clearInterval(id)
+  }, [paused])
+
+  const slide = SLIDES[index]
+
   return (
-    /* The hero is the photograph, not a panel laid on top of one. The dark
-       ground the header bar is the top edge of is now the scrim over that
-       photograph, so the bar, the band and the image read as one surface and
-       the content is set directly into it. */
-    <section id="top" className="band-pit rail relative isolate pt-nav">
-      {/* The ground is a photograph of the thing being sold. It is held down,
-          but only where something has to be read on top of it — a flat scrim
-          heavy enough for the worst pixel in the frame would take the sunset
-          with it, so the weight is placed instead of spread:
+    /* The hero is the photograph, not a panel laid on top of one — true of
+       whichever slide is showing. The dark ground the header bar is the top
+       edge of is now the scrim over it, so the bar, the band and the image
+       read as one surface and the content is set directly into it. */
+    <section
+      id="top"
+      className="band-pit rail relative isolate flex min-h-[92vh] flex-col justify-center pt-nav"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
+      {/* The ground is held down, but only where something has to be read on
+          top of it — a flat scrim heavy enough for the worst pixel in the
+          frame would take the sunset with it, so the weight is placed
+          instead of spread:
 
             left    the argument column sits here, and the section spine is
                     fixed over this rail with glint-soft labels, which need a
@@ -20,105 +91,109 @@ export default function Hero() {
                     than ending on a bright sky.
             bottom  hands off to the sheet band below without a seam.
 
-          What is left — the middle and right of the frame — is where the
-          photograph shows, and the only thing set over it there carries its
-          own surface. */}
+          What is left — the middle and right of the frame — is where each
+          slide's own content shows, and the only thing set over it there
+          carries its own surface. */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden">
-        <img
-          src="/hero-array.jpg"
-          alt=""
-          fetchPriority="high"
-          className="h-full w-full object-cover object-center brightness-105 saturate-110"
-        />
+        {SLIDES.filter((s) => s.kind === 'photo').map((s) => (
+          <div
+            key={s.key}
+            className={cx(
+              'absolute inset-0 transition-opacity duration-1000 ease-out',
+              slide.key === s.key ? 'opacity-100' : 'opacity-0',
+            )}
+          >
+            <img
+              src={s.src}
+              alt=""
+              fetchPriority="high"
+              className="h-full w-full object-cover object-center brightness-105 saturate-110"
+            />
+          </div>
+        ))}
         <div className="bg-pit/55 absolute inset-0" />
         <div className="from-pit via-pit/70 absolute inset-0 bg-gradient-to-r via-42% to-transparent to-72%" />
         {/* Bands rather than one full-height gradient: a gradient that runs the
             whole height has to be fading somewhere at every row, and the middle
-            is the one place the photograph is supposed to be left alone. */}
+            is the one place each slide is supposed to be left alone. */}
         <div className="from-pit absolute inset-x-0 top-0 h-28 bg-gradient-to-b to-transparent" />
         <div className="from-pit absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t to-transparent" />
       </div>
 
       <div className="rail-inner pt-14 pb-16 lg:pt-20 lg:pb-24 xl:pt-24 xl:pb-28">
-        <div className="grid items-start gap-14 xl:grid-cols-[minmax(0,6.2fr)_minmax(0,5.8fr)] xl:gap-16">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_30rem]">
           {/* ---------------------------- argument ---------------------------- */}
-          <div>
-            {/* An outlined pill rather than the hairline-and-label pairing the
-                rest of the page uses: this is the one eyebrow that has to hold
-                its own against a headline four times its size. */}
-            <p className="label border-glint-soft/45 text-glint-soft inline-flex items-center gap-2.5 rounded-full border px-4 py-1.5 font-medium">
-              <span aria-hidden="true" className="bg-cool-400 h-1.5 w-1.5 shrink-0 rounded-full" />
-              H6 hybrid series — shipping now
-            </p>
-
-            <h1 className="display-wide text-display-1 text-glint mt-7 font-semibold text-balance">
-              Rated output at 45 °C.
-              <br />
-              {/* hot-400 rather than the 600 this line carried on the lit panel:
-                  the warm pole has to be read against pit here, not sheet */}
-              <span className="text-hot-400">Not at 25.</span>
+          {/* Swaps with the slide behind it rather than sitting fixed on top —
+              a rotating banner showing one argument the whole time reads as a
+              mistake, not a choice. `key={slide.key}` forces a clean remount
+              so the swap never blends two slides' text mid-transition. */}
+          <div key={slide.key} className="max-w-2xl">
+            <h1 className="display-wide text-display-1 text-glint font-semibold text-balance">
+              {slide.heading}
+              {/* Not every slide has a figure to lead with — the brand slide
+                  is a name and a sentence, not a spec. */}
+              {slide.accent && (
+                <>
+                  <br />
+                  {/* hot-400 rather than the 600 this line carried on the lit
+                      panel: the warm pole has to be read against pit here, not
+                      sheet */}
+                  <span className="text-hot-400">{slide.accent}</span>
+                </>
+              )}
             </h1>
 
-            <p className="text-glint max-w-measure mt-7 text-lg leading-snug font-medium">
-              Datasheets are written at 25 °C ambient. Philippine roofs are not.
-            </p>
-
-            <p className="text-glint-soft max-w-measure mt-5 text-[0.9375rem] leading-relaxed">
-              Grid-tie, hybrid and storage inverters engineered around the two things installers actually get called
-              back for: thermal headroom and clean commissioning.
-            </p>
-
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Button as="a" href="#products" variant="outlineShade" size="lg">
-                Compare the range
-              </Button>
-            </div>
+            <p className="text-glint max-w-measure mt-7 text-lg leading-snug font-medium">{slide.sub}</p>
           </div>
 
-          {/* ------------------------------ the line -------------------------- */}
-          {/* Set on its own translucent surface rather than straight onto the
-              photograph: the frame is bright and uneven in the middle, and a
-              line this size has to hold at 3:1 wherever the sun happens to sit
-              in the crop. The blur keeps the image reading through it, which is
-              the point of putting it here rather than on a solid card. */}
-          <blockquote className="border-glint-soft/25 bg-pit/45 rounded-[1.75rem] border p-8 backdrop-blur-md sm:p-10 xl:mt-6">
-            <p className="label text-glint-soft flex items-center gap-3 font-medium">
-              <span aria-hidden="true" className="bg-hot-400 h-px w-6 shrink-0" />
-              Field note
-            </p>
+          {/* ------------------------------ the unit ------------------------------ */}
+          {/* Its own grid column rather than a background layer — a column
+              cannot be overlapped by the text next to it the way a floated
+              background image can. Hidden below `lg`, where there is no room
+              for both without one landing on the other.
 
-            <p className="display-wide text-display-3 text-glint mt-6 font-semibold text-balance">
-              A datasheet is a promise made in an air-conditioned lab.
-            </p>
-
-            <p className="display-wide text-display-3 text-hot-400 mt-3 font-semibold text-balance">
-              The roof is where it gets collected.
-            </p>
-
-            {/* The claim is about the enclosure, not the town. A weather
-                station reads shade air at two metres; the wall an inverter is
-                bolted to has been in the sun since mid-morning, and that gap —
-                not the forecast — is what the derating curve gets asked about. */}
-            <footer className="border-rule-shade text-glint-soft mt-8 border-t pt-6 text-[0.9375rem] leading-relaxed">
-              An Ormoc weather station reads the shade. The wall your inverter is bolted to does not — enclosure
-              ambient sits past 40 °C by mid-afternoon. Everything we ship is specified to hold 100 % there.
-            </footer>
-          </blockquote>
+              The box itself is unconditional and the same fixed height on
+              every slide — including the brand slide, which has no unit to
+              show — so the grid row never grows or shrinks as the slides
+              rotate. Only what is inside it changes. */}
+          <div className="hidden h-96 lg:flex lg:items-center lg:justify-center xl:h-[30rem]">
+            {slide.kind === 'product' && (
+              <img src={slide.src} alt="" className="h-full w-full object-contain" />
+            )}
+          </div>
         </div>
 
-        {/* The primary action carries the brightest warm in the palette with
-            dark text on top — the one inversion on the page, and the reason the
-            eye lands here before anywhere else. */}
-        <div className="mt-14 inline-flex w-full sm:w-auto">
-          <a
-            href="/register"
-            className="group/join bg-hot-400 hover:bg-hot-500 flex w-full items-center justify-between gap-6 rounded-[1.75rem] px-7 py-6 transition-colors duration-200 sm:w-auto sm:min-w-[26rem] sm:px-9"
-          >
-            <span className="text-pit text-lg font-semibold">Become a certified installer</span>
-            <span className="border-pit/35 group-hover/join:border-pit group-hover/join:bg-pit/10 grid h-11 w-11 shrink-0 place-items-center rounded-full border transition-colors duration-200">
-              <ArrowUpRightIcon className="text-pit h-5 w-5" strokeWidth={1.9} />
-            </span>
-          </a>
+        {/* ------------------------------ slide controls ------------------------------ */}
+        <div className="mt-12 flex flex-wrap items-center gap-5">
+          <div className="flex items-center gap-2" role="tablist" aria-label="Hero slides">
+            {SLIDES.map((s, i) => (
+              <button
+                key={s.key}
+                type="button"
+                role="tab"
+                aria-selected={i === index}
+                aria-label={s.kind === 'photo' ? 'Overview' : s.label}
+                onClick={() => setIndex(i)}
+                className={cx(
+                  'h-1.5 rounded-full transition-all duration-300',
+                  i === index ? 'bg-hot-400 w-6' : 'bg-glint-soft/40 hover:bg-glint-soft w-1.5',
+                )}
+              />
+            ))}
+          </div>
+
+          {/* Only the product slides get a link — the environment shot is
+              scene-setting, not a category, and giving it one would send a
+              visitor into a filter that matches nothing in particular. */}
+          {slide.kind === 'product' && (
+            <a
+              href={slide.href}
+              className="text-glint hover:text-hot-400 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
+            >
+              Shop {slide.label}
+              <span aria-hidden="true">→</span>
+            </a>
+          )}
         </div>
       </div>
     </section>

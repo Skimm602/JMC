@@ -1,6 +1,6 @@
 import { getStorefront } from '@/app/actions/catalogue'
 import Catalogue from '@/components/Catalogue.jsx'
-import { ArrowLink, Eyebrow, Rule, SectionHeading } from '@/components/ui.jsx'
+import { ArrowLink, Breadcrumb, Eyebrow, Rule, SectionHeading } from '@/components/ui.jsx'
 import { AlertIcon, InfoIcon } from '@/components/icons.jsx'
 
 export const metadata = {
@@ -10,13 +10,10 @@ export const metadata = {
 }
 
 /**
- * The shop. Its own route rather than a band on the home page, because this
- * is where prices, stock and ordering live, and none of those belong in the
- * middle of an argument about why the equipment is good.
- *
- * The home page keeps the engineering side of the range — the spec tables and
- * the manufacturer's datasheets — and the two link to each other rather than
- * one trying to be both.
+ * The whole shop, split into shelves. `/products/inverters` and its two
+ * siblings are where the header menu sends people when they already know
+ * what they want — this page stays as the one place that shows all of it at
+ * once, for anyone who wants that instead.
  */
 export default async function ProductsPage() {
   const { data, error, isInstaller, signedIn } = await getStorefront()
@@ -25,7 +22,9 @@ export default async function ProductsPage() {
     <main id="content" className="pt-nav">
       <section className="band-sheet rail py-20 lg:py-28">
         <div className="rail-inner">
-          <Eyebrow>Shop</Eyebrow>
+          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Products' }]} />
+
+          <Eyebrow className="mt-6">Shop</Eyebrow>
           <SectionHeading className="mt-6">Products and pricing</SectionHeading>
           <p className="text-ink-soft max-w-measure mt-6 leading-relaxed">
             Everything below is priced and stocked. Pick a unit to see what it costs delivered, fill in where it
@@ -76,8 +75,8 @@ export default async function ProductsPage() {
 
           <Rule className="mt-16" />
           <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
-            <ArrowLink href="/#products">Full technical range and datasheets</ArrowLink>
-            <ArrowLink href="/#sizing">Size a system</ArrowLink>
+            <ArrowLink href="/faqs">FAQs</ArrowLink>
+            <ArrowLink href="/#footer">Talk to us</ArrowLink>
           </div>
         </div>
       </section>

@@ -18,8 +18,10 @@ export const PRODUCT_CATEGORIES = [
     // Short enough to sit under the label in the header menu.
     menuBlurb: 'Hybrid inverters, low and high voltage',
     lede: 'Hybrid inverters from HYXiPOWER, LuxpowerTek, Solis and GoodWe — the box between the array, the battery and the switchboard. Every unit here is priced, stocked and specified to hold its rating at Philippine roof temperatures.',
-    empty:
-      'No inverters are listed for sale at the moment. The technical range and its datasheets are on the home page in the meantime.',
+    empty: 'No inverters are listed for sale at the moment. Tell us what the job needs and we will quote it.',
+    // Representative unit for the homepage's category cards/slideshow —
+    // a real, currently-stocked photo, not a placeholder.
+    photo: '/products/h6-8k-ls.png',
   },
   {
     key: 'battery',
@@ -27,8 +29,8 @@ export const PRODUCT_CATEGORIES = [
     label: 'Batteries',
     menuBlurb: 'LiFePO₄ storage — wall, rack and cabinet',
     lede: 'LiFePO₄ storage in wall packs, rack modules and floor cabinets, low and high voltage. Breaker, fuse and cell-temperature sensing are inside the unit, so the install is a mount and a pair of cables rather than a cabinet build.',
-    empty:
-      'No batteries are listed for sale at the moment. The technical range and its datasheets are on the home page in the meantime.',
+    empty: 'No batteries are listed for sale at the moment. Tell us what the job needs and we will quote it.',
+    photo: '/products/e50-100-h3.png',
   },
   {
     key: 'accessory',
@@ -38,6 +40,9 @@ export const PRODUCT_CATEGORIES = [
     lede: 'Meters, monitoring dongles, mounting hardware and cabling — the parts an install needs beyond the inverter and the battery.',
     empty:
       'Accessories are not listed online yet. Tell us what the job needs and we will quote it — we stock more than the site lists.',
+    // No accessory is stocked yet, so there is no real unit to show —
+    // consumers of this list render an icon instead when `photo` is null.
+    photo: null,
   },
 ]
 

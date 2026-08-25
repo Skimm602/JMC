@@ -8,8 +8,8 @@ import { cx } from './ui.jsx'
  * wayfinding. It replaces the usual centred-section rhythm with an
  * off-centre axis that every band hangs from.
  *
- * No index numbers — Range / Engineering / Program / Register is not a
- * sequence, so numbering it would decorate rather than inform.
+ * No index numbers — Products / Why Choose Us / About is not a sequence, so
+ * numbering it would decorate rather than inform.
  *
  * `shade` marks the sections that sit on a dark band, so the spine can
  * invert with the surface it is currently floating over.
@@ -25,10 +25,8 @@ import { cx } from './ui.jsx'
  */
 const SECTIONS = [
   { id: 'top', label: 'Overview', shade: true },
-  { id: 'products', label: 'Range' },
-  { id: 'sizing', label: 'Sizing' },
-  { id: 'why', label: 'Engineering', shade: true },
-  { id: 'installers', label: 'Program' },
+  { id: 'products', label: 'Products' },
+  { id: 'why-choose', label: 'Why Choose Us' },
   { id: 'about', label: 'About', shade: true },
 ]
 
@@ -56,6 +54,32 @@ export default function SectionIndex() {
 
   const onShade = SECTIONS.find((s) => s.id === active)?.shade
 
+  /**
+   * Products is short enough to centre on the section itself. About is
+   * different: the goal there isn't the middle of anything, it's landing
+   * right as the band above finishes scrolling past — so "About us" is the
+   * first thing on the dark band, sitting just clear of the nav bar rather
+   * than buried mid-screen.
+   */
+  const SCROLL_TARGET = {
+    products: { id: 'products', mode: 'center' },
+    about: { id: 'about-heading', mode: 'top', offset: 96 },
+  }
+
+  const onLinkClick = (e, id) => {
+    const target = SCROLL_TARGET[id]
+    if (!target) return
+    const el = document.getElementById(target.id)
+    if (!el) return
+    e.preventDefault()
+
+    const rect = el.getBoundingClientRect()
+    const delta =
+      target.mode === 'top' ? rect.top - target.offset : rect.top + rect.height / 2 - window.innerHeight / 2
+    window.scrollBy({ top: delta, behavior: 'smooth' })
+    history.pushState(null, '', `#${id}`)
+  }
+
   return (
     <nav
       aria-label="Section index"
@@ -82,6 +106,7 @@ export default function SectionIndex() {
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
+                onClick={(e) => onLinkClick(e, s.id)}
                 className="group relative flex h-4 items-center"
                 aria-current={on ? 'page' : undefined}
               >
@@ -97,19 +122,13 @@ export default function SectionIndex() {
                         : 'bg-ink/40 group-hover:bg-ink w-3',
                   )}
                 />
-                {/* The section you are in stays named. Revealing every label
-                    only on hover made the index unreadable unless you already
-                    knew to point at it. */}
+                {/* Only visible on hover/focus, active section included —
+                    it names itself while you're pointing at it, then goes
+                    back to just the tick like every other stop. */}
                 <span
                   className={cx(
-                    'label absolute left-8 whitespace-nowrap transition-opacity duration-300',
-                    on
-                      ? onShade
-                        ? 'text-glint opacity-100'
-                        : 'text-ink opacity-100'
-                      : onShade
-                        ? 'text-glint-soft opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
-                        : 'text-ink-soft opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100',
+                    'label absolute left-8 whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100',
+                    on ? (onShade ? 'text-glint' : 'text-ink') : onShade ? 'text-glint-soft' : 'text-ink-soft',
                   )}
                 >
                   {s.label}

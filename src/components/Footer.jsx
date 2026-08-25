@@ -22,10 +22,9 @@ import { Rule } from './ui.jsx'
 /** Real destinations only. A column of links that all point at "/" is worse
     than no column — it costs a click to learn it was decorative. */
 const EXPLORE = [
+  { label: 'Products by category', href: '/#products' },
   { label: 'Products and pricing', href: '/products' },
   { label: 'FAQs', href: '/faqs' },
-  { label: 'Size a system', href: '/#sizing' },
-  { label: 'Technical range', href: '/#products' },
 ]
 
 /** Answered by a person, so they are dial-able rather than decorative — half

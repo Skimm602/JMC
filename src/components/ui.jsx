@@ -101,6 +101,37 @@ export function ArrowLink({ href, children, className, tone = 'ink', ...rest }) 
   )
 }
 
+/**
+ * Orientation trail for a page nested more than one level deep. The current
+ * page is the last item and never a link — it names where you are, not
+ * where you could go.
+ */
+export function Breadcrumb({ items, className }) {
+  return (
+    <nav aria-label="Breadcrumb" className={cx('flex flex-wrap items-center gap-2 text-sm', className)}>
+      {items.map((item, i) => {
+        const last = i === items.length - 1
+        return (
+          <span key={item.label} className="flex items-center gap-2">
+            {i > 0 && (
+              <span aria-hidden="true" className="text-ink-soft/60">
+                /
+              </span>
+            )}
+            {last || !item.href ? (
+              <span className={last ? 'text-ink' : 'text-ink-soft'}>{item.label}</span>
+            ) : (
+              <a href={item.href} className="text-ink-soft hover:text-ink transition-colors">
+                {item.label}
+              </a>
+            )}
+          </span>
+        )
+      })}
+    </nav>
+  )
+}
+
 /** Hairline separating blocks within a band. */
 export function Rule({ className, tone = 'ink' }) {
   return (

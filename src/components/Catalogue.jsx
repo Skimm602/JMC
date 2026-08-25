@@ -138,7 +138,7 @@ function brandOf(product) {
 /** Anything the rules do not recognise is still reachable, under one heading. */
 const OTHER_BRAND = 'Other'
 
-const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery', accessory: 'Accessory' }
+export const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery', accessory: 'Accessory' }
 const VOLTAGE_LABEL = { low: 'Low voltage', high: 'High voltage' }
 
 /**
@@ -185,7 +185,7 @@ function ProductCard({ product, isInstaller }) {
       href={`/products/${product.id}`}
       className="group border-rule bg-glare hover:border-ink-soft rounded-panel flex flex-col border p-6 transition-colors duration-200"
     >
-      <div className="bg-sheet rounded-card flex h-44 items-center justify-center p-4">
+      <div className="bg-sheet rounded-card flex h-56 items-center justify-center p-4">
         {product.image_url ? (
           <img
             src={product.image_url}
