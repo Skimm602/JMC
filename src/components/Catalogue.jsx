@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { formatPeso, isPriced, unitPriceOf, withVat } from '@/utils/pricing'
 import { Rule, cx } from './ui.jsx'
-import { ArrowRightIcon, FileIcon } from './icons.jsx'
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon, FileIcon } from './icons.jsx'
 
 /**
  * The shop floor. The grid itself is a picture, a price and a link, and none
@@ -100,6 +100,43 @@ export function StockNote({ stock, className }) {
     </p>
   )
 }
+
+/**
+ * Who made it, read off the model number.
+ *
+ * There is no `brand` column on the products table, and adding one would mean
+ * every product sat brandless until somebody ran the migration and filled it
+ * in — a filter that lists nothing is worse than no filter. The model numbers
+ * already carry the answer unambiguously (a manufacturer's series prefix is
+ * the one part of a model number that never collides), so it is read from
+ * there instead.
+ *
+ * Longest prefix wins, so a future 'GW-SOMETHING-LB-EU' cannot be caught by a
+ * shorter rule that happens to sit earlier in the list.
+ */
+const BRAND_RULES = [
+  ['GEN2-LB-EU', 'LuxpowerTek'],
+  ['T-BAT-SYS', 'SolaX'],
+  ['S6-EH1P', 'Solis'],
+  ['HYX-', 'HYXiPOWER'],
+  ['GW', 'GoodWe'],
+]
+
+/** The brand of one product, or null when the name matches no known series. */
+function brandOf(product) {
+  const name = (product.name ?? '').trim().toUpperCase()
+
+  let best = null
+  for (const [prefix, brand] of BRAND_RULES) {
+    if (!name.startsWith(prefix.toUpperCase())) continue
+    if (!best || prefix.length > best[0].length) best = [prefix, brand]
+  }
+
+  return best ? best[1] : null
+}
+
+/** Anything the rules do not recognise is still reachable, under one heading. */
+const OTHER_BRAND = 'Other'
 
 const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery', accessory: 'Accessory' }
 const VOLTAGE_LABEL = { low: 'Low voltage', high: 'High voltage' }
@@ -224,15 +261,110 @@ function FilterOption({ active, onClick, children }) {
   )
 }
 
-const DEFAULT_FILTERS = { query: '', category: 'all', voltage: 'all', minPrice: '', maxPrice: '' }
+/**
+ * The brand picker. A dropdown rather than another row of segmented buttons
+ * because the brand list grows every time a supplier is added, and five
+ * suppliers already wrap the filter bar onto another line.
+ *
+ * It opens on hover, which is what makes it quick to skim, but hover alone
+ * would leave it unusable on a phone and unreachable from a keyboard — so a
+ * press toggles it too, and Escape closes it. The panel is a DOM child of the
+ * hover target, so moving the pointer down into it does not count as leaving.
+ */
+function BrandFilter({ brands, value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
 
-function FilterBar({ filters, setFilters, priceBounds, showType = true }) {
+  useEffect(() => {
+    if (!open) return
+
+    const onPointerDown = (e) => {
+      if (!ref.current?.contains(e.target)) setOpen(false)
+    }
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  const total = brands.reduce((n, b) => n + b.count, 0)
+  const options = [{ name: 'all', label: 'All brands', count: total }, ...brands.map((b) => ({ ...b, label: b.name }))]
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className={cx(
+          'rounded-row flex items-center gap-2 border px-3 py-1.5 text-xs font-medium transition-colors duration-200',
+          value === 'all'
+            ? 'border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink'
+            : 'border-cool-600 bg-cool-600 text-glare',
+        )}
+      >
+        {value === 'all' ? 'All brands' : value}
+        <ChevronDownIcon className={cx('h-3 w-3 shrink-0 transition-transform duration-200', open && 'rotate-180')} />
+      </button>
+
+      {open && (
+        /* pt-1 rather than mt-1: the gap between the button and the panel is
+           inside the panel's own box, so the pointer never crosses dead space
+           on its way down and the menu does not shut under the cursor. */
+        <div role="listbox" className="animate-reveal absolute top-full left-0 z-20 pt-1">
+          <div className="border-rule bg-glare rounded-card min-w-[13rem] border p-1 shadow-lg">
+            {options.map((o) => {
+              const on = value === o.name
+              return (
+                <button
+                  key={o.name}
+                  type="button"
+                  role="option"
+                  aria-selected={on}
+                  onClick={() => {
+                    onChange(o.name)
+                    setOpen(false)
+                  }}
+                  className={cx(
+                    'rounded-row flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-colors',
+                    on ? 'text-cool-600' : 'text-ink-soft hover:bg-sheet hover:text-ink',
+                  )}
+                >
+                  <CheckIcon className={cx('h-3.5 w-3.5 shrink-0', on ? 'opacity-100' : 'opacity-0')} />
+                  <span className="flex-1">{o.label}</span>
+                  <span className="text-hush tabular-nums">{o.count}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const DEFAULT_FILTERS = { query: '', category: 'all', voltage: 'all', brand: 'all', minPrice: '', maxPrice: '' }
+
+function FilterBar({ filters, setFilters, priceBounds, brands, showType = true }) {
   const set = (patch) => setFilters((f) => ({ ...f, ...patch }))
 
   const active =
     filters.query !== '' ||
     filters.category !== 'all' ||
     filters.voltage !== 'all' ||
+    filters.brand !== 'all' ||
     filters.minPrice !== '' ||
     filters.maxPrice !== ''
 
@@ -266,6 +398,13 @@ function FilterBar({ filters, setFilters, priceBounds, showType = true }) {
               Accessories
             </FilterOption>
           </div>
+        </div>
+      )}
+
+      {brands.length > 1 && (
+        <div>
+          <span className="label text-ink-soft mb-2 block">Brand</span>
+          <BrandFilter brands={brands} value={filters.brand} onChange={(brand) => set({ brand })} />
         </div>
       )}
 
@@ -337,6 +476,21 @@ export default function Catalogue({ products, isInstaller, category = null }) {
     return { min: Math.min(...priced), max: Math.max(...priced) }
   }, [products, isInstaller])
 
+  const brands = useMemo(() => {
+    const counts = new Map()
+    for (const product of products ?? []) {
+      const brand = brandOf(product) ?? OTHER_BRAND
+      counts.set(brand, (counts.get(brand) ?? 0) + 1)
+    }
+
+    // Named brands alphabetically, with the catch-all last wherever it falls.
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) =>
+        a.name === OTHER_BRAND ? 1 : b.name === OTHER_BRAND ? -1 : a.name.localeCompare(b.name),
+      )
+  }, [products])
+
   const filtered = useMemo(() => {
     const min = filters.minPrice === '' ? null : Number(filters.minPrice)
     const max = filters.maxPrice === '' ? null : Number(filters.maxPrice)
@@ -352,6 +506,9 @@ export default function Catalogue({ products, isInstaller, category = null }) {
           product.description,
           CATEGORY_LABEL[product.category],
           VOLTAGE_LABEL[product.voltage_class],
+          // "solis" appears nowhere in "S6-EH1P 8K", so searching the brand
+          // only works if the brand is put into the haystack deliberately.
+          brandOf(product),
           ...(product.specifications ?? []),
         ]
           .filter(Boolean)
@@ -362,6 +519,7 @@ export default function Catalogue({ products, isInstaller, category = null }) {
       }
 
       if (filters.category !== 'all' && product.category !== filters.category) return false
+      if (filters.brand !== 'all' && (brandOf(product) ?? OTHER_BRAND) !== filters.brand) return false
       if (filters.voltage !== 'all' && product.voltage_class !== filters.voltage) return false
 
       if (min != null || max != null) {
@@ -401,7 +559,13 @@ export default function Catalogue({ products, isInstaller, category = null }) {
 
   return (
     <div>
-      <FilterBar filters={filters} setFilters={setFilters} priceBounds={priceBounds} showType={!category} />
+      <FilterBar
+        filters={filters}
+        setFilters={setFilters}
+        priceBounds={priceBounds}
+        brands={brands}
+        showType={!category}
+      />
 
       <p className="text-ink-soft mt-4 text-xs">
         Showing {filtered.length} of {products.length} {products.length === 1 ? 'product' : 'products'}
