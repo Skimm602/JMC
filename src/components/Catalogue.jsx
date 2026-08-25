@@ -147,6 +147,11 @@ const CATEGORY_GROUPS = [
     blurb: 'LiFePO₄ storage, low and high voltage, rack and cabinet.',
   },
   {
+    key: 'accessory',
+    heading: 'Accessories',
+    blurb: 'Mounting, wiring and the other parts an install needs beyond the inverter and battery.',
+  },
+  {
     key: 'uncategorised',
     heading: 'Other equipment',
     blurb: 'Stocked lines that do not sit in either group above.',
