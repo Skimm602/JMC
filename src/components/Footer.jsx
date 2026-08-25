@@ -43,7 +43,7 @@ const linkClass =
 export default function Footer() {
   return (
     <footer id="footer" className="band-pit rail">
-      <div className="rail-inner py-20 lg:py-24">
+      <div className="rail-inner pt-20 pb-32 lg:py-24 lg:pb-28">
         <div className="reveal-up grid gap-12 md:grid-cols-[1.4fr_1fr_1fr] md:gap-10 lg:gap-16">
           {/* ------------------------------- who ------------------------------- */}
           <div>

@@ -28,7 +28,6 @@ const links = [
   // shortcut menu into the technical range on the home page. One control
   // could not do both without one of the two being a surprise.
   { label: 'Products', href: '/products', dropdown: true },
-  { label: 'About', href: '/#about' },
   { label: 'Support', href: '/#footer' },
 ]
 
@@ -289,17 +288,6 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                   scrolled ? 'opacity-0' : 'opacity-100',
                 )}
               />
-              {/* Sits directly under the bar's bottom edge, immediately left of
-                  the shelf, and fills everything but the quarter it rounds off. */}
-              <div
-                aria-hidden="true"
-                style={{ '--notch-color': 'var(--color-pit)' }}
-                className={cx(
-                  'notch notch-tr top-[calc(100%+0.75rem)] right-[calc(100%+1.25rem)] transition-opacity duration-300',
-                  scrolled ? 'opacity-0' : 'opacity-100',
-                )}
-              />
-
               {/* Signed-in only, unlike the cart: an order history is a thing
                   you have, and offering it to somebody with no account is a
                   link to a log-in wall wearing a different name. */}

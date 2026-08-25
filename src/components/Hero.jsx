@@ -182,18 +182,25 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* Only the product slides get a link — the environment shot is
-              scene-setting, not a category, and giving it one would send a
-              visitor into a filter that matches nothing in particular. */}
-          {slide.kind === 'product' && (
-            <a
-              href={slide.href}
-              className="text-glint hover:text-hot-400 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
-            >
-              Shop {slide.label}
-              <span aria-hidden="true">→</span>
-            </a>
-          )}
+          {/* Only the product slides get a real link — the environment shot
+              is scene-setting, not a category, and giving it one would send
+              a visitor into a filter that matches nothing in particular. It
+              still renders (invisibly) on the brand slide rather than being
+              removed outright: removing it changed the row's wrapping at
+              some widths, which shifted the dots above it down and up again
+              every time the slide changed. */}
+          <a
+            href={slide.kind === 'product' ? slide.href : undefined}
+            aria-hidden={slide.kind !== 'product'}
+            tabIndex={slide.kind !== 'product' ? -1 : undefined}
+            className={cx(
+              'text-glint hover:text-hot-400 inline-flex items-center gap-1.5 text-sm font-medium transition-colors',
+              slide.kind !== 'product' && 'invisible',
+            )}
+          >
+            Shop {slide.kind === 'product' ? slide.label : 'Batteries'}
+            <span aria-hidden="true">→</span>
+          </a>
         </div>
       </div>
     </section>

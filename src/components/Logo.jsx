@@ -32,13 +32,13 @@ export default function Logo({ className = '', compact = false, tone = 'ink' }) 
           match the page's voice would make it a different logo. */}
       <span
         aria-hidden="true"
-        className={`font-display text-[1.0625rem] leading-none font-bold tracking-[-0.02em] ${
+        className={`font-display text-[1.75rem] leading-none font-bold tracking-[-0.02em] ${
           onShade ? 'text-glint' : 'text-ink'
         }`}
       >
         {compact ? 'Vip' : 'Vip Solar'}
       </span>
-      <span aria-hidden="true" className="text-brand font-display text-[1.0625rem] leading-none font-bold">
+      <span aria-hidden="true" className="text-brand font-display text-[1.75rem] leading-none font-bold">
         .
       </span>
     </a>
