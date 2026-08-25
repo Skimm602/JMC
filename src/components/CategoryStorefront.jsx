@@ -1,8 +1,10 @@
 import { getStorefront } from '@/app/actions/catalogue'
 import Catalogue from '@/components/Catalogue.jsx'
+import PricingNote from '@/components/PricingNote.jsx'
+import { isPriced } from '@/utils/pricing'
 import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
 import { ArrowLink, Eyebrow, Rule, SectionHeading } from '@/components/ui.jsx'
-import { AlertIcon, InfoIcon } from '@/components/icons.jsx'
+import { AlertIcon } from '@/components/icons.jsx'
 
 /**
  * One type of product, and nothing else on the page.
@@ -21,6 +23,7 @@ import { AlertIcon, InfoIcon } from '@/components/icons.jsx'
 export default async function CategoryStorefront({ category }) {
   const { data, error, isInstaller, signedIn } = await getStorefront(category.key)
   const products = data ?? []
+  const anyPriced = products.some(isPriced)
 
   return (
     <main id="content" className="pt-nav">
@@ -65,33 +68,7 @@ export default async function CategoryStorefront({ category }) {
 
           <Rule className="mt-10" />
 
-          {/* Which price someone is looking at is the first thing they will
-              want to know, so the page says it rather than leaving them to
-              work it out from a number they have nothing to compare against. */}
-          <div className="mt-10 flex items-start gap-3">
-            <InfoIcon className="text-cool-600 mt-0.5 h-4 w-4 shrink-0" />
-            <p className="text-ink-soft max-w-measure text-sm leading-relaxed">
-              {isInstaller ? (
-                <>
-                  You are seeing <span className="text-cool-600 font-medium">installer pricing</span>. List price is
-                  shown struck through wherever a trade price applies.
-                </>
-              ) : signedIn ? (
-                <>
-                  These are list prices. Installer accounts see trade pricing here automatically —{' '}
-                  <ArrowLink href="/register" className="inline-flex">
-                    register as an installer
-                  </ArrowLink>{' '}
-                  if that is you.
-                </>
-              ) : (
-                <>
-                  These are list prices, shown VAT-exclusive. Log in to order; installer accounts see trade pricing
-                  here automatically.
-                </>
-              )}
-            </p>
-          </div>
+          <PricingNote anyPriced={anyPriced} isInstaller={isInstaller} signedIn={signedIn} />
 
           {error ? (
             <p

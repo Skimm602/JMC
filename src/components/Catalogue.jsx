@@ -41,7 +41,7 @@ export function PriceTag({ product, isInstaller, size = 'md' }) {
         >
           Price on request
         </p>
-        <p className="text-ink-soft mt-1.5 text-xs">Ask us for a quote — this line is not on general sale yet.</p>
+        <p className="text-ink-soft mt-1.5 text-xs">Quoted on enquiry, delivered and installed.</p>
       </div>
     )
   }
@@ -423,30 +423,39 @@ function FilterBar({ filters, setFilters, priceBounds, brands, showType = true }
         </div>
       </div>
 
-      <div>
-        <span className="label text-ink-soft mb-2 block">Price range (₱)</span>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            inputMode="decimal"
-            min="0"
-            placeholder={priceBounds.min != null ? String(Math.floor(priceBounds.min)) : 'Min'}
-            value={filters.minPrice}
-            onChange={(e) => set({ minPrice: e.target.value })}
-            className="border-rule-strong bg-glare text-ink focus:border-ink w-28 border px-3 py-1.5 text-xs outline-none"
-          />
-          <span className="text-ink-soft text-xs">–</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            min="0"
-            placeholder={priceBounds.max != null ? String(Math.ceil(priceBounds.max)) : 'Max'}
-            value={filters.maxPrice}
-            onChange={(e) => set({ maxPrice: e.target.value })}
-            className="border-rule-strong bg-glare text-ink focus:border-ink w-28 border px-3 py-1.5 text-xs outline-none"
-          />
+      {/* A price range over a catalogue that carries no prices can only ever
+          return nothing: the predicate below drops every unpriced product as
+          soon as a bound is set, so the control would answer "nothing matches
+          that" to every number typed into it. priceBounds is already null
+          when nothing is priced, which makes it the test for whether there is
+          anything here to filter — and the control comes back on its own the
+          day a real figure is saved. */}
+      {priceBounds.min != null && (
+        <div>
+          <span className="label text-ink-soft mb-2 block">Price range (₱)</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              placeholder={String(Math.floor(priceBounds.min))}
+              value={filters.minPrice}
+              onChange={(e) => set({ minPrice: e.target.value })}
+              className="border-rule-strong bg-glare text-ink focus:border-ink w-28 border px-3 py-1.5 text-xs outline-none"
+            />
+            <span className="text-ink-soft text-xs">–</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              placeholder={priceBounds.max != null ? String(Math.ceil(priceBounds.max)) : 'Max'}
+              value={filters.maxPrice}
+              onChange={(e) => set({ maxPrice: e.target.value })}
+              className="border-rule-strong bg-glare text-ink focus:border-ink w-28 border px-3 py-1.5 text-xs outline-none"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {active && (
         <button

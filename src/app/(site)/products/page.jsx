@@ -1,12 +1,14 @@
 import { getStorefront } from '@/app/actions/catalogue'
 import Catalogue from '@/components/Catalogue.jsx'
+import PricingNote from '@/components/PricingNote.jsx'
+import { isPriced } from '@/utils/pricing'
 import { ArrowLink, Breadcrumb, Eyebrow, Rule, SectionHeading } from '@/components/ui.jsx'
-import { AlertIcon, InfoIcon } from '@/components/icons.jsx'
+import { AlertIcon } from '@/components/icons.jsx'
 
 export const metadata = {
   title: 'Products — VIP Solar',
   description:
-    'Hybrid inverters and LiFePO₄ storage in stock, with prices. Trade pricing applies automatically to installer accounts.',
+    'Hybrid inverters and LiFePO₄ storage in stock, with full specifications and datasheets. Trade rates for registered installer accounts.',
 }
 
 /**
@@ -17,6 +19,11 @@ export const metadata = {
  */
 export default async function ProductsPage() {
   const { data, error, isInstaller, signedIn } = await getStorefront()
+  const products = data ?? []
+
+  // Whether the shop is currently quoting or selling off a price list. Every
+  // sentence below that mentions a figure depends on it.
+  const anyPriced = products.some(isPriced)
 
   return (
     <main id="content" className="pt-nav">
@@ -27,39 +34,23 @@ export default async function ProductsPage() {
           <Eyebrow className="mt-6">Shop</Eyebrow>
           <SectionHeading className="mt-6">Products and pricing</SectionHeading>
           <p className="text-ink-soft max-w-measure mt-6 leading-relaxed">
-            Everything below is priced and stocked. Pick a unit to see what it costs delivered, fill in where it
-            goes, and check the total before you commit to it.
+            {anyPriced ? (
+              <>
+                Everything below is priced and stocked. Pick a unit to see what it costs delivered, fill in where it
+                goes, and check the total before you commit to it.
+              </>
+            ) : (
+              <>
+                Everything below is in stock, with its full specification and the manufacturer&apos;s datasheet. What
+                it costs is settled on the phone — tell us the load, the roof and where it is going, and you get one
+                figure for the set rather than a line of list prices to add up.
+              </>
+            )}
           </p>
 
           <Rule className="mt-10" />
 
-          {/* Which price someone is looking at is the first thing they will
-              want to know, so the page says it rather than leaving them to
-              work it out from a number they have nothing to compare against. */}
-          <div className="mt-10 flex items-start gap-3">
-            <InfoIcon className="text-cool-600 mt-0.5 h-4 w-4 shrink-0" />
-            <p className="text-ink-soft max-w-measure text-sm leading-relaxed">
-              {isInstaller ? (
-                <>
-                  You are seeing <span className="text-cool-600 font-medium">installer pricing</span>. List price is
-                  shown struck through wherever a trade price applies.
-                </>
-              ) : signedIn ? (
-                <>
-                  These are list prices. Installer accounts see trade pricing here automatically —{' '}
-                  <ArrowLink href="/register" className="inline-flex">
-                    register as an installer
-                  </ArrowLink>{' '}
-                  if that is you.
-                </>
-              ) : (
-                <>
-                  These are list prices, shown VAT-exclusive. Log in to order; installer accounts see trade pricing
-                  here automatically.
-                </>
-              )}
-            </p>
-          </div>
+          <PricingNote anyPriced={anyPriced} isInstaller={isInstaller} signedIn={signedIn} />
 
           {error ? (
             <p
@@ -70,7 +61,7 @@ export default async function ProductsPage() {
               The catalogue could not be loaded: {error}
             </p>
           ) : (
-            <Catalogue products={data ?? []} isInstaller={isInstaller} />
+            <Catalogue products={products} isInstaller={isInstaller} />
           )}
 
           <Rule className="mt-16" />

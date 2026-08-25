@@ -17,7 +17,7 @@ export const PRODUCT_CATEGORIES = [
     label: 'Inverters',
     // Short enough to sit under the label in the header menu.
     menuBlurb: 'Hybrid inverters, low and high voltage',
-    lede: 'Hybrid inverters from HYXiPOWER, LuxpowerTek, Solis and GoodWe — the box between the array, the battery and the switchboard. Every unit here is priced, stocked and specified to hold its rating at Philippine roof temperatures.',
+    lede: 'Hybrid inverters from HYXiPOWER, LuxpowerTek, Solis and GoodWe — the box between the array, the battery and the switchboard. Every unit here is stocked and specified to hold its rating at Philippine roof temperatures.',
     empty: 'No inverters are listed for sale at the moment. Tell us what the job needs and we will quote it.',
     // Representative unit for the homepage's category cards/slideshow —
     // a real, currently-stocked photo, not a placeholder.
