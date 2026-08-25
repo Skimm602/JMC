@@ -17,8 +17,6 @@ import { ArrowLink, Eyebrow, Section, SectionHeading, cx } from './ui.jsx'
 const FAMILIES = [
   {
     id: 'h-ls',
-    brand: 'HYXiPOWER',
-    category: 'inverter',
     series: 'H-LS Series',
     models: 'HYX-H6K-LS · HYX-H8K-LS',
     name: 'Low-voltage hybrid inverter',
@@ -42,8 +40,6 @@ const FAMILIES = [
   },
   {
     id: 'h-hs',
-    brand: 'HYXiPOWER',
-    category: 'inverter',
     series: 'H-HS Series',
     models: 'HYX-H6K-HS · HYX-H8K-HS',
     name: 'High-voltage hybrid inverter',
@@ -65,8 +61,6 @@ const FAMILIES = [
   },
   {
     id: 'e-h3',
-    brand: 'HYXiPOWER',
-    category: 'battery',
     series: 'E-H3 Series',
     models: 'HYX-E50-H3 · HYX-E100-H3',
     name: 'High-voltage battery',
@@ -89,8 +83,6 @@ const FAMILIES = [
   },
   {
     id: 'e-l',
-    brand: 'HYXiPOWER',
-    category: 'battery',
     series: 'E-L Series',
     models: 'HYX-E160-L',
     name: 'Low-voltage battery',
@@ -119,8 +111,6 @@ const FAMILIES = [
    * --------------------------------------------------------------------- */
   {
     id: 'lux-gen2-3-6k',
-    brand: 'LuxpowerTek',
-    category: 'inverter',
     series: 'LuxpowerTek GEN2-LB-EU 3-6K',
     models: 'GEN2-LB-EU 6K',
     name: 'Low-voltage hybrid inverter',
@@ -144,8 +134,6 @@ const FAMILIES = [
   },
   {
     id: 'lux-gen2-7-14k',
-    brand: 'LuxpowerTek',
-    category: 'inverter',
     series: 'LuxpowerTek GEN2-LB-EU 7-14K',
     models: 'GEN2-LB-EU 10K · GEN2-LB-EU 12K',
     name: 'Low-voltage hybrid inverter',
@@ -168,8 +156,6 @@ const FAMILIES = [
   },
   {
     id: 'solis-s6-3-10k',
-    brand: 'Solis',
-    category: 'inverter',
     series: 'Solis S6-EH1P (3-10)K-L-PLUS',
     models: 'S6-EH1P 6K · S6-EH1P 8K',
     name: 'Low-voltage hybrid inverter',
@@ -192,8 +178,6 @@ const FAMILIES = [
   },
   {
     id: 'solis-s6-12-18k',
-    brand: 'Solis',
-    category: 'inverter',
     series: 'Solis S6-EH1P (12-18)K-L',
     models: 'S6-EH1P 12K · S6-EH1P 16K',
     name: 'Low-voltage hybrid inverter',
@@ -217,8 +201,6 @@ const FAMILIES = [
   },
   {
     id: 'goodwe-es-uniq',
-    brand: 'GoodWe',
-    category: 'inverter',
     series: 'GoodWe ES Uniq Series',
     models: 'GW6000-ES-C10 · GW12K-ES-C10',
     name: 'Low-voltage hybrid inverter',
@@ -241,8 +223,6 @@ const FAMILIES = [
   },
   {
     id: 'solax-t-bat-d150',
-    brand: 'SolaX',
-    category: 'battery',
     series: 'SolaX T-BAT-SYS-LV D150',
     models: 'T-BAT-SYS-LV D150',
     name: 'Low-voltage battery',
@@ -263,46 +243,6 @@ const FAMILIES = [
     datasheet: 'https://www.solaxpower.com/uploads/file/solax-t-bat-sys-lv-d150-datasheet-en.pdf',
   },
 ]
-
-/**
- * The three shelves the header menu is built on, in the order it lists them.
- * `key` is the shop's own category value, so the menu and /products cannot
- * end up disagreeing about what counts as an inverter.
- */
-export const PRODUCT_CATEGORIES = [
-  { key: 'inverter', label: 'Inverters', blurb: 'Hybrid inverters, low and high voltage' },
-  { key: 'battery', label: 'Batteries', blurb: 'LiFePO₄ storage — wall, rack and cabinet' },
-  { key: 'accessory', label: 'Accessories', blurb: 'Meters, dongles, mounting and cabling' },
-]
-
-/**
- * What the header dropdown lists: the range grouped category → brand →
- * family. Derived from FAMILIES rather than restated, so a product added to
- * the section below appears in the menu without anybody having to remember to
- * add it in two places.
- *
- * Brand order follows FAMILIES, which puts the house brand first — the menu
- * should open on what we actually stock deepest rather than on an alphabet.
- *
- * A category with nothing under it keeps its entry: Accessories is named on
- * the site before it is stocked, and a menu that quietly drops it is harder
- * to explain than one that says "not listed yet".
- */
-export const PRODUCT_MENU = PRODUCT_CATEGORIES.map((category) => {
-  const brands = []
-
-  for (const family of FAMILIES) {
-    if (family.category !== category.key) continue
-
-    const item = { id: family.id, models: family.models, name: family.name, photo: family.photo }
-    const brand = brands.find((b) => b.brand === family.brand)
-
-    if (brand) brand.families.push(item)
-    else brands.push({ brand: family.brand, families: [item] })
-  }
-
-  return { ...category, brands }
-})
 
 export default function Products() {
   const [activeId, setActiveId] = useState('h-ls')

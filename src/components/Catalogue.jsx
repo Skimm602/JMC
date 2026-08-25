@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatPeso, isPriced, unitPriceOf, withVat } from '@/utils/pricing'
 import { Rule, cx } from './ui.jsx'
-import { ArrowRightIcon, FileIcon, StarIcon } from './icons.jsx'
+import { ArrowRightIcon, FileIcon } from './icons.jsx'
 
 /**
  * The shop floor. The grid itself is a picture, a price and a link, and none
@@ -101,26 +101,6 @@ export function StockNote({ stock, className }) {
   )
 }
 
-/**
- * Five stars, filled up to the rating. Half a star rounds down to whole
- * stars visually — the number next to it is what carries the precision.
- */
-export function RatingStars({ rating, className }) {
-  if (rating == null) return null
-  const value = Number(rating)
-
-  return (
-    <div className={cx('flex items-center gap-1', className)}>
-      <div className="flex items-center gap-0.5" role="img" aria-label={`${value} out of 5 stars`}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <StarIcon key={n} filled={n <= Math.round(value)} className="text-cool-600 h-3.5 w-3.5" />
-        ))}
-      </div>
-      <span className="text-ink-soft text-xs tabular-nums">{value.toFixed(1)}</span>
-    </div>
-  )
-}
-
 const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery', accessory: 'Accessory' }
 const VOLTAGE_LABEL = { low: 'Low voltage', high: 'High voltage' }
 
@@ -200,8 +180,6 @@ function ProductCard({ product, isInstaller }) {
         {product.name}
       </h3>
 
-      {product.rating != null && <RatingStars rating={product.rating} className="mt-2" />}
-
       {product.description && (
         <p className="text-ink-soft mt-2 line-clamp-3 text-sm leading-relaxed">{product.description}</p>
       )}
@@ -248,7 +226,7 @@ function FilterOption({ active, onClick, children }) {
 
 const DEFAULT_FILTERS = { query: '', category: 'all', voltage: 'all', minPrice: '', maxPrice: '' }
 
-function FilterBar({ filters, setFilters, priceBounds }) {
+function FilterBar({ filters, setFilters, priceBounds, showType = true }) {
   const set = (patch) => setFilters((f) => ({ ...f, ...patch }))
 
   const active =
@@ -271,23 +249,25 @@ function FilterBar({ filters, setFilters, priceBounds }) {
         />
       </div>
 
-      <div>
-        <span className="label text-ink-soft mb-2 block">Type</span>
-        <div className="flex flex-wrap gap-2">
-          <FilterOption active={filters.category === 'all'} onClick={() => set({ category: 'all' })}>
-            All
-          </FilterOption>
-          <FilterOption active={filters.category === 'inverter'} onClick={() => set({ category: 'inverter' })}>
-            Inverters
-          </FilterOption>
-          <FilterOption active={filters.category === 'battery'} onClick={() => set({ category: 'battery' })}>
-            Batteries
-          </FilterOption>
-          <FilterOption active={filters.category === 'accessory'} onClick={() => set({ category: 'accessory' })}>
-            Accessories
-          </FilterOption>
+      {showType && (
+        <div>
+          <span className="label text-ink-soft mb-2 block">Type</span>
+          <div className="flex flex-wrap gap-2">
+            <FilterOption active={filters.category === 'all'} onClick={() => set({ category: 'all' })}>
+              All
+            </FilterOption>
+            <FilterOption active={filters.category === 'inverter'} onClick={() => set({ category: 'inverter' })}>
+              Inverters
+            </FilterOption>
+            <FilterOption active={filters.category === 'battery'} onClick={() => set({ category: 'battery' })}>
+              Batteries
+            </FilterOption>
+            <FilterOption active={filters.category === 'accessory'} onClick={() => set({ category: 'accessory' })}>
+              Accessories
+            </FilterOption>
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <span className="label text-ink-soft mb-2 block">Voltage</span>
@@ -342,7 +322,13 @@ function FilterBar({ filters, setFilters, priceBounds }) {
   )
 }
 
-export default function Catalogue({ products, isInstaller }) {
+/**
+ * `category` puts the grid on a page that is already one type — /products/
+ * inverters and its two siblings. There it drops the shelf headings and the
+ * Type filter, because both would be restating the page's own title. Without
+ * it the grid is the whole shop, split into shelves.
+ */
+export default function Catalogue({ products, isInstaller, category = null }) {
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
 
   const priceBounds = useMemo(() => {
@@ -415,7 +401,7 @@ export default function Catalogue({ products, isInstaller }) {
 
   return (
     <div>
-      <FilterBar filters={filters} setFilters={setFilters} priceBounds={priceBounds} />
+      <FilterBar filters={filters} setFilters={setFilters} priceBounds={priceBounds} showType={!category} />
 
       <p className="text-ink-soft mt-4 text-xs">
         Showing {filtered.length} of {products.length} {products.length === 1 ? 'product' : 'products'}
@@ -434,6 +420,12 @@ export default function Catalogue({ products, isInstaller }) {
           >
             Clear filters
           </button>
+        </div>
+      ) : category ? (
+        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((product) => (
+            <ProductCard key={product.id} product={product} isInstaller={isInstaller} />
+          ))}
         </div>
       ) : (
         <div>

@@ -24,7 +24,7 @@ export async function getProducts() {
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, category, voltage_class, rating, is_active, created_at',
+      'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, category, voltage_class, is_active, created_at',
     )
     .order('name', { ascending: true })
 
@@ -38,7 +38,7 @@ export async function getProducts() {
  * reason to ship the whole row to a browser to show a card.
  */
 const STOREFRONT_COLUMNS =
-  'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, category, voltage_class, rating'
+  'id, name, description, retail_price, installer_price, is_bulk_only, stock_quantity, image_url, datasheet_url, manual_url, specifications, category, voltage_class'
 
 /**
  * Whether the person looking gets trade pricing.
@@ -64,7 +64,7 @@ async function readPricingContext(supabase) {
 }
 
 /**
- * getStorefront()
+ * getStorefront(category?)
  *
  * The catalogue as a customer sees it: active products only, in name order,
  * plus whether this visitor is being shown trade prices. Public — the shop
@@ -72,15 +72,23 @@ async function readPricingContext(supabase) {
  * can view products" policy in supabase-orders-checkout.sql is what allows
  * that.
  *
+ * Passing a category narrows it to one type, which is what the per-type
+ * pages ask for. The narrowing happens in the query rather than in the page:
+ * there is no reason to send a browser thirteen inverters so that it can
+ * render four batteries.
+ *
  * A discontinued product is filtered out here rather than greyed out, and
  * createOrder() applies the same filter independently, so a stale
  * tab cannot order something that has since been pulled.
  */
-export async function getStorefront() {
+export async function getStorefront(category = null) {
   const supabase = await createClient()
 
+  let query = supabase.from('products').select(STOREFRONT_COLUMNS).eq('is_active', true)
+  if (category) query = query.eq('category', category)
+
   const [{ data, error }, pricing] = await Promise.all([
-    supabase.from('products').select(STOREFRONT_COLUMNS).eq('is_active', true).order('name', { ascending: true }),
+    query.order('name', { ascending: true }),
     readPricingContext(supabase),
   ])
 
@@ -134,19 +142,13 @@ function readProductFields(formData) {
     .filter(Boolean)
 
   const categoryRaw = String(formData.get('category') ?? '').trim()
-  if (categoryRaw && !['inverter', 'battery'].includes(categoryRaw)) {
-    return { error: 'Type must be inverter or battery.' }
+  if (categoryRaw && !['inverter', 'battery', 'accessory'].includes(categoryRaw)) {
+    return { error: 'Type must be inverter, battery or accessory.' }
   }
 
   const voltageRaw = String(formData.get('voltage_class') ?? '').trim()
   if (voltageRaw && !['low', 'high'].includes(voltageRaw)) {
     return { error: 'Voltage must be low or high.' }
-  }
-
-  const ratingRaw = formData.get('rating')
-  const rating = ratingRaw === '' || ratingRaw == null ? null : Number(ratingRaw)
-  if (rating != null && (!Number.isFinite(rating) || rating < 0 || rating > 5)) {
-    return { error: 'Rating must be between 0 and 5.' }
   }
 
   return {
@@ -159,7 +161,6 @@ function readProductFields(formData) {
       specifications,
       category: categoryRaw || null,
       voltage_class: voltageRaw || null,
-      rating,
     },
   }
 }

@@ -123,6 +123,7 @@ function ProductForm({ product, onCancel, onSaved }) {
           <option value="">Not set</option>
           <option value="inverter">Inverter</option>
           <option value="battery">Battery</option>
+          <option value="accessory">Accessory</option>
         </select>
       </label>
       <label className="grid gap-1.5">
@@ -137,17 +138,6 @@ function ProductForm({ product, onCancel, onSaved }) {
           <option value="high">High voltage</option>
         </select>
       </label>
-      <label className="grid gap-1.5">
-        <span className="label text-ink-soft">Rating (0-5, optional)</span>
-        <input
-          inputMode="decimal"
-          name="rating"
-          defaultValue={product?.rating ?? ''}
-          placeholder="e.g. 4.5"
-          className="border-rule-strong bg-glare text-ink focus:border-ink border px-3 py-2 text-sm outline-none"
-        />
-      </label>
-
       <FileField
         label={product ? 'Replace image (optional)' : 'Image (optional)'}
         name="image"

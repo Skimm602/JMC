@@ -6,7 +6,7 @@ import Logo from './Logo.jsx'
 import LoginDialog from './LoginDialog.jsx'
 import AccountMenu, { initialFor } from './AccountMenu.jsx'
 import { signOut } from '@/app/actions/auth'
-import { PRODUCT_MENU } from './Products.jsx'
+import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
 import { Button, cx } from './ui.jsx'
 import { ArrowUpRightIcon, CartIcon, ChevronDownIcon, FileIcon, MenuIcon, SpinnerIcon, XIcon } from './icons.jsx'
 
@@ -72,12 +72,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
   const [open, setOpen] = useState(false)
   const [login, setLogin] = useState(false)
   const [products, setProducts] = useState(false)
-  // Which shelf the brand panel is showing. The menu always opens on the
-  // first one rather than on whatever was last pointed at — reopening a menu
-  // half-way through somebody else's browse is disorienting.
-  const [menuCategory, setMenuCategory] = useState(PRODUCT_MENU[0].key)
   const [mobileProducts, setMobileProducts] = useState(false)
-  const [mobileCategory, setMobileCategory] = useState(null)
   const productsRef = useRef(null)
   const triggerRef = useRef(null)
   const itemRefs = useRef([])
@@ -100,13 +95,10 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
     }
   }, [open])
 
-  // A closed sheet folds itself back up. Reopening it half-way down somebody
-  // else's browse — Batteries already expanded, Products already open — reads
-  // as the menu having remembered something it had no business remembering.
+  // A closed sheet folds itself back up, so reopening it does not resume
+  // half-way through somebody else's browse.
   useEffect(() => {
-    if (open) return
-    setMobileProducts(false)
-    setMobileCategory(null)
+    if (!open) setMobileProducts(false)
   }, [open])
 
   // A menu that stays open when you click elsewhere or scroll away reads as
@@ -137,31 +129,17 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
   useEffect(() => {
     if (products && focusFirstRef.current) itemRefs.current[0]?.focus()
     focusFirstRef.current = false
-    if (!products) setMenuCategory(PRODUCT_MENU[0].key)
   }, [products])
 
-  /**
-   * Picking the family you are already on leaves the hash unchanged, so no
-   * hashchange fires and the menu appears to do nothing. Saying so explicitly
-   * keeps every item behaving the same way.
-   */
-  const goToFamily = (id) => {
-    if (window.location.hash === `#product-${id}`) {
-      window.dispatchEvent(new HashChangeEvent('hashchange'))
-    }
-  }
-
-  // Down from the trigger goes into the menu; up and down walk the shelves.
-  // Without this the menu is a tab stop that swallows the whole range.
+  // Down from the trigger goes into the menu; up and down walk it. Without
+  // this the menu is a tab stop that swallows three links.
   const onMenuKeyDown = (e, i) => {
     const step = { ArrowDown: 1, ArrowUp: -1 }[e.key]
     if (!step) return
     e.preventDefault()
-    const next = (i + step + PRODUCT_MENU.length) % PRODUCT_MENU.length
+    const next = (i + step + PRODUCT_CATEGORIES.length) % PRODUCT_CATEGORIES.length
     itemRefs.current[next]?.focus()
   }
-
-  const openCategory = PRODUCT_MENU.find((c) => c.key === menuCategory) ?? PRODUCT_MENU[0]
 
   return (
     /* The bar is dark at every scroll position rather than fading up from
@@ -226,7 +204,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                       type="button"
                       aria-expanded={products}
                       aria-controls="products-menu"
-                      aria-label="Product families"
+                      aria-label="Product types"
                       onClick={() => setProducts((v) => !v)}
                       onKeyDown={(e) => {
                         if (e.key !== 'ArrowDown') return
@@ -245,142 +223,45 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                     </button>
 
                     {products && (
-                      /* Centred on the trigger rather than left-aligned to
-                         it: two columns are wider than the link they hang
-                         from, and left-0 would push the panel past the right
-                         edge the header clips at. */
                       <div
                         id="products-menu"
-                        className="animate-reveal border-rule bg-glare absolute top-full left-1/2 z-10 mt-4 w-[min(42rem,calc(100vw-3rem))] -translate-x-1/2 overflow-hidden rounded-[1.25rem] border"
+                        className="animate-reveal border-rule bg-glare absolute top-full left-0 z-10 mt-4 w-[19rem] overflow-hidden rounded-[1.25rem] border p-1.5"
                       >
-                        <div className="flex">
-                          {/* The three shelves. Pointing at one swaps the
-                              panel beside it; none of them navigate, so
-                              passing over Batteries on the way to Accessories
-                              cannot take the page with it. The label above
-                              already goes to the shop for anyone who wants
-                              the whole catalogue. */}
-                          <div className="border-rule bg-sheet/60 w-[13.5rem] shrink-0 border-r p-1.5">
-                            {PRODUCT_MENU.map((c, i) => {
-                              const on = c.key === menuCategory
-                              return (
-                                <button
-                                  key={c.key}
-                                  type="button"
-                                  ref={(el) => {
-                                    itemRefs.current[i] = el
-                                  }}
-                                  aria-expanded={on}
-                                  aria-controls="products-menu-panel"
-                                  onMouseEnter={() => setMenuCategory(c.key)}
-                                  onFocus={() => setMenuCategory(c.key)}
-                                  onClick={() => setMenuCategory(c.key)}
-                                  onKeyDown={(e) => onMenuKeyDown(e, i)}
-                                  className={cx(
-                                    'flex w-full items-center gap-2 rounded-[0.875rem] px-3.5 py-3 text-left transition-colors',
-                                    on ? 'bg-glare' : 'hover:bg-glare/70',
-                                  )}
-                                >
-                                  <span className="min-w-0 flex-1">
-                                    <span
-                                      className={cx(
-                                        'block text-sm font-medium transition-colors',
-                                        on ? 'text-cool-600' : 'text-ink',
-                                      )}
-                                    >
-                                      {c.label}
-                                    </span>
-                                    <span className="text-ink-soft mt-1 block text-xs leading-relaxed">
-                                      {c.blurb}
-                                    </span>
-                                  </span>
-                                  <ChevronDownIcon
-                                    aria-hidden="true"
-                                    className={cx(
-                                      '-mr-0.5 h-3.5 w-3.5 shrink-0 -rotate-90 transition-colors',
-                                      on ? 'text-cool-600' : 'text-hush',
-                                    )}
-                                  />
-                                </button>
-                              )
-                            })}
-                          </div>
-
-                          {/* The brands under whichever shelf is being
-                              pointed at, and under each brand the same three
-                              things the range section leads with — the unit,
-                              its model number, what it is — so the menu and
-                              the page name the products identically.
-
-                              It scrolls inside the panel, which keeps the
-                              "all products" link below reachable rather than
-                              pushed off the bottom of a laptop screen. */}
-                          <div
-                            id="products-menu-panel"
-                            className="max-h-[min(60vh,26rem)] min-w-0 flex-1 overflow-y-auto p-1.5"
+                        {/* Three destinations, not a catalogue. The menu's
+                            job is to ask which kind of thing you came for
+                            and then get out of the way — the models live on
+                            the page it sends you to, where there is room to
+                            show them properly. */}
+                        {PRODUCT_CATEGORIES.map((c, i) => (
+                          <a
+                            key={c.key}
+                            href={categoryHref(c)}
+                            ref={(el) => {
+                              itemRefs.current[i] = el
+                            }}
+                            onClick={() => setProducts(false)}
+                            onKeyDown={(e) => onMenuKeyDown(e, i)}
+                            className="hover:bg-sheet group/item flex items-center gap-3 rounded-[0.875rem] px-3.5 py-3 transition-colors"
                           >
-                            {openCategory.brands.length ? (
-                              openCategory.brands.map((b) => (
-                                <div key={b.brand}>
-                                  <p className="label text-ink-soft px-3.5 pt-3 pb-1">{b.brand}</p>
-
-                                  {b.families.map((f) => (
-                                    <a
-                                      key={f.id}
-                                      href={`/#product-${f.id}`}
-                                      onClick={() => {
-                                        setProducts(false)
-                                        goToFamily(f.id)
-                                      }}
-                                      className="hover:bg-sheet group/item flex items-center gap-3.5 rounded-[0.875rem] px-3.5 py-2.5 transition-colors"
-                                    >
-                                      <img
-                                        src={f.photo}
-                                        alt=""
-                                        loading="lazy"
-                                        className="h-10 w-10 shrink-0 object-contain opacity-80 transition-opacity group-hover/item:opacity-100"
-                                      />
-                                      <span className="min-w-0">
-                                        <span className="text-ink block font-mono text-[0.8125rem] font-medium">
-                                          {f.models}
-                                        </span>
-                                        <span className="text-ink-soft group-hover/item:text-cool-600 mt-0.5 block text-sm transition-colors">
-                                          {f.name}
-                                        </span>
-                                      </span>
-                                    </a>
-                                  ))}
-                                </div>
-                              ))
-                            ) : (
-                              /* Named on the site before it is stocked. An
-                                 empty panel would read as broken, so it says
-                                 what the situation is and offers the person
-                                 who can answer it. */
-                              <div className="px-3.5 py-10">
-                                <p className="text-ink-soft text-sm leading-relaxed">
-                                  {openCategory.label} are not listed online yet. Tell us what the job needs and we
-                                  will quote it.
-                                </p>
-                                <a
-                                  href="/#footer"
-                                  onClick={() => setProducts(false)}
-                                  className="text-cool-600 mt-3 inline-flex items-center gap-1.5 text-sm font-medium"
-                                >
-                                  Ask us
-                                  <span aria-hidden="true">→</span>
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                            <span className="min-w-0 flex-1">
+                              <span className="text-ink group-hover/item:text-cool-600 block text-sm font-medium transition-colors">
+                                {c.label}
+                              </span>
+                              <span className="text-ink-soft mt-1 block text-xs leading-relaxed">{c.menuBlurb}</span>
+                            </span>
+                            <ChevronDownIcon
+                              aria-hidden="true"
+                              className="text-hush group-hover/item:text-cool-600 h-3.5 w-3.5 shrink-0 -rotate-90 transition-colors"
+                            />
+                          </a>
+                        ))}
 
                         <a
                           href="/products"
                           onClick={() => setProducts(false)}
-                          className="border-rule text-ink-soft hover:text-ink flex items-center justify-between border-t px-3.5 py-3 text-xs font-medium transition-colors"
+                          className="border-rule text-ink-soft hover:text-ink mt-1.5 flex items-center justify-between border-t px-3.5 py-3 text-xs font-medium transition-colors"
                         >
-                          All products and prices
+                          Everything, with prices
                           <span aria-hidden="true">→</span>
                         </a>
                       </div>
@@ -530,7 +411,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                   <button
                     type="button"
                     aria-expanded={mobileProducts}
-                    aria-label="Product families"
+                    aria-label="Product types"
                     onClick={() => setMobileProducts((v) => !v)}
                     className="text-glint hover:text-glint-soft p-3 transition-colors"
                   >
@@ -546,79 +427,31 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                     thumb rather than the length of the range. */}
                 {mobileProducts && (
                   <div className="animate-reveal pb-3">
-                    {PRODUCT_MENU.map((c) => {
-                      const on = mobileCategory === c.key
-                      return (
-                        <div key={c.key}>
-                          <button
-                            type="button"
-                            aria-expanded={on}
-                            onClick={() => setMobileCategory(on ? null : c.key)}
-                            className="text-glint hover:text-glint-soft flex w-full items-center justify-between px-2 py-3 text-left text-sm font-medium transition-colors"
-                          >
-                            {c.label}
-                            <ChevronDownIcon
-                              className={cx('h-4 w-4 shrink-0 transition-transform duration-200', on && 'rotate-180')}
-                            />
-                          </button>
+                    {PRODUCT_CATEGORIES.map((c) => (
+                      <a
+                        key={c.key}
+                        href={categoryHref(c)}
+                        onClick={() => {
+                          setOpen(false)
+                          setMobileProducts(false)
+                        }}
+                        className="hover:bg-glint/[0.06] block rounded-[0.875rem] px-2 py-3 transition-colors"
+                      >
+                        <span className="text-glint block text-sm font-medium">{c.label}</span>
+                        <span className="text-glint-soft mt-0.5 block text-xs leading-relaxed">{c.menuBlurb}</span>
+                      </a>
+                    ))}
 
-                          {on && (
-                            <div className="animate-reveal border-rule-shade mb-2 ml-2 border-l pb-1 pl-2">
-                              {c.brands.length ? (
-                                c.brands.map((b) => (
-                                  <div key={b.brand}>
-                                    <p className="label text-glint-soft px-2 pt-2 pb-1">{b.brand}</p>
-
-                                    {b.families.map((f) => (
-                                      <a
-                                        key={f.id}
-                                        href={`/#product-${f.id}`}
-                                        onClick={() => {
-                                          setOpen(false)
-                                          setMobileProducts(false)
-                                          setMobileCategory(null)
-                                          goToFamily(f.id)
-                                        }}
-                                        className="hover:bg-glint/[0.06] flex items-center gap-3 rounded-[0.875rem] px-2 py-2.5 transition-colors"
-                                      >
-                                        <img
-                                          src={f.photo}
-                                          alt=""
-                                          loading="lazy"
-                                          className="h-9 w-9 shrink-0 object-contain"
-                                        />
-                                        <span className="min-w-0">
-                                          <span className="text-glint block font-mono text-xs font-medium">
-                                            {f.models}
-                                          </span>
-                                          <span className="text-glint-soft mt-0.5 block text-xs">{f.name}</span>
-                                        </span>
-                                      </a>
-                                    ))}
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="text-glint-soft px-2 py-3 text-xs leading-relaxed">
-                                  {c.label} are not listed online yet.{' '}
-                                  <a
-                                    href="/#footer"
-                                    onClick={() => {
-                                      setOpen(false)
-                                      setMobileProducts(false)
-                                      setMobileCategory(null)
-                                    }}
-                                    className="text-cool-400 font-medium underline underline-offset-2"
-                                  >
-                                    Ask us
-                                  </a>{' '}
-                                  what the job needs and we will quote it.
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
+                    <a
+                      href="/products"
+                      onClick={() => {
+                        setOpen(false)
+                        setMobileProducts(false)
+                      }}
+                      className="text-glint-soft hover:text-glint block px-2 py-3 text-xs font-medium transition-colors"
+                    >
+                      Everything, with prices →
+                    </a>
                   </div>
                 )}
               </div>
