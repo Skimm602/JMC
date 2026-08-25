@@ -46,26 +46,40 @@ export default function About() {
         </Lede>
       </div>
 
-      {/* One of our own installs, which is the point of the section above it:
-          the claim is that we service what we sell, and a stock array would
-          undercut it. Cropped from a portrait phone photo, so the band shows
-          the middle of the array rather than the whole roof. */}
-      <div className="border-rule-shade rounded-panel mt-12 overflow-hidden border">
-        <img
-          src="/about-install.jpg"
-          alt="A VIP Solar rooftop array on a home in the province, coconut palms behind the roofline."
-          /* Biased up the frame rather than centred. The photo is portrait and
-             the band is a wide strip, so a centred crop lands on bare panel
-             surface and reads as a stock texture; 38 % catches the roofline,
-             the parapet and the palms behind it, which is what makes it
-             legible as one of our own roofs. */
-          className="h-64 w-full object-cover object-[50%_38%] sm:h-80"
-        />
-      </div>
+      <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:gap-10">
+        {/* The photo is 418 px wide and portrait, which is the whole reason it
+            sits in a four-column well rather than across the band: four
+            columns of this rail is about 410 px, so it renders at roughly its
+            own size instead of being stretched to three times it. A wide strip
+            would be the flattering shape for the picture and the unflattering
+            one for its pixels, and softness is the first thing anyone notices.
 
-      <div className="mt-16 grid gap-16 lg:grid-cols-12 lg:gap-10">
-        {/* the story, at reading measure rather than full band width */}
-        <div className="max-w-measure grid gap-6 lg:col-span-7">
+            Both columns name their row as well as their column. Auto-placement
+            only moves forward, so a figure that starts at column nine pushes
+            anything declared after it onto a second row — which is how the
+            story ended up under the picture instead of beside it. Pinned to
+            the last four columns rather than packed against the
+            story, because the story stops at a reading measure well short of
+            its own seven: left to pack, the picture would sit in the middle
+            with the slack outside it, which reads as a column that failed to
+            reach the edge rather than as space.
+
+            Its height falls out of its own aspect ratio, which lands within a
+            few pixels of the story and milestones beside it — the column pair
+            reads as one block without either side being padded to match. */}
+        <figure className="lg:col-start-9 lg:col-span-4 lg:row-start-1">
+          <div className="border-rule-shade rounded-panel overflow-hidden border">
+            <img
+              src="/about-sunset.jpg"
+              alt="Sunrise low on the horizon at the end of a row of solar panels, seen down the channel between two rows."
+              loading="lazy"
+              className="aspect-[418/733] w-full object-cover"
+            />
+          </div>
+        </figure>
+
+        {/* the story, at reading measure rather than full column width */}
+        <div className="max-w-measure grid gap-6 lg:col-start-1 lg:col-span-7 lg:row-start-1">
           {STORY.map((paragraph, i) => (
             <p key={i} className="text-glint-soft leading-relaxed">
               {paragraph}
@@ -80,21 +94,23 @@ export default function About() {
               Contact us
             </Button>
           </div>
-        </div>
 
-        {/* Milestones as a dated list rather than a drawn timeline: the dates
-            are the information, and a connecting line would only decorate
-            them. Definition list because that is what year → event is. */}
-        <div className="lg:col-span-5">
-          <h3 className="label text-glint-soft border-rule-shade border-b pb-4">Milestones</h3>
-          <dl className="mt-1">
-            {MILESTONES.map((m) => (
-              <div key={m.year} className="border-rule-shade flex items-baseline gap-6 border-b py-4">
-                <dt className="text-cool-400 shrink-0 font-mono text-sm tabular-nums">{m.year}</dt>
-                <dd className="text-glint text-sm leading-relaxed">{m.event}</dd>
-              </div>
-            ))}
-          </dl>
+          {/* Milestones as a dated list rather than a drawn timeline: the
+              dates are the information, and a connecting line would only
+              decorate them. Definition list because that is what year → event
+              is. Under the story rather than beside it now, because the
+              column beside it belongs to the photograph. */}
+          <div className="mt-8">
+            <h3 className="label text-glint-soft border-rule-shade border-b pb-4">Milestones</h3>
+            <dl className="mt-1">
+              {MILESTONES.map((m) => (
+                <div key={m.year} className="border-rule-shade flex items-baseline gap-6 border-b py-4">
+                  <dt className="text-cool-400 shrink-0 font-mono text-sm tabular-nums">{m.year}</dt>
+                  <dd className="text-glint text-sm leading-relaxed">{m.event}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
       </div>
     </Section>
