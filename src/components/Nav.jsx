@@ -270,24 +270,11 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
               )}
             </nav>
 
-            {/* The bar's own ground drops around the action instead of the
-                action being drawn on top of it: the shelf carries the dark
-                past the bar's bottom edge and the panel below tucks under it.
-                A square step would read as a mistake, so the join is filleted
-                — the same concave corner the hero panel already makes with the
-                block under its left edge, pointed the other way.
-
-                It belongs to the fold. Once you scroll, the bar has to be a
-                bar and nothing else, or a dark tongue hangs over the page for
-                the rest of the document. */}
+            {/* The bar's actions. No dark shelf behind them any more: it
+                existed to carry the pit ground down into a dark hero, and the
+                hero is now a colour field beside a photograph, over both of
+                which it hung as an unexplained tongue. */}
             <div className="relative hidden items-center gap-4 lg:flex">
-              <div
-                aria-hidden="true"
-                className={cx(
-                  'bg-pit absolute -top-3 -bottom-12 -left-5 -right-[100vw] rounded-bl-[1.75rem] transition-opacity duration-300',
-                  scrolled ? 'opacity-0' : 'opacity-100',
-                )}
-              />
               {/* Signed-in only, unlike the cart: an order history is a thing
                   you have, and offering it to somebody with no account is a
                   link to a log-in wall wearing a different name. */}

@@ -1,6 +1,6 @@
-import SectionIndex from '@/components/SectionIndex.jsx'
 import Hero from '@/components/Hero.jsx'
 import Proof from '@/components/Proof.jsx'
+import StickyCta from '@/components/StickyCta.jsx'
 import ProductCategories from '@/components/ProductCategories.jsx'
 import WhyChooseVip from '@/components/WhyChooseVip.jsx'
 import About from '@/components/About.jsx'
@@ -20,8 +20,6 @@ import About from '@/components/About.jsx'
 export default function Home() {
   return (
     <>
-      <SectionIndex />
-
       <main id="content">
         <Hero />
         <Proof />
@@ -29,6 +27,8 @@ export default function Home() {
         <WhyChooseVip />
         <About />
       </main>
+
+      <StickyCta />
     </>
   )
 }
