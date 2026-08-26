@@ -1,5 +1,6 @@
 import SectionIndex from '@/components/SectionIndex.jsx'
 import Hero from '@/components/Hero.jsx'
+import Proof from '@/components/Proof.jsx'
 import ProductCategories from '@/components/ProductCategories.jsx'
 import WhyChooseVip from '@/components/WhyChooseVip.jsx'
 import About from '@/components/About.jsx'
@@ -23,6 +24,7 @@ export default function Home() {
 
       <main id="content">
         <Hero />
+        <Proof />
         <ProductCategories />
         <WhyChooseVip />
         <About />

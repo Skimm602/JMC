@@ -108,6 +108,13 @@ export const ArrowUpRightIcon = (p) => (
   </Svg>
 )
 
+/** Handset, for the number that settles every price on this site. */
+export const PhoneIcon = (p) => (
+  <Svg {...p}>
+    <path d="M6.5 3.5h3l1.5 4-2 1.3a12 12 0 0 0 6.2 6.2l1.3-2 4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.5 5.7a2 2 0 0 1 2-2.2Z" />
+  </Svg>
+)
+
 export const UploadIcon = (p) => (
   <Svg {...p}>
     <path d="M12 16V4M8 8l4-4 4 4" />
