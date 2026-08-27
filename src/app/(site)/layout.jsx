@@ -1,6 +1,7 @@
 import Nav from '@/components/Nav.jsx'
 import Footer from '@/components/Footer.jsx'
 import IntroScreen from '@/components/IntroScreen.jsx'
+import RouteProgress from '@/components/RouteProgress.jsx'
 import SupportButton from '@/components/SupportButton.jsx'
 import PageViewTracker from '@/components/PageViewTracker.jsx'
 import { createClient } from '@/utils/supabase/server'
@@ -41,6 +42,10 @@ export default async function SiteLayout({ children }) {
       {/* Above the skip link so the cover is parsed — and its "already seen"
           check has run — before anything else on the page. */}
       <IntroScreen />
+
+      {/* Every in-app link click, everywhere in this group — the bar has no
+          opinion on which page it is watching. */}
+      <RouteProgress />
 
       {/* Counts visits to the public site only. It sits in this group rather
           than the root layout so the back office never counts itself — an

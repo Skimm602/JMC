@@ -1,5 +1,6 @@
 import Logo from './Logo.jsx'
 import { Rule } from './ui.jsx'
+import Reveal from './Reveal.jsx'
 
 /**
  * The foot of every public page.
@@ -13,10 +14,10 @@ import { Rule } from './ui.jsx'
  * reach them, and where else to go — so the width does some work instead of
  * being margin.
  *
- * The only motion is `reveal-up`, the scroll-linked lift already used
- * elsewhere. It costs no JavaScript, browsers without view timelines simply
- * show the content, and the global reduced-motion rule turns it off. A footer
- * is not the place to spend a visitor's attention.
+ * The only motion is `<Reveal>`, the fade-up used elsewhere on the site. The
+ * global reduced-motion rule collapses its transition to near-nothing for
+ * anyone who has asked for less motion. A footer is not the place to spend a
+ * visitor's attention on anything more than that.
  */
 
 /** Real destinations only. A column of links that all point at "/" is worse
@@ -44,7 +45,7 @@ export default function Footer() {
   return (
     <footer id="footer" className="band-pit rail">
       <div className="rail-inner pt-20 pb-32 lg:py-24 lg:pb-28">
-        <div className="reveal-up grid gap-12 md:grid-cols-[1.4fr_1fr_1fr] md:gap-10 lg:gap-16">
+        <Reveal className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr] md:gap-10 lg:gap-16">
           {/* ------------------------------- who ------------------------------- */}
           <div>
             <Logo tone="shade" />
@@ -92,7 +93,7 @@ export default function Footer() {
               ))}
             </ul>
           </div>
-        </div>
+        </Reveal>
 
         <Rule tone="shade" className="mt-12 mb-8" />
 

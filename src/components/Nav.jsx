@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Logo from './Logo.jsx'
 import LoginDialog from './LoginDialog.jsx'
 import AccountMenu, { initialFor } from './AccountMenu.jsx'
@@ -24,10 +24,10 @@ const links = [
   // '/#top' rather than '/': from the form it goes home, and from home it
   // scrolls back to the hero instead of doing nothing at all.
   { label: 'Home', href: '/#top' },
-  // Pressing the label goes to the shop; the chevron beside it opens the
-  // shortcut menu into the technical range on the home page. One control
-  // could not do both without one of the two being a surprise.
-  { label: 'Products', href: '/products', dropdown: true },
+  // One control rather than a label plus a separate chevron beside it — the
+  // whole thing is now the toggle. "Everything, with prices" inside the menu
+  // it opens is what carries a visitor to the full page instead.
+  { label: 'Products', dropdown: true },
   { label: 'Support', href: '/#footer' },
 ]
 
@@ -67,6 +67,7 @@ function SignOutRow({ onDone }) {
  * logged-out state while a client-side check catches up.
  */
 export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
+  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [login, setLogin] = useState(false)
@@ -76,6 +77,14 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
   const triggerRef = useRef(null)
   const itemRefs = useRef([])
   const focusFirstRef = useRef(false)
+
+  // Only the home page opens on a dark, hero-sized band the bar can
+  // disappear into — every other route starts on a light band (`/products`,
+  // `/cart`, `/login`…), where light nav text over nothing would be
+  // unreadable rather than blended. Those pages keep the solid bar from the
+  // first frame; home is the one page that gets the transparent-to-solid
+  // move, matching the parent company's own site.
+  const isHome = pathname === '/'
 
   // The header starts transparent over the hero and only takes a surface
   // once you leave the fold — keeps the first impression uncluttered.
@@ -141,17 +150,23 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
   }
 
   return (
-    /* The bar is dark at every scroll position rather than fading up from
-       transparent. It is the top edge of the dark ground the hero panel is
-       inset into, so letting it go clear would detach it from the shape it
-       belongs to. Scroll only deepens it and draws the rule. */
+    /* On the home page the bar is clear at the top, sitting directly on the
+       hero's own dark ground, and only takes a surface of its own once the
+       hero has scrolled past — the same move the parent company's site
+       makes. Every other route opens on a light band, so the bar there
+       starts solid instead: transparent nav text over nothing would read as
+       a broken header, not a blended one. */
     <header
       className={cx(
         // overflow-x-clip, not hidden: the shelf runs past the right edge on
         // purpose, and clip is the one that contains it without also cutting
         // off the product menu hanging below the bar.
-        'fixed inset-x-0 top-0 z-50 overflow-x-clip transition-colors duration-300',
-        scrolled ? 'border-rule-shade bg-pit/95 border-b backdrop-blur-md' : 'bg-pit border-b border-transparent',
+        'fixed inset-x-0 top-0 z-50 overflow-x-clip transition-[background-color,backdrop-filter,border-color] duration-500',
+        scrolled
+          ? 'border-rule-shade bg-pit/95 border-b backdrop-blur-md'
+          : isHome
+            ? 'border-b border-transparent bg-transparent'
+            : 'bg-pit border-b border-transparent',
       )}
     >
       {/* Same rail as every band below, so the logo sits on the page datum
@@ -183,27 +198,16 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                     />
                   </a>
                 ) : (
-                  <div key={l.label} ref={productsRef} className="relative flex items-center gap-1">
-                    <a
-                      href={l.href}
-                      className="group text-glint hover:text-glint-soft relative py-1 text-sm transition-colors"
-                    >
-                      {l.label}
-                      <span
-                        aria-hidden="true"
-                        className="bg-glint-soft absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
-                      />
-                    </a>
-
-                    {/* Its own control, with its own name: a chevron that is
-                        part of the link would make "go to the shop" and "show
-                        me the range" the same press. */}
+                  <div key={l.label} ref={productsRef} className="relative flex items-center">
+                    {/* One control now, not a link plus a separate chevron
+                        beside it — the press opens the menu, and the menu's
+                        own "Everything, with prices" is the way through to
+                        the full page. */}
                     <button
                       ref={triggerRef}
                       type="button"
                       aria-expanded={products}
                       aria-controls="products-menu"
-                      aria-label="Product types"
                       onClick={() => setProducts((v) => !v)}
                       onKeyDown={(e) => {
                         if (e.key !== 'ArrowDown') return
@@ -212,12 +216,17 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                         setProducts(true)
                       }}
                       className={cx(
-                        'p-1 transition-colors',
+                        'group relative flex items-center gap-1.5 py-1 text-sm transition-colors',
                         products ? 'text-glint-soft' : 'text-glint hover:text-glint-soft',
                       )}
                     >
+                      {l.label}
                       <ChevronDownIcon
                         className={cx('h-3.5 w-3.5 transition-transform duration-200', products && 'rotate-180')}
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="bg-glint-soft absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
                       />
                     </button>
 
@@ -375,26 +384,20 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
               </a>
             ) : (
               <div key={l.label} className="border-rule-shade border-b">
-                <div className="flex items-center justify-between">
-                  <a
-                    href={l.href}
-                    onClick={() => setOpen(false)}
-                    className="text-glint hover:text-glint-soft flex-1 py-4 text-sm font-medium transition-colors"
-                  >
-                    {l.label}
-                  </a>
-                  <button
-                    type="button"
-                    aria-expanded={mobileProducts}
-                    aria-label="Product types"
-                    onClick={() => setMobileProducts((v) => !v)}
-                    className="text-glint hover:text-glint-soft p-3 transition-colors"
-                  >
-                    <ChevronDownIcon
-                      className={cx('h-4 w-4 transition-transform duration-200', mobileProducts && 'rotate-180')}
-                    />
-                  </button>
-                </div>
+                {/* One row, one control — the label and the chevron used to
+                    be a separate link and a separate button; now the whole
+                    row is the toggle, matching the bar above it. */}
+                <button
+                  type="button"
+                  aria-expanded={mobileProducts}
+                  onClick={() => setMobileProducts((v) => !v)}
+                  className="text-glint hover:text-glint-soft flex w-full items-center justify-between py-4 text-left text-sm font-medium transition-colors"
+                >
+                  {l.label}
+                  <ChevronDownIcon
+                    className={cx('h-4 w-4 transition-transform duration-200', mobileProducts && 'rotate-180')}
+                  />
+                </button>
 
                 {/* The same two levels as the bar, folded into an
                     accordion: a flyout has nowhere to fly to on a phone, and

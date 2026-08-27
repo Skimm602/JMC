@@ -217,6 +217,41 @@ export const StarIcon = ({ filled, className = 'h-4 w-4', ...rest }) => (
   </Svg>
 )
 
+/** Three stacked planes — a range of brands under one roof, not one product. */
+export const LayersIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 3 3 8l9 5 9-5Z" />
+    <path d="M3 12l9 5 9-5" />
+    <path d="M3 16l9 5 9-5" />
+  </Svg>
+)
+
+/** A price tag with its punch hole, for a figure shown rather than quoted. */
+export const TagIcon = (p) => (
+  <Svg {...p}>
+    <path d="M20 12.8 12.8 20 4 11.2V4h7.2L20 12.8Z" />
+    <circle cx="8.6" cy="8.6" r="1.3" />
+  </Svg>
+)
+
+/** An open crate, for a unit sitting on a shelf rather than a line in a PDF. */
+export const BoxIcon = (p) => (
+  <Svg {...p}>
+    <path d="M3 8 12 3.5 21 8v9l-9 4.5L3 17Z" />
+    <path d="M3 8l9 4.5 9-4.5M12 12.5V21" />
+  </Svg>
+)
+
+/** A cab and a box on wheels, for the line that ships correctly the first time. */
+export const TruckIcon = (p) => (
+  <Svg {...p}>
+    <rect x="2.5" y="7" width="11" height="9" rx="1" />
+    <path d="M13.5 10.5h3.7l3.3 2.8V16h-7Z" />
+    <circle cx="7.5" cy="18" r="1.6" />
+    <circle cx="17" cy="18" r="1.6" />
+  </Svg>
+)
+
 export const SpinnerIcon = ({ className = 'h-5 w-5' }) => (
   <svg {...base} className={`${className} animate-spin`}>
     <path d="M12 3a9 9 0 1 0 9 9" />

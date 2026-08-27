@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import EnergyFlow from './EnergyFlow.jsx'
 import { ArrowLink, Eyebrow, Section, SectionHeading, cx } from './ui.jsx'
+import Reveal from './Reveal.jsx'
 
 /**
  * The range as HYXiPOWER actually publishes it. Every number here is read off
@@ -305,14 +306,15 @@ export default function Products() {
       {/* The schematic is the section's claim, so it leads rather than
           decorates. It is wider than a phone, so the scroller is focusable
           and named — otherwise the right half is unreachable by keyboard. */}
-      <div
+      <Reveal
+        as="div"
         role="group"
         aria-label="Single-line schematic: array through inverter to loads and grid. Scrollable."
         tabIndex={0}
-        className="reveal-up border-rule mt-14 overflow-x-auto pb-2 lg:border-0"
+        className="border-rule mt-14 overflow-x-auto pb-2 lg:border-0"
       >
         <EnergyFlow className="h-auto w-[1210px] max-w-none lg:w-full" />
-      </div>
+      </Reveal>
 
       <div className="mt-16 grid gap-px lg:grid-cols-[290px_1fr]">
         {/* ------------------------------ selector ----------------------------- */}

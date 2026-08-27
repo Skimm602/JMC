@@ -1,14 +1,16 @@
 import Hero from '@/components/Hero.jsx'
-import Proof from '@/components/Proof.jsx'
 import StickyCta from '@/components/StickyCta.jsx'
 import ProductCategories from '@/components/ProductCategories.jsx'
 import WhyChooseVip from '@/components/WhyChooseVip.jsx'
 import About from '@/components/About.jsx'
+import Brands from '@/components/Brands.jsx'
+import Projects from '@/components/Projects.jsx'
 
 /**
- * Registration is its own route now, so the page ends on who the company is
- * rather than on a form: About closes the argument the hero opens, and the
- * call to register is a link out of it from every band that earns one.
+ * Registration is its own route now, so the page ends on the dealership
+ * rather than on a form: what the range is, who backs it, why to buy it
+ * here, then the marks that make the "authorised dealer" claim checkable —
+ * in that order, because each one only lands if the argument before it did.
  *
  * The detailed spec-comparison range, the sizing calculator, the
  * installer-tier table and the engineering-arguments section are no longer
@@ -22,10 +24,11 @@ export default function Home() {
     <>
       <main id="content">
         <Hero />
-        <Proof />
         <ProductCategories />
-        <WhyChooseVip />
         <About />
+        <WhyChooseVip />
+        <Brands />
+        <Projects />
       </main>
 
       <StickyCta />

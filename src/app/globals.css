@@ -88,6 +88,23 @@
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
+  /* Home page only — the parent company's own palette (jmcsolarph.com):
+     navy grounds and an amber signal colour, sampled from that site's
+     shipped CSS rather than matched by eye. Additive to the "Clear sky"
+     pair above, not a replacement — every other route still reads off
+     the cool and hot tokens, so nothing outside the home components that
+     opt into these new classes changes. */
+  --color-solar-300: #fcd34d;
+  --color-solar-400: #fbbf24;
+  --color-solar-500: #f59e0b;
+  --color-solar-600: #d97706;
+  --color-solar-700: #b45309;
+
+  --color-navy-700: #1e3a6e;
+  --color-navy-800: #162d5a;
+  --color-navy-900: #0f1f40;
+  --color-navy-950: #0a1428;
+
   /* Display scale. The two steps grow at different rates on purpose: the old
      pair both grew at 4.4vw, so between roughly 800px and 1350px the page
      heading and every section heading rendered at the same size and the
@@ -221,10 +238,19 @@
     font-variant-numeric: tabular-nums;
   }
 
-  @supports (scrollbar-color: auto) {
-    html {
-      scrollbar-color: var(--color-sheet-edge) var(--color-sheet);
-    }
+  /* The scrollbar itself is hidden rather than styled to the palette —
+     scrolling still works exactly as before, there is just nothing drawn
+     for it. Three properties because there are three different ways a
+     browser exposes this: Firefox reads `scrollbar-width`, old Edge/IE read
+     `-ms-overflow-style`, and everything Chromium/WebKit only listens to the
+     pseudo-element below. */
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -327,6 +353,16 @@
 }
 
 @layer utilities {
+  /* Poppins, for the home page's headings only — everywhere else still
+     resolves h1–h4 to Archivo through the base-layer rule above. Utilities
+     are the last layer, so this wins over that rule wherever it is applied
+     without needing !important. */
+  .font-display-jmc {
+    font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+    font-variation-settings: normal;
+    letter-spacing: -0.01em;
+  }
+
   /* Expanded display width, for headings that need to carry more weight
      than the base h1–h4 setting. */
   .display-wide {
@@ -551,27 +587,85 @@
     animation: fade-in 0.5s ease-out both;
   }
 
-  /* Scroll-linked reveals, progressive: browsers without view timelines
-     simply show the content with no JS and no layout cost. */
-  @keyframes reveal-up {
+  /* The brand strip, moving the way the parent company's own site's does:
+     two rows, opposite directions, each one's content doubled so the loop
+     has no seam — translating exactly one copy's width lands back on the
+     frame it started from. The reduced-motion rule above already freezes
+     this along with everything else on the page. */
+  @keyframes marquee-left {
     from {
-      opacity: 0;
-      transform: translateY(18px);
+      transform: translateX(0);
     }
     to {
-      opacity: 1;
-      transform: translateY(0);
+      transform: translateX(-50%);
     }
   }
 
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .reveal-up {
-        animation: reveal-up linear both;
-        animation-timeline: view();
-        animation-range: entry 5% cover 26%;
-      }
+  @keyframes marquee-right {
+    from {
+      transform: translateX(-50%);
     }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .animate-marquee-left {
+    animation: marquee-left 34s linear infinite;
+  }
+
+  .animate-marquee-right {
+    animation: marquee-right 34s linear infinite;
+  }
+
+  /* Ambient motion for the decorative glow orbs behind the hero and other
+     dark navy bands — the same pairing (a slow drift plus a slower one, so
+     two together never fall back into sync) and the same pulsing glow the
+     parent company's site uses behind its own headline. Pure decoration:
+     aria-hidden wherever it is used, and the reduced-motion rule above
+     already freezes it. */
+  @keyframes float-slow {
+    0%,
+    to {
+      transform: translateY(0) rotate(0);
+    }
+    50% {
+      transform: translateY(-20px) rotate(3deg);
+    }
+  }
+
+  @keyframes float-slower {
+    0%,
+    to {
+      transform: translateY(0) rotate(0);
+    }
+    50% {
+      transform: translateY(-14px) rotate(-2deg);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    to {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-float-slow {
+    animation: float-slow 6s ease-in-out infinite;
+  }
+
+  .animate-float-slower {
+    animation: float-slower 8s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 4s ease-in-out infinite;
   }
 }
 

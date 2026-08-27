@@ -1,4 +1,4 @@
-import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
+import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans, Poppins } from 'next/font/google'
 import './globals.css'
 
 /**
@@ -31,6 +31,19 @@ const plexMono = IBM_Plex_Mono({
   display: 'swap',
 })
 
+/**
+ * Home page only, for now — matching the heading voice of the parent
+ * company site (jmcsolarph.com) while the rest of the shop keeps Archivo.
+ * Loaded here regardless, same as the other three, since next/font's
+ * variables have to attach to a single root <html> element.
+ */
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  variable: '--font-poppins',
+  display: 'swap',
+})
+
 export const metadata = {
   title: 'VIP Solar — Inverters & Energy Storage',
   description:
@@ -58,7 +71,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} scroll-smooth`}
+      className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} ${poppins.variable} scroll-smooth`}
       // The opening animation's skip check (IntroScreen) sets data-intro-seen
       // on this element before React hydrates — that is the whole point of it,
       // since deciding after hydration would mean painting a frame of a cover

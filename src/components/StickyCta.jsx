@@ -66,14 +66,14 @@ export default function StickyCta() {
                 href={`tel:${phone.replace(/\s/g, '')}`}
                 className="text-glint border-glint-soft/40 hover:border-glint hover:bg-glint/[0.06] inline-flex h-11 flex-1 items-center justify-center gap-2.5 rounded-full border px-5 font-mono text-sm font-medium transition-colors duration-200 sm:flex-none"
               >
-                <PhoneIcon className="text-hot-400 h-4 w-4 shrink-0" />
+                <PhoneIcon className="text-solar-400 h-4 w-4 shrink-0" />
                 <span className="hidden sm:inline">{phone}</span>
                 <span className="sm:hidden">Call</span>
               </a>
 
               <a
                 href="/#footer"
-                className="bg-hot-600 text-glare hover:bg-hot-500 inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-colors duration-200 sm:flex-none"
+                className="bg-solar-500 text-navy-950 hover:bg-solar-400 inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold shadow-[0_0_0_0_rgba(245,158,11,0.5)] transition-[background-color,box-shadow] duration-300 hover:shadow-[0_0_20px_1px_rgba(245,158,11,0.5)] sm:flex-none"
               >
                 Get a free quote
                 <ArrowUpRightIcon className="h-4 w-4 shrink-0" />

@@ -84,28 +84,32 @@ export const CREDENTIALS = [
 ]
 
 /**
- * The manufacturers actually carried. Ordered with the two we stock as boxed
- * equipment on this site first, because those are the ones a visitor can click
- * through to a specification.
+ * The manufacturers actually carried, with the mark each one ships on its own
+ * material — the same files the parent company's site displays, since the
+ * dealership the logo represents belongs to this business either way.
+ *
+ * Ordered with the two we stock as boxed equipment on this site first
+ * (`emphasized`), because those are the ones a visitor can click through to a
+ * specification.
  */
 export const PARTNER_BRANDS = [
-  'HYXiPOWER',
-  'Solis',
-  'GoodWe',
-  'SolaX Power',
-  'Deye',
-  'Sofar Solar',
-  'Jinko Solar',
-  'Trina Solar',
-  'REC Group',
-  'Livoltek',
-  'LVTOPSUN',
-  'SRNE Solar',
-  'Sunri',
-  'Aiko',
-  'Voltronic Power',
-  'Think Power',
-  'Japan Solar',
+  { name: 'HYXiPOWER', logo: '/logos/hyxipower.webp', emphasized: true },
+  { name: 'Solis', logo: '/logos/solis.webp', emphasized: true },
+  { name: 'GoodWe', logo: '/logos/goodwe.webp', emphasized: true },
+  { name: 'SolaX Power', logo: '/logos/solax.webp', emphasized: true },
+  { name: 'Deye', logo: '/logos/deye.webp' },
+  { name: 'Sofar Solar', logo: '/logos/sofarsolar.webp' },
+  { name: 'Jinko Solar', logo: '/logos/jinkosolar.webp' },
+  { name: 'Trina Solar', logo: '/logos/trinasolar.webp' },
+  { name: 'REC Group', logo: '/logos/rec.webp' },
+  { name: 'Livoltek', logo: '/logos/livoltek.webp' },
+  { name: 'LVTOPSUN', logo: '/logos/lvtopsun.webp' },
+  { name: 'SRNE Solar', logo: '/logos/srne.webp' },
+  { name: 'Sunri', logo: '/logos/sunri.webp' },
+  { name: 'Aiko', logo: '/logos/aiko.webp' },
+  { name: 'Voltronic Power', logo: '/logos/voltronicpower.webp' },
+  { name: 'Think Power', logo: '/logos/think-power.webp' },
+  { name: 'Japan Solar', logo: '/logos/japan-solar.webp' },
 ]
 
 /** What the company does on a roof, as distinct from what it sells in a box. */
@@ -165,6 +169,48 @@ export const TESTIMONIALS = [
     quote: 'if you want to save a lot in terms of electricity bill. this company will definitely help you! quality of their products should be more than just 5 star in rate.',
     attribution: 'Customer',
   },
+]
+
+/**
+ * Completed installations, as published on the parent company's own
+ * /projects page — same thirteen jobs, same categories, same cover photo
+ * for each. `size` is the figure that page shows next to the title, where it
+ * showed one; several entries there carry no size and none is invented here.
+ */
+export const PROJECTS = [
+  {
+    title: '100kWp Broiler Farm On Grid Solar Project',
+    category: 'industrial',
+    size: '100kW',
+    image: '/projects/100kwp-broiler-farm.webp',
+  },
+  { title: 'Farm 50kW On Grid', category: 'agricultural', size: '50kW', image: '/projects/farm-50kw.webp' },
+  {
+    title: 'Education Institution 100kW On Grid',
+    category: 'commercial',
+    size: '100kW',
+    image: '/projects/education-100kw.webp',
+  },
+  {
+    title: 'Education Institution 50kW On Grid',
+    category: 'commercial',
+    size: '50kW',
+    image: '/projects/education-50kw.webp',
+  },
+  { title: 'Hospital 30kW On Grid', category: 'commercial', size: '30kW', image: '/projects/hospital-30kw.webp' },
+  {
+    title: 'Education Institution 16kW On Grid',
+    category: 'commercial',
+    size: '16kW',
+    image: '/projects/education-16kw.webp',
+  },
+  { title: '30kWp On Grid', category: 'commercial', size: '30kWp', image: '/projects/30kwp-on-grid.webp' },
+  { title: '20kWp On Grid', category: 'commercial', size: '20kWp', image: '/projects/20kwp-on-grid.webp' },
+  { title: '15kWp On Grid', category: 'commercial', size: '15kWp', image: '/projects/15kwp-on-grid.webp' },
+  { title: '24kWp 3-Phase Hybrid', category: 'residential', size: '24kWp', image: '/projects/24kwp-hybrid.webp' },
+  { title: '20kW On Grid', category: 'residential', size: '20kW', image: '/projects/20kw-on-grid.webp' },
+  { title: '16kW Hybrid', category: 'residential', size: '16kW', image: '/projects/16kw-hybrid.webp' },
+  { title: '5kW Hybrid', category: 'residential', size: '5kW', image: '/projects/5kw-hybrid.webp' },
 ]
 
 /**
