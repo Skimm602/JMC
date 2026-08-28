@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { formatPeso, isPriced, unitPriceOf, withVat } from '@/utils/pricing'
 import { brandOf } from '@/utils/brands'
-import { PRODUCT_CATEGORIES } from '@/utils/product-categories'
-import { Eyebrow, Lede, Section, SectionHeading, TwoTone, cx } from './ui.jsx'
+import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
+import { Eyebrow, SectionHeading, TwoTone, cx } from './ui.jsx'
 import { ArrowRightIcon, ArrowUpRightIcon, CartIcon, FileIcon } from './icons.jsx'
 import Reveal from './Reveal.jsx'
 
@@ -14,7 +14,8 @@ import Reveal from './Reveal.jsx'
  * site: it describes a service and asks you to enquire. A shop puts stock in
  * front of you, with its picture, its price and a way to buy it, before it
  * asks you to believe anything — so this is real rows out of the catalogue,
- * eight of them, the same cards the shop floor uses.
+ * twelve of them, on the first screenful, in the same cards the shop floor
+ * uses.
  *
  * The products are fetched once by the page and passed to this and to the
  * hero, so the front page makes one catalogue query rather than three.
@@ -31,10 +32,10 @@ const TYPE_LABEL = Object.fromEntries(
 )
 
 /**
- * Eight units that show the range rather than eight of the same thing.
+ * Twelve units that show the range rather than twelve of the same thing.
  *
  * Taken round-robin across the types, because the point this shelf has to
- * make in one screenful is breadth — a visitor who sees eight inverters
+ * make in its first rows is breadth — a visitor who sees eight inverters
  * concludes we sell inverters. In-stock lines are preferred, but a shelf that
  * would come out nearly empty falls back to the whole catalogue rather than
  * disappearing.
@@ -148,58 +149,87 @@ function ShelfCard({ product, isInstaller }) {
 }
 
 export default function ShopShelf({ products = [], isInstaller = false }) {
-  const featured = pickFeatured(products, 8)
+  const featured = pickFeatured(products, 12)
   if (featured.length === 0) return null
 
   return (
-    <Section id="shop">
-      <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
-        <div className="lg:col-span-7">
-          <Eyebrow>Buy now</Eyebrow>
-          <SectionHeading className="mt-5">
-            <TwoTone light="On the shelf" dark="today." />
-          </SectionHeading>
+    /* Not `Section`: its py-20/28 would put a screenful of sky between the
+       banner and the first product card, which is exactly what the owner
+       asked to be rid of. The shelf starts immediately and takes its air at
+       the bottom, where the page carries on. */
+    <section id="shop" className="rail relative scroll-mt-nav pt-6 pb-20 lg:pt-8 lg:pb-28">
+      <div className="rail-inner">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+          <div>
+            <Eyebrow>Buy now</Eyebrow>
+            <SectionHeading className="mt-4">
+              <TwoTone light="On the shelf" dark="today." />
+            </SectionHeading>
+          </div>
+
+          {/* The shelves, as a row of capsules beside the heading rather than
+              a section of their own further down. Somebody who came for a
+              battery should be one click from the battery page without
+              scrolling past twelve inverters to find the door. */}
+          <nav aria-label="Shelves" className="flex flex-wrap items-center gap-2">
+            {PRODUCT_CATEGORIES.map((c) => (
+              <Link
+                key={c.key}
+                href={categoryHref(c)}
+                className="border-navy-900/15 text-ink-soft hover:border-navy-900/50 hover:text-navy-900 inline-flex h-10 items-center rounded-full border bg-white/60 px-4 text-sm font-medium transition-colors duration-200"
+              >
+                {c.label}
+              </Link>
+            ))}
+            <Link
+              href="/products"
+              className="bg-navy-900 border-navy-900 text-glare hover:bg-navy-800 inline-flex h-10 items-center rounded-full border px-4 text-sm font-semibold transition-colors duration-200"
+            >
+              All {products.length}
+            </Link>
+          </nav>
         </div>
-        <Lede className="lg:col-span-5">
-          Boxed, counted and ready to go out. Every unit ships with its manufacturer&apos;s warranty and the
-          datasheet it was specified from.
-        </Lede>
-      </div>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {featured.map((product, i) => (
-          <Reveal key={product.id} delay={(i % 4) * 70} className="h-full">
-            <ShelfCard product={product} isInstaller={isInstaller} />
-          </Reveal>
-        ))}
-      </div>
-
-      <Reveal className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-        <p className="text-ink-soft text-sm leading-relaxed">
-          <span className="text-navy-900 font-semibold">{products.length} lines</span> in the catalogue right now —
-          inverters, storage and the gear that goes between them.
-        </p>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/products"
-            className="group/cta bg-navy-900 text-glare hover:bg-navy-800 inline-flex h-12 items-center gap-3 rounded-full pr-2 pl-6 text-sm font-semibold shadow-[0_14px_30px_-16px_rgba(15,31,64,0.95)] transition-colors duration-200"
-          >
-            Shop everything
-            <span className="bg-solar-500 text-navy-950 grid h-8 w-8 shrink-0 place-items-center rounded-full transition-transform duration-200 group-hover/cta:translate-x-0.5">
-              <ArrowUpRightIcon className="h-4 w-4" />
-            </span>
-          </Link>
-
-          <Link
-            href="/cart"
-            className="text-navy-900 border-navy-900/20 hover:border-navy-900/60 hover:bg-glare inline-flex h-12 items-center gap-2.5 rounded-full border bg-white/60 px-5 text-sm font-medium transition-colors duration-200"
-          >
-            <CartIcon className="text-solar-600 h-4 w-4 shrink-0" />
-            Your cart
-          </Link>
+        {/* No lede here on purpose: a paragraph between the heading and the
+            first card is another 70px of reading before anything can be
+            bought. What it said now sits under the grid, where somebody who
+            has already looked at the stock will read it. */}
+        <div className="mt-7 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {featured.map((product, i) => (
+            <Reveal key={product.id} delay={(i % 4) * 70} className="h-full">
+              <ShelfCard product={product} isInstaller={isInstaller} />
+            </Reveal>
+          ))}
         </div>
-      </Reveal>
-    </Section>
+
+        <Reveal className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <p className="text-ink-soft max-w-measure text-sm leading-relaxed">
+            <span className="text-navy-900 font-semibold">{products.length} lines</span> in the catalogue right now,
+            boxed and counted. Every unit ships with its manufacturer&apos;s warranty and the datasheet it was
+            specified from.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/products"
+              className="group/cta bg-navy-900 text-glare hover:bg-navy-800 inline-flex h-12 items-center gap-3 rounded-full pr-2 pl-6 text-sm font-semibold shadow-[0_14px_30px_-16px_rgba(15,31,64,0.95)] transition-colors duration-200"
+            >
+              Shop everything
+              <span className="bg-solar-500 text-navy-950 grid h-8 w-8 shrink-0 place-items-center rounded-full transition-transform duration-200 group-hover/cta:translate-x-0.5">
+                <ArrowUpRightIcon className="h-4 w-4" />
+              </span>
+            </Link>
+
+            <Link
+              href="/cart"
+              className="text-navy-900 border-navy-900/20 hover:border-navy-900/60 hover:bg-glare inline-flex h-12 items-center gap-2.5 rounded-full border bg-white/60 px-5 text-sm font-medium transition-colors duration-200"
+            >
+              <CartIcon className="text-solar-600 h-4 w-4 shrink-0" />
+              Your cart
+            </Link>
+          </div>
+        </Reveal>
+      </div>
+    </section>
   )
 }
