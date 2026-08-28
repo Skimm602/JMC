@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Logo from './Logo.jsx'
+import { COMPANY } from '@/utils/company'
 import LoginDialog from './LoginDialog.jsx'
 import AccountMenu, { initialFor } from './AccountMenu.jsx'
 import { signOut } from '@/app/actions/auth'
@@ -53,7 +54,7 @@ function SignOutRow({ onDone }) {
       type="button"
       onClick={leave}
       disabled={status === 'signing-out'}
-      className="text-glint-soft hover:text-glint flex w-full items-center gap-2 py-4 text-left text-sm font-medium transition-colors disabled:opacity-60"
+      className="text-ink-soft hover:text-navy-900 flex w-full items-center gap-2 py-4 text-left text-sm font-medium transition-colors disabled:opacity-60"
     >
       {status === 'signing-out' && <SpinnerIcon className="h-4 w-4" />}
       {status === 'signing-out' ? 'Logging out…' : 'Log out'}
@@ -67,7 +68,6 @@ function SignOutRow({ onDone }) {
  * logged-out state while a client-side check catches up.
  */
 export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
-  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [login, setLogin] = useState(false)
@@ -77,14 +77,6 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
   const triggerRef = useRef(null)
   const itemRefs = useRef([])
   const focusFirstRef = useRef(false)
-
-  // Only the home page opens on a dark, hero-sized band the bar can
-  // disappear into — every other route starts on a light band (`/products`,
-  // `/cart`, `/login`…), where light nav text over nothing would be
-  // unreadable rather than blended. Those pages keep the solid bar from the
-  // first frame; home is the one page that gets the transparent-to-solid
-  // move, matching the parent company's own site.
-  const isHome = pathname === '/'
 
   // The header starts transparent over the hero and only takes a surface
   // once you leave the fold — keeps the first impression uncluttered.
@@ -150,23 +142,23 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
   }
 
   return (
-    /* On the home page the bar is clear at the top, sitting directly on the
-       hero's own dark ground, and only takes a surface of its own once the
-       hero has scrolled past — the same move the parent company's site
-       makes. Every other route opens on a light band, so the bar there
-       starts solid instead: transparent nav text over nothing would read as
-       a broken header, not a blended one. */
+    /* Clear at the top on every route — the page's ground is one continuous
+       sky now, so there is nothing for the bar to be a different colour
+       from. It takes a frosted surface only once that sky starts moving
+       underneath it. */
     <header
       className={cx(
         // overflow-x-clip, not hidden: the shelf runs past the right edge on
         // purpose, and clip is the one that contains it without also cutting
         // off the product menu hanging below the bar.
-        'fixed inset-x-0 top-0 z-50 overflow-x-clip transition-[background-color,backdrop-filter,border-color] duration-500',
-        scrolled
-          ? 'border-rule-shade bg-pit/95 border-b backdrop-blur-md'
-          : isHome
-            ? 'border-b border-transparent bg-transparent'
-            : 'bg-pit border-b border-transparent',
+        'fixed inset-x-0 top-0 z-50 overflow-x-clip transition-[background-color,backdrop-filter,box-shadow] duration-500',
+        // The bar sits on the same sky the whole page is built on now, so at
+        // the top it is genuinely nothing. Once the field starts moving under
+        // it, it takes a frosted white surface and one soft shadow rather than
+        // a border: a hairline over a gradient reads as a seam, a shadow reads
+        // as the bar lifting off it. Every route is light, so there is no
+        // longer a dark-page case to special-case.
+        scrolled ? 'bg-glare/80 shadow-[0_10px_30px_-24px_rgba(15,31,64,0.65)] backdrop-blur-xl' : 'bg-transparent',
       )}
     >
       {/* Same rail as every band below, so the logo sits on the page datum
@@ -176,7 +168,16 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
       <div className="rail">
         <div className="rail-inner">
           <div className="flex h-nav items-center gap-6">
-            <Logo tone="shade" />
+            {/* Mark, hairline, tagline — the reference's masthead. The
+                tagline is the company's own, and it drops below xl rather
+                than wrapping: a strapline that has to fold is noise. */}
+            <div className="flex items-center gap-4">
+              <Logo />
+              <span aria-hidden="true" className="bg-navy-900/15 hidden h-8 w-px xl:block" />
+              <span className="text-ink-soft hidden max-w-[11rem] text-xs leading-snug xl:block">
+                {COMPANY.tagline}
+              </span>
+            </div>
 
             {/* The links sit as one group toward the action rather than spread
                 across the bar: the eye runs logo → menu → the thing to press,
@@ -188,13 +189,13 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                   <a
                     key={l.href}
                     href={l.href}
-                    className="group text-glint hover:text-glint-soft relative py-1 text-sm transition-colors"
+                    className="group text-navy-900/75 hover:text-navy-900 relative py-1 text-sm font-medium transition-colors"
                   >
                     {l.label}
                     {/* the rule grows from the left, matching the button axis */}
                     <span
                       aria-hidden="true"
-                      className="bg-glint-soft absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
+                      className="bg-solar-500 absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full transition-all duration-300 ease-out group-hover:w-full"
                     />
                   </a>
                 ) : (
@@ -216,8 +217,8 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                         setProducts(true)
                       }}
                       className={cx(
-                        'group relative flex items-center gap-1.5 py-1 text-sm transition-colors',
-                        products ? 'text-glint-soft' : 'text-glint hover:text-glint-soft',
+                        'group relative flex items-center gap-1.5 py-1 text-sm font-medium transition-colors',
+                        products ? 'text-navy-900' : 'text-navy-900/75 hover:text-navy-900',
                       )}
                     >
                       {l.label}
@@ -226,14 +227,14 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                       />
                       <span
                         aria-hidden="true"
-                        className="bg-glint-soft absolute -bottom-0.5 left-0 h-px w-0 transition-all duration-300 ease-out group-hover:w-full"
+                        className="bg-solar-500 absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full transition-all duration-300 ease-out group-hover:w-full"
                       />
                     </button>
 
                     {products && (
                       <div
                         id="products-menu"
-                        className="animate-reveal border-rule bg-glare absolute top-full left-0 z-10 mt-4 w-[19rem] overflow-hidden rounded-[1.25rem] border p-1.5"
+                        className="animate-reveal rounded-bento bg-glare absolute top-full left-0 z-10 mt-4 w-[19rem] overflow-hidden border border-white p-1.5 shadow-[0_24px_60px_-30px_rgba(15,31,64,0.7)]"
                       >
                         {/* Three destinations, not a catalogue. The menu's
                             job is to ask which kind of thing you came for
@@ -249,17 +250,17 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                             }}
                             onClick={() => setProducts(false)}
                             onKeyDown={(e) => onMenuKeyDown(e, i)}
-                            className="hover:bg-sheet group/item flex items-center gap-3 rounded-[0.875rem] px-3.5 py-3 transition-colors"
+                            className="hover:bg-sheet group/item rounded-card flex items-center gap-3 px-3.5 py-3 transition-colors"
                           >
                             <span className="min-w-0 flex-1">
-                              <span className="text-ink group-hover/item:text-cool-600 block text-sm font-medium transition-colors">
+                              <span className="text-navy-900 group-hover/item:text-solar-600 block text-sm font-semibold transition-colors">
                                 {c.label}
                               </span>
                               <span className="text-ink-soft mt-1 block text-xs leading-relaxed">{c.menuBlurb}</span>
                             </span>
                             <ChevronDownIcon
                               aria-hidden="true"
-                              className="text-hush group-hover/item:text-cool-600 h-3.5 w-3.5 shrink-0 -rotate-90 transition-colors"
+                              className="text-hush group-hover/item:text-solar-600 h-3.5 w-3.5 shrink-0 -rotate-90 transition-colors"
                             />
                           </a>
                         ))}
@@ -292,7 +293,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                   href="/account/orders"
                   aria-label="Your orders"
                   title="Your orders"
-                  className="text-glint hover:text-glint-soft relative p-2 transition-colors"
+                  className="text-navy-900/70 hover:text-navy-900 relative p-2 transition-colors"
                 >
                   <FileIcon className="h-5 w-5" />
                 </a>
@@ -303,13 +304,13 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
               <a
                 href="/cart"
                 aria-label={cartCount > 0 ? `Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}` : 'Cart'}
-                className="text-glint hover:text-glint-soft relative p-2 transition-colors"
+                className="text-navy-900/70 hover:text-navy-900 relative p-2 transition-colors"
               >
                 <CartIcon className="h-5 w-5" />
                 {cartCount > 0 && (
                   <span
                     aria-hidden="true"
-                    className="bg-cool-600 text-glare absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-bold"
+                    className="bg-solar-500 text-navy-950 absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-bold"
                   >
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>
@@ -325,17 +326,22 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                 </div>
               ) : (
                 <>
-                  <Button variant="ghostShade" size="sm" className="relative" onClick={() => setLogin(true)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="relative !text-navy-900/75 hover:!text-navy-900"
+                    onClick={() => setLogin(true)}
+                  >
                     Log in
                   </Button>
+                  {/* The one amber thing in the bar, and the reference's only
+                      filled control up here. */}
                   <a
                     href="/register"
-                    className="group/cta border-glint-soft/40 hover:border-glint relative flex h-11 items-center gap-3 rounded-full border pr-1.5 pl-5 transition-colors duration-200"
+                    className="group/cta bg-solar-500 text-navy-950 hover:bg-solar-400 relative flex h-11 items-center gap-2.5 rounded-full px-5 text-sm font-semibold shadow-[0_10px_24px_-12px_rgba(245,158,11,0.95)] transition-colors duration-200"
                   >
-                    <span className="text-glint text-sm font-medium">Create account</span>
-                    <span className="border-glint-soft/50 group-hover/cta:border-glint grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-colors duration-200">
-                      <ArrowUpRightIcon className="text-glint h-4 w-4" />
-                    </span>
+                    Create account
+                    <ArrowUpRightIcon className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                   </a>
                 </>
               )}
@@ -344,7 +350,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="text-glint hover:text-glint-soft ml-auto p-2 transition-colors lg:hidden"
+              className="text-navy-900 border-navy-900/15 bg-glare/70 ml-auto grid h-11 w-11 place-items-center rounded-full border transition-colors lg:hidden"
               aria-expanded={open}
               aria-controls="mobile-nav"
               aria-label={open ? 'Close menu' : 'Open menu'}
@@ -362,7 +368,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
         id="mobile-nav"
         inert={!open}
         className={cx(
-          'border-rule-shade bg-pit/97 border-t backdrop-blur-md transition-[max-height,opacity] duration-300 lg:hidden',
+          'bg-glare/97 border-t border-white/70 shadow-[0_20px_50px_-30px_rgba(15,31,64,0.7)] backdrop-blur-xl transition-[max-height,opacity] duration-300 lg:hidden',
           // The product group can push the sheet past a fixed height, so it
           // scrolls once open rather than clipping the last link. Closed, it
           // still has to clip — that is what makes the collapse animate.
@@ -378,12 +384,12 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="border-rule-shade text-glint hover:text-glint-soft border-b py-4 text-sm font-medium transition-colors"
+                className="border-navy-900/10 text-navy-900 hover:text-solar-600 border-b py-4 text-sm font-semibold transition-colors"
               >
                 {l.label}
               </a>
             ) : (
-              <div key={l.label} className="border-rule-shade border-b">
+              <div key={l.label} className="border-navy-900/10 border-b">
                 {/* One row, one control — the label and the chevron used to
                     be a separate link and a separate button; now the whole
                     row is the toggle, matching the bar above it. */}
@@ -391,7 +397,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                   type="button"
                   aria-expanded={mobileProducts}
                   onClick={() => setMobileProducts((v) => !v)}
-                  className="text-glint hover:text-glint-soft flex w-full items-center justify-between py-4 text-left text-sm font-medium transition-colors"
+                  className="text-navy-900 hover:text-solar-600 flex w-full items-center justify-between py-4 text-left text-sm font-semibold transition-colors"
                 >
                   {l.label}
                   <ChevronDownIcon
@@ -413,10 +419,10 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                           setOpen(false)
                           setMobileProducts(false)
                         }}
-                        className="hover:bg-glint/[0.06] block rounded-[0.875rem] px-2 py-3 transition-colors"
+                        className="hover:bg-sheet rounded-card block px-2 py-3 transition-colors"
                       >
-                        <span className="text-glint block text-sm font-medium">{c.label}</span>
-                        <span className="text-glint-soft mt-0.5 block text-xs leading-relaxed">{c.menuBlurb}</span>
+                        <span className="text-navy-900 block text-sm font-semibold">{c.label}</span>
+                        <span className="text-ink-soft mt-0.5 block text-xs leading-relaxed">{c.menuBlurb}</span>
                       </a>
                     ))}
 
@@ -426,7 +432,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                         setOpen(false)
                         setMobileProducts(false)
                       }}
-                      className="text-glint-soft hover:text-glint block px-2 py-3 text-xs font-medium transition-colors"
+                      className="text-ink-soft hover:text-navy-900 block px-2 py-3 text-xs font-medium transition-colors"
                     >
                       Everything, with prices →
                     </a>
@@ -439,10 +445,10 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
           <a
             href="/cart"
             onClick={() => setOpen(false)}
-            className="border-rule-shade text-glint hover:text-glint-soft flex items-center justify-between border-b py-4 text-sm font-medium transition-colors"
+            className="border-navy-900/10 text-navy-900 hover:text-solar-600 flex items-center justify-between border-b py-4 text-sm font-semibold transition-colors"
           >
             Cart
-            {cartCount > 0 && <span className="label text-glint-soft">{cartCount}</span>}
+            {cartCount > 0 && <span className="label text-ink-soft">{cartCount}</span>}
           </a>
 
           {/* The same swap as the bar. A dropdown inside a sheet that is
@@ -450,17 +456,17 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
               sheet just lists the two destinations flat. */}
           {user ? (
             <div className="mt-4 mb-4">
-              <div className="border-rule-shade flex items-center gap-3 border-b pb-4">
+              <div className="border-navy-900/10 flex items-center gap-3 border-b pb-4">
                 <span
                   aria-hidden="true"
-                  className="bg-glint text-pit font-display display-wide grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold"
+                  className="bg-navy-900 text-glare font-display grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold"
                 >
                   {initialFor(user)}
                 </span>
                 <span className="min-w-0">
-                  <span className="label text-glint-soft block">Signed in as</span>
-                  <span className="text-glint mt-0.5 block truncate text-sm">{user.email}</span>
-                  {isAdmin && <span className="text-cool-400 mt-0.5 block text-xs font-medium">Admin</span>}
+                  <span className="label text-ink-soft block">Signed in as</span>
+                  <span className="text-navy-900 mt-0.5 block truncate text-sm">{user.email}</span>
+                  {isAdmin && <span className="text-solar-600 mt-0.5 block text-xs font-medium">Admin</span>}
                 </span>
               </div>
 
@@ -468,7 +474,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                 <a
                   href="/admin"
                   onClick={() => setOpen(false)}
-                  className="border-rule-shade text-glint hover:text-glint-soft block border-b py-4 text-sm font-medium transition-colors"
+                  className="border-navy-900/10 text-navy-900 hover:text-solar-600 block border-b py-4 text-sm font-semibold transition-colors"
                 >
                   Admin
                 </a>
@@ -477,7 +483,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
               <a
                 href="/account/orders"
                 onClick={() => setOpen(false)}
-                className="border-rule-shade text-glint hover:text-glint-soft block border-b py-4 text-sm font-medium transition-colors"
+                className="border-navy-900/10 text-navy-900 hover:text-solar-600 block border-b py-4 text-sm font-semibold transition-colors"
               >
                 Purchase history
               </a>
@@ -486,12 +492,20 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
             </div>
           ) : (
             <>
-              <Button as="a" href="/register" onClick={() => setOpen(false)} className="mt-4 w-full">
+              <Button
+                as="a"
+                variant="solar"
+                size="lg"
+                href="/register"
+                onClick={() => setOpen(false)}
+                className="mt-4 w-full"
+              >
                 Create account
                 <ArrowUpRightIcon className="h-4 w-4" />
               </Button>
               <Button
-                variant="outlineShade"
+                variant="outline"
+                size="lg"
                 onClick={() => {
                   setOpen(false)
                   setLogin(true)

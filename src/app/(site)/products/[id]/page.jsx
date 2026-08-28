@@ -43,7 +43,7 @@ export default async function ProductPage({ params }) {
 
   return (
     <main id="content" className="pt-nav">
-      <section className="band-sheet rail py-16 lg:py-24">
+      <section className="rail py-16 lg:py-24">
         <div className="rail-inner">
           <Breadcrumb
             items={[

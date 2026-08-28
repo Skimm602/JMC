@@ -10,21 +10,35 @@ export const cx = (...parts) => parts.filter(Boolean).join(' ')
  */
 export function Eyebrow({ children, className, tone = 'ink' }) {
   return (
-    <p
-      className={cx(
-        'label flex items-center gap-3 font-medium',
-        tone === 'shade' ? 'text-glint-soft' : 'text-ink-soft',
-        className,
-      )}
-    >
-      <span aria-hidden="true" className={cx('h-px w-6 shrink-0', tone === 'shade' ? 'bg-cool-400' : 'bg-cool-600')} />
+    <p className={cx('chip', tone === 'shade' ? 'chip-shade' : 'chip-solar', className)}>
+      <span
+        aria-hidden="true"
+        className={cx('h-1.5 w-1.5 shrink-0 rounded-full', tone === 'shade' ? 'bg-solar-400' : 'bg-solar-500')}
+      />
       {children}
     </p>
   )
 }
 
+/**
+ * The page's display voice: two words, two weights of the same blue.
+ *
+ * The pale half is `--color-sky-500` rather than a tint of the navy, so the
+ * heading reads as one phrase lit from two distances instead of as a heading
+ * with a faded word in it. Both halves are one <h_>, so it is still a single
+ * heading to a screen reader.
+ */
+export function TwoTone({ light, dark, className }) {
+  return (
+    <>
+      <span className={cx('text-sky-500', className)}>{light}</span>{' '}
+      <span className={cx('text-navy-900', className)}>{dark}</span>
+    </>
+  )
+}
+
 export function SectionHeading({ children, className }) {
-  return <h2 className={cx('display-wide text-display-2 font-semibold text-balance', className)}>{children}</h2>
+  return <h2 className={cx('text-display-2 text-navy-900 font-bold text-balance', className)}>{children}</h2>
 }
 
 export function Lede({ children, className, tone = 'ink' }) {
@@ -44,12 +58,12 @@ export function Lede({ children, className, tone = 'ink' }) {
 /* --------------------------------- button --------------------------------- */
 
 const buttonBase =
-  'group/btn relative inline-flex items-center justify-center gap-2.5 rounded-row font-medium tracking-[0.01em] transition-[background-color,color,border-color,transform] duration-200 disabled:cursor-not-allowed disabled:opacity-45 active:translate-y-px'
+  'group/btn relative inline-flex items-center justify-center gap-2.5 rounded-full font-semibold tracking-[0.01em] transition-[background-color,color,border-color,box-shadow,transform] duration-200 disabled:cursor-not-allowed disabled:opacity-45 active:translate-y-px'
 
 const buttonSizes = {
-  sm: 'px-4 py-2 text-[0.8125rem]',
-  md: 'px-5 py-2.5 text-sm',
-  lg: 'px-7 py-3.5 text-[0.9375rem]',
+  sm: 'h-10 px-4 text-[0.8125rem]',
+  md: 'h-11 px-5 text-sm',
+  lg: 'h-13 px-7 text-[0.9375rem]',
 }
 
 /**
@@ -59,9 +73,17 @@ const buttonSizes = {
  * is genuinely about heat or risk rather than for every call to action.
  */
 const buttonVariants = {
-  primary: 'bg-cool-600 text-glare hover:bg-cool-700',
+  /* The page's committed action. Navy on the light field, the way the
+     reference sets it — the amber is kept for the header's single CTA and
+     for the accents inside dark tiles, so it never has to compete with
+     itself twice in one viewport. */
+  primary: 'bg-navy-900 text-glare hover:bg-navy-800 shadow-[0_10px_24px_-14px_rgba(15,31,64,0.9)]',
+  solar:
+    'bg-solar-500 text-navy-950 hover:bg-solar-400 shadow-[0_10px_24px_-12px_rgba(245,158,11,0.9)]',
+  glare: 'bg-glare text-navy-900 hover:bg-sky-200 shadow-[0_10px_24px_-16px_rgba(15,31,64,0.8)]',
+  cool: 'bg-cool-600 text-glare hover:bg-cool-700',
   hot: 'bg-hot-600 text-glare hover:bg-hot-700',
-  outline: 'border border-rule-strong text-ink hover:border-ink hover:bg-ink/[0.04]',
+  outline: 'border border-navy-900/25 bg-glare/60 text-navy-900 hover:border-navy-900/60 hover:bg-glare',
   outlineShade: 'border border-rule-shade text-glint hover:border-glint-soft hover:bg-glint/[0.06]',
   ghost: 'text-ink-soft hover:text-ink',
   ghostShade: 'text-glint-soft hover:text-glint',
@@ -148,7 +170,7 @@ export function Rule({ className, tone = 'ink' }) {
  */
 export function Section({ id, className, children }) {
   return (
-    <section id={id} className={cx('rail relative py-24 lg:py-32 xl:py-40', className)}>
+    <section id={id} className={cx('rail relative py-20 lg:py-28', className)}>
       <div className="rail-inner">{children}</div>
     </section>
   )

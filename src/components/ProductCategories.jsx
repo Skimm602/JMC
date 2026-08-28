@@ -1,38 +1,34 @@
 import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
-import { Lede, Section, SectionHeading } from './ui.jsx'
-import { ArrowRightIcon, WrenchIcon } from './icons.jsx'
+import { Eyebrow, Lede, Section, SectionHeading, TwoTone } from './ui.jsx'
+import { ArrowUpRightIcon, WrenchIcon } from './icons.jsx'
 import Reveal from './Reveal.jsx'
 
 /**
- * The shop, one click deep, before the range gets into datasheets. Three
- * cards rather than a paragraph — a visitor deciding what they even need
- * should not have to read the engineering section to find out we sell
- * batteries.
+ * Three tiles, cut from the same grid as the hero's.
  *
- * Accessories has no photo (`photo: null` in `product-categories.js`)
- * because nothing is stocked under it yet. An icon and a shorter, honest
- * note stand in rather than a photo borrowed from another category.
+ * The unit photograph sits in a sky-tinted well rather than on white, so a
+ * product shot on a transparent background has a ground to stand on instead
+ * of floating in the card. The action is the circular arrow the reference
+ * puts on every card — it fills amber on hover, which is the only motion the
+ * tile makes besides lifting.
  */
 export default function ProductCategories() {
   return (
-    <Section id="products" className="bg-glare border-rule border-t">
-      <div className="grid gap-8 lg:grid-cols-12">
+    <Section id="products">
+      <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
         <div className="lg:col-span-7">
-          {/* JMC's own eyebrow treatment — amber, not the site-wide Eyebrow's
-              blue, so it is written locally rather than by giving that shared
-              component a colour prop every other page would inherit. */}
-          <p className="label text-solar-600 flex items-center gap-3 font-medium">
-            <span aria-hidden="true" className="bg-solar-500 h-px w-6 shrink-0" />
-            Products
-          </p>
-          <SectionHeading className="font-display-jmc mt-6">Products by category</SectionHeading>
+          <Eyebrow>Products</Eyebrow>
+          <SectionHeading className="mt-5">
+            <TwoTone light="Everything" dark="in the box." />
+          </SectionHeading>
         </div>
-        <Lede className="lg:col-span-5 lg:self-end">
-          Inverters, storage and the accessories that go with them — priced and stocked, or quoted where they are not.
+        <Lede className="lg:col-span-5">
+          Inverters, storage and the accessories that go with them — priced and stocked, or quoted where they are
+          not.
         </Lede>
       </div>
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-3">
+      <div className="mt-10 grid gap-5 sm:grid-cols-3">
         {PRODUCT_CATEGORIES.map((category, i) => {
           const photo = category.photo
 
@@ -42,42 +38,45 @@ export default function ProductCategories() {
               key={category.key}
               href={categoryHref(category)}
               delay={i * 90}
-              className="group border-rule bg-glare hover:border-solar-500/50 rounded-panel flex flex-col border p-6 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-lg"
+              className="tile group flex flex-col p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:shadow-[0_1px_2px_rgba(15,31,64,0.04),0_28px_54px_-28px_rgba(15,31,64,0.55)]"
             >
-              <div className="bg-sheet rounded-card flex h-40 items-center justify-center overflow-hidden p-5">
+              <div className="tile-sky flex h-44 items-center justify-center overflow-hidden p-6 shadow-none">
                 {photo ? (
                   <img
                     src={photo}
                     alt=""
-                    className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-auto object-contain transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <WrenchIcon className="text-hush h-10 w-10" />
+                  <WrenchIcon className="text-sky-500 h-12 w-12" />
                 )}
               </div>
 
-              <h3 className="text-ink group-hover:text-solar-600 mt-6 font-mono text-[0.9375rem] font-medium transition-colors">
-                {category.label}
-              </h3>
-              <p className="text-ink-soft mt-2 text-sm leading-relaxed">{category.menuBlurb}</p>
+              <div className="mt-6 flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h3 className="text-navy-900 text-lg font-bold">{category.label}</h3>
+                  <p className="text-ink-soft mt-2 text-sm leading-relaxed">{category.menuBlurb}</p>
+                </div>
+                <span
+                  aria-hidden="true"
+                  className="border-navy-900/15 text-navy-900 group-hover:bg-solar-500 group-hover:border-solar-500 group-hover:text-navy-950 grid h-11 w-11 shrink-0 place-items-center rounded-full border transition-colors duration-300"
+                >
+                  <ArrowUpRightIcon className="h-4 w-4" />
+                </span>
+              </div>
 
-              <div className="mt-auto pt-6">
+              <p className="text-ink-soft mt-auto pt-6 text-xs leading-relaxed">
                 {photo ? (
-                  <span className="text-ink-soft group-hover:text-ink flex items-center gap-2 text-sm font-medium transition-colors">
-                    <span className="border-b border-current/40 pb-px transition-colors group-hover:border-current">
-                      Shop {category.label.toLowerCase()}
-                    </span>
-                    <ArrowRightIcon
-                      aria-hidden="true"
-                      className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
-                    />
-                  </span>
+                  <>
+                    Shop {category.label.toLowerCase()} —{' '}
+                    <span className="text-solar-600 font-semibold">in stock, with datasheets.</span>
+                  </>
                 ) : (
-                  <p className="text-ink-soft text-xs leading-relaxed">
-                    Not listed online yet — <span className="text-solar-600 font-medium">ask us on the way through.</span>
-                  </p>
+                  <>
+                    Not listed online yet — <span className="text-solar-600 font-semibold">ask us on the way through.</span>
+                  </>
                 )}
-              </div>
+              </p>
             </Reveal>
           )
         })}

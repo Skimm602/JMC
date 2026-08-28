@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }) {
 
   return (
     <main id="content" className="pt-nav">
-      <section className="band-sheet rail py-24 lg:py-32 xl:py-40">
+      <section className="rail py-24 lg:py-32 xl:py-40">
         <div className="rail-inner grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <Eyebrow>Account access</Eyebrow>

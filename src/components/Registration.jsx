@@ -339,7 +339,7 @@ export default function Registration() {
   const pwScore = passwordScore(form.password)
 
   return (
-    <section id="register" className="band-sheet rail py-24 lg:py-32 xl:py-40">
+    <section id="register" className="rail py-24 lg:py-32 xl:py-40">
       <div className="rail-inner grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
         {/* --------------------------------- aside -------------------------------- */}
         <div className="lg:sticky lg:top-28 lg:self-start">

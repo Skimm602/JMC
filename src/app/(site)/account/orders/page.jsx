@@ -22,7 +22,7 @@ export default async function PurchaseHistoryPage() {
 
   return (
     <main id="content" className="pt-nav">
-      <section className="band-sheet rail py-20 lg:py-28">
+      <section className="rail py-20 lg:py-28">
         <div className="rail-inner">
           <Eyebrow>Your account</Eyebrow>
           <SectionHeading className="mt-6">Purchase history</SectionHeading>

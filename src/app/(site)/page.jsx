@@ -26,9 +26,9 @@ export default function Home() {
         <Hero />
         <ProductCategories />
         <About />
+        <Projects />
         <WhyChooseVip />
         <Brands />
-        <Projects />
       </main>
 
       <StickyCta />

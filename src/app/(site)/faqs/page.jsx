@@ -134,7 +134,7 @@ function Question({ q, a }) {
 export default function FaqsPage() {
   return (
     <main id="content" className="pt-nav">
-      <section className="band-sheet rail py-20 lg:py-28">
+      <section className="rail py-20 lg:py-28">
         <div className="rail-inner">
           <Eyebrow>Help</Eyebrow>
           <SectionHeading className="mt-6">Frequently asked questions</SectionHeading>

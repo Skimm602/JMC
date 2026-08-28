@@ -1,122 +1,154 @@
 import Logo from './Logo.jsx'
-import { Rule } from './ui.jsx'
+import { ADDRESS_LINE, COMPANY } from '@/utils/company'
+import { ArrowRightIcon, PhoneIcon } from './icons.jsx'
 import Reveal from './Reveal.jsx'
 
 /**
- * The foot of every public page.
+ * The foot of every public page, and the target of every "get a quote" on it.
  *
- * Left-aligned to the same datum the rest of the site is built on, rather
- * than centred. A centred column floating in a wide dark band was the reason
- * this read as empty: the page has a spine, and the footer was the one place
- * that stepped off it.
+ * A rounded navy slab sitting on the sky field rather than a full-bleed band
+ * clamped to the bottom of the window: the page is made of tiles, and the
+ * largest tile is the last one. It opens on the ask — the offer, the two
+ * ways to make contact, at the size of a heading — because half the links
+ * that arrive here were pressed by somebody who had already decided.
  *
- * Three columns carry what a footer is actually for — who this is, how to
- * reach them, and where else to go — so the width does some work instead of
- * being margin.
- *
- * The only motion is `<Reveal>`, the fade-up used elsewhere on the site. The
- * global reduced-motion rule collapses its transition to near-nothing for
- * anyone who has asked for less motion. A footer is not the place to spend a
- * visitor's attention on anything more than that.
+ * Every fact is read from `company.js`, so the address, the numbers and the
+ * hours cannot drift from what the rest of the site says.
  */
-
-/** Real destinations only. A column of links that all point at "/" is worse
-    than no column — it costs a click to learn it was decorative. */
 const EXPLORE = [
   { label: 'Products by category', href: '/#products' },
   { label: 'Products and pricing', href: '/products' },
+  { label: 'Our work', href: '/#projects' },
   { label: 'FAQs', href: '/faqs' },
 ]
 
-/** Answered by a person, so they are dial-able rather than decorative — half
-    the people reading this are holding the phone they would call from. */
-const NUMBERS = ['0917 508 8220', '0949 954 8439', '(053) 520-2459']
-
-const EMAIL = 'jmcsolarph@gmail.com'
-
-/** Underline grows from the left on hover rather than appearing all at once —
-    the same movement the site's ArrowLink makes, at a smaller size. */
 const linkClass =
-  'text-glint-soft hover:text-glint relative inline-block text-sm transition-colors duration-200 ' +
-  'after:bg-brand after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:transition-all ' +
+  'text-glint-soft hover:text-glare relative inline-block text-sm transition-colors duration-200 ' +
+  'after:bg-solar-400 after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:transition-all ' +
   'after:duration-300 after:ease-out hover:after:w-full'
 
 export default function Footer() {
   return (
-    <footer id="footer" className="band-pit rail">
-      <div className="rail-inner pt-20 pb-32 lg:py-24 lg:pb-28">
-        <Reveal className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr] md:gap-10 lg:gap-16">
-          {/* ------------------------------- who ------------------------------- */}
-          <div>
-            <Logo tone="shade" />
-            <p className="text-glint-soft max-w-xs mt-6 text-sm leading-relaxed">
-              Grid-tie, hybrid and storage inverters for residential and commercial solar. Engineered for the people
-              who have to service them.
-            </p>
-          </div>
+    <footer id="footer" className="rail pb-6 lg:pb-10">
+      <div className="rail-inner">
+        <div className="tile-navy relative overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="bg-solar-500/15 pointer-events-none absolute -top-32 right-0 h-96 w-96 rounded-full blur-3xl"
+          />
 
-          {/* ------------------------------ reach ------------------------------ */}
-          <div>
-            <p className="label text-glint-soft">Trade desk</p>
-            <ul className="mt-4 space-y-2">
-              {NUMBERS.map((number) => (
-                <li key={number}>
-                  <a
-                    href={`tel:${number.replace(/[^\d+]/g, '')}`}
-                    className="text-glint hover:text-brand font-mono text-sm transition-colors duration-200"
-                  >
-                    {number}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <div className="relative p-7 sm:p-10 lg:p-14">
+            {/* ------------------------------- the ask ------------------------------ */}
+            <Reveal className="grid gap-8 lg:grid-cols-12 lg:items-end">
+              <div className="lg:col-span-7">
+                <h2 className="text-glare text-[clamp(1.9rem,3.4vw,3rem)] leading-[1.02] font-bold text-balance">
+                  Tell us what your bill looks like.{' '}
+                  <span className="text-sky-400">We will tell you what it could look like instead.</span>
+                </h2>
+              </div>
 
-            <p className="label text-glint-soft mt-7">Email</p>
-            <a
-              href={`mailto:${EMAIL}`}
-              className="text-glint hover:text-brand mt-4 block font-mono text-sm break-all transition-colors duration-200"
-            >
-              {EMAIL}
-            </a>
-          </div>
-
-          {/* ------------------------------ where ------------------------------ */}
-          <div>
-            <p className="label text-glint-soft">Explore</p>
-            <ul className="mt-4 space-y-2.5">
-              {EXPLORE.map(({ label, href }) => (
-                <li key={href}>
-                  <a href={href} className={linkClass}>
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Reveal>
-
-        <Rule tone="shade" className="mt-12 mb-8" />
-
-        {/* The graduations along the bottom edge, read from both ends. They
-            carry no information — they are the instrument-panel voice the rest
-            of the site is drawn in, and the one place a footer can hold it
-            without adding another thing to read. aria-hidden for that reason. */}
-        <div aria-hidden="true" className="text-rule-shade flex items-end gap-6">
-          <span className="scale-marks h-3 flex-1" />
-          <span className="scale-marks scale-marks-end h-3 flex-1" />
-        </div>
-
-        <div className="text-glint-soft mt-8 flex flex-col gap-4 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Vip Solar. All rights reserved.</p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            {['Privacy', 'Terms of sale', 'Cookies', 'Compliance'].map((l) => (
-              <li key={l}>
-                <a href="/" className="hover:text-glint transition-colors duration-200">
-                  {l}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:col-span-5 lg:justify-end">
+                <a
+                  href={`mailto:${COMPANY.email}`}
+                  className="group/cta bg-solar-500 text-navy-950 hover:bg-solar-400 inline-flex h-13 items-center gap-3 rounded-full pr-2 pl-7 text-[0.9375rem] font-semibold transition-colors duration-200"
+                >
+                  Email us
+                  <span className="bg-navy-950 text-solar-400 grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform duration-200 group-hover/cta:translate-x-0.5">
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </span>
                 </a>
-              </li>
-            ))}
-          </ul>
+                <a
+                  href={`tel:${COMPANY.phones[0].replace(/[^\d+]/g, '')}`}
+                  className="text-glare hover:border-glare/60 inline-flex h-13 items-center justify-center gap-2.5 rounded-full border border-white/25 px-6 font-mono text-sm font-medium transition-colors duration-200"
+                >
+                  <PhoneIcon className="text-solar-400 h-4 w-4 shrink-0" />
+                  {COMPANY.phones[0]}
+                </a>
+              </div>
+            </Reveal>
+
+            <div aria-hidden="true" className="mt-12 h-px w-full bg-white/10" />
+
+            {/* ------------------------------ the detail ---------------------------- */}
+            <Reveal className="mt-12 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr] md:gap-10 lg:gap-16">
+              <div>
+                <Logo tone="shade" />
+                <p className="text-glint-soft mt-6 max-w-xs text-sm leading-relaxed">
+                  {COMPANY.tagline}. Solar design, supply and installation across Leyte, Southern Leyte and Cebu,
+                  under a duly licensed electrical engineer.
+                </p>
+                <p className="text-glint-soft/80 mt-6 text-sm leading-relaxed">
+                  {ADDRESS_LINE}
+                  <br />
+                  {COMPANY.hours}
+                </p>
+              </div>
+
+              <div>
+                <p className="label text-glint-soft">Trade desk</p>
+                <ul className="mt-4 space-y-2">
+                  {COMPANY.phones.map((number) => (
+                    <li key={number}>
+                      <a
+                        href={`tel:${number.replace(/[^\d+]/g, '')}`}
+                        className="text-glare hover:text-solar-400 font-mono text-sm transition-colors duration-200"
+                      >
+                        {number}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="label text-glint-soft mt-7">Email</p>
+                <a
+                  href={`mailto:${COMPANY.email}`}
+                  className="text-glare hover:text-solar-400 mt-4 block font-mono text-sm break-all transition-colors duration-200"
+                >
+                  {COMPANY.email}
+                </a>
+              </div>
+
+              <div>
+                <p className="label text-glint-soft">Explore</p>
+                <ul className="mt-4 space-y-2.5">
+                  {EXPLORE.map(({ label, href }) => (
+                    <li key={href}>
+                      <a href={href} className={linkClass}>
+                        {label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="label text-glint-soft mt-7">Follow</p>
+                <a
+                  href={COMPANY.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${linkClass} mt-4`}
+                >
+                  Facebook
+                </a>
+              </div>
+            </Reveal>
+
+            <div aria-hidden="true" className="mt-12 h-px w-full bg-white/10" />
+
+            <div className="text-glint-soft/80 mt-8 flex flex-col gap-4 text-xs sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                © {new Date().getFullYear()} {COMPANY.name}. Trading as {COMPANY.formerName}. All rights reserved.
+              </p>
+              <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                {['Privacy', 'Terms of sale', 'Cookies', 'Compliance'].map((l) => (
+                  <li key={l}>
+                    <a href="/faqs" className="hover:text-glare transition-colors duration-200">
+                      {l}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

@@ -135,7 +135,7 @@ export default function LegalDialog({ doc, onSelect, onClose }) {
         if (e.target === ref.current) onClose()
       }}
       className={cx(
-        'bg-glare text-ink border-rule m-auto w-[min(44rem,calc(100vw-2rem))] max-h-[calc(100dvh-3rem)] border p-0',
+        'bg-glare text-ink rounded-panel border-white shadow-[0_40px_80px_-40px_rgba(15,31,64,0.8)] m-auto w-[min(44rem,calc(100vw-2rem))] max-h-[calc(100dvh-3rem)] border p-0',
         'backdrop:bg-pit/70 backdrop:backdrop-blur-sm',
       )}
     >

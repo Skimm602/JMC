@@ -183,9 +183,9 @@ function ProductCard({ product, isInstaller }) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group border-rule bg-glare hover:border-ink-soft rounded-panel flex flex-col border p-6 transition-colors duration-200"
+      className="tile group flex flex-col p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_1px_2px_rgba(15,31,64,0.04),0_28px_54px_-28px_rgba(15,31,64,0.55)]"
     >
-      <div className="bg-sheet rounded-card flex h-56 items-center justify-center p-4">
+      <div className="tile-sky flex h-56 items-center justify-center p-5 shadow-none">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -213,7 +213,7 @@ function ProductCard({ product, isInstaller }) {
         )}
       </div>
 
-      <h3 className="text-ink group-hover:text-cool-600 mt-4 font-mono text-[0.9375rem] font-medium transition-colors">
+      <h3 className="text-navy-900 group-hover:text-solar-600 mt-4 font-mono text-[0.9375rem] font-medium transition-colors">
         {product.name}
       </h3>
 
@@ -250,10 +250,10 @@ function FilterOption({ active, onClick, children }) {
       onClick={onClick}
       aria-pressed={active}
       className={cx(
-        'rounded-row border px-3 py-1.5 text-xs font-medium transition-colors duration-200',
+        'h-9 rounded-full border px-4 text-xs font-medium transition-colors duration-200',
         active
-          ? 'border-cool-600 bg-cool-600 text-glare'
-          : 'border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink',
+          ? 'border-navy-900 bg-navy-900 text-glare'
+          : 'border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900',
       )}
     >
       {children}
@@ -309,10 +309,10 @@ function BrandFilter({ brands, value, onChange }) {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={cx(
-          'rounded-row flex items-center gap-2 border px-3 py-1.5 text-xs font-medium transition-colors duration-200',
+          'flex h-9 items-center gap-2 rounded-full border px-4 text-xs font-medium transition-colors duration-200',
           value === 'all'
-            ? 'border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink'
-            : 'border-cool-600 bg-cool-600 text-glare',
+            ? 'border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900'
+            : 'border-navy-900 bg-navy-900 text-glare',
         )}
       >
         {value === 'all' ? 'All brands' : value}
@@ -324,7 +324,7 @@ function BrandFilter({ brands, value, onChange }) {
            inside the panel's own box, so the pointer never crosses dead space
            on its way down and the menu does not shut under the cursor. */
         <div role="listbox" className="animate-reveal absolute top-full left-0 z-20 pt-1">
-          <div className="border-rule bg-glare rounded-card min-w-[13rem] border p-1 shadow-lg">
+          <div className="rounded-card bg-glare min-w-[13rem] border border-white p-1 shadow-[0_24px_60px_-30px_rgba(15,31,64,0.7)]">
             {options.map((o) => {
               const on = value === o.name
               return (
@@ -369,7 +369,7 @@ function FilterBar({ filters, setFilters, priceBounds, brands, showType = true }
     filters.maxPrice !== ''
 
   return (
-    <div className="border-rule bg-sheet/50 mt-10 flex flex-wrap items-end gap-x-8 gap-y-5 border p-5">
+    <div className="tile mt-10 flex flex-wrap items-end gap-x-8 gap-y-5 p-6">
       <div className="w-full">
         <span className="label text-ink-soft mb-2 block">Search</span>
         <input
@@ -377,7 +377,7 @@ function FilterBar({ filters, setFilters, priceBounds, brands, showType = true }
           value={filters.query}
           onChange={(e) => set({ query: e.target.value })}
           placeholder="Model, wattage, brand, feature…"
-          className="border-rule-strong bg-glare text-ink focus:border-ink w-full max-w-md border px-3.5 py-2 text-sm outline-none"
+          className="border-navy-900/15 bg-sheet/60 text-ink focus:border-navy-900 h-11 w-full max-w-md rounded-full border px-4 text-sm outline-none transition-colors"
         />
       </div>
 
@@ -441,7 +441,7 @@ function FilterBar({ filters, setFilters, priceBounds, brands, showType = true }
               placeholder={String(Math.floor(priceBounds.min))}
               value={filters.minPrice}
               onChange={(e) => set({ minPrice: e.target.value })}
-              className="border-rule-strong bg-glare text-ink focus:border-ink w-28 border px-3 py-1.5 text-xs outline-none"
+              className="border-navy-900/15 bg-sheet/60 text-ink focus:border-navy-900 h-9 w-28 rounded-full border px-3.5 text-xs outline-none transition-colors"
             />
             <span className="text-ink-soft text-xs">–</span>
             <input
@@ -451,7 +451,7 @@ function FilterBar({ filters, setFilters, priceBounds, brands, showType = true }
               placeholder={priceBounds.max != null ? String(Math.ceil(priceBounds.max)) : 'Max'}
               value={filters.maxPrice}
               onChange={(e) => set({ maxPrice: e.target.value })}
-              className="border-rule-strong bg-glare text-ink focus:border-ink w-28 border px-3 py-1.5 text-xs outline-none"
+              className="border-navy-900/15 bg-sheet/60 text-ink focus:border-navy-900 h-9 w-28 rounded-full border px-3.5 text-xs outline-none transition-colors"
             />
           </div>
         </div>
@@ -556,7 +556,7 @@ export default function Catalogue({ products, isInstaller, category = null }) {
 
   if (!products?.length) {
     return (
-      <div className="border-rule bg-glare mt-12 flex flex-col items-center border border-dashed px-6 py-20 text-center">
+      <div className="tile mt-12 flex flex-col items-center px-6 py-20 text-center">
         <FileIcon className="text-hush h-8 w-8" />
         <p className="text-ink-soft max-w-measure mt-5 text-sm leading-relaxed">
           Nothing is listed for sale yet. The range and its datasheets are on the home page in the meantime, and
@@ -581,7 +581,7 @@ export default function Catalogue({ products, isInstaller, category = null }) {
       </p>
 
       {filtered.length === 0 ? (
-        <div className="border-rule bg-glare mt-6 flex flex-col items-center border border-dashed px-6 py-16 text-center">
+        <div className="tile mt-6 flex flex-col items-center px-6 py-16 text-center">
           <FileIcon className="text-hush h-8 w-8" />
           <p className="text-ink-soft max-w-measure mt-5 text-sm leading-relaxed">
             Nothing matches that. Try a different search term, widening the price range, or clearing a filter.
@@ -589,7 +589,7 @@ export default function Catalogue({ products, isInstaller, category = null }) {
           <button
             type="button"
             onClick={() => setFilters(DEFAULT_FILTERS)}
-            className="text-cool-600 mt-4 text-sm font-medium underline underline-offset-2"
+            className="text-solar-600 mt-4 text-sm font-medium underline underline-offset-4"
           >
             Clear filters
           </button>
@@ -610,7 +610,7 @@ export default function Catalogue({ products, isInstaller, category = null }) {
                 <a
                   key={shelf.key}
                   href={`#shelf-${shelf.key}`}
-                  className="rounded-row border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink border px-3 py-1.5 text-xs font-medium transition-colors duration-200"
+                  className="border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900 inline-flex h-9 items-center rounded-full border px-4 text-xs font-medium transition-colors duration-200"
                 >
                   {shelf.heading}
                   <span className="text-hush ml-1.5 tabular-nums">{shelf.products.length}</span>
@@ -629,7 +629,7 @@ export default function Catalogue({ products, isInstaller, category = null }) {
               <Rule />
 
               <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <h2 id={`shelf-${shelf.key}-heading`} className="display-wide text-ink text-xl font-semibold">
+                <h2 id={`shelf-${shelf.key}-heading`} className="text-navy-900 text-xl font-bold">
                   {shelf.heading}
                 </h2>
                 <p className="text-ink-soft text-xs tabular-nums">

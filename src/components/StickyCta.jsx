@@ -3,20 +3,20 @@
 import { useEffect, useState } from 'react'
 import { COMPANY } from '@/utils/company'
 import { cx } from './ui.jsx'
-import { ArrowUpRightIcon, PhoneIcon } from './icons.jsx'
+import { ArrowRightIcon, PhoneIcon } from './icons.jsx'
 
 /**
  * The way to buy, permanently in reach once the offer has been made.
  *
- * On a page whose only job is to sell, the action cannot live only in the
- * first viewport and the footer: a visitor deep in the reviews who decides
- * right then has to scroll somewhere to act, and some of them will not. This
- * rides at the bottom of the screen from the moment the hero leaves it.
+ * A floating capsule now rather than a full-width bar clamped to the bottom
+ * edge. The page is built from tiles laid on a field, and a hard-edged band
+ * pinned across the foot of it was the one element that belonged to a
+ * different site — this is the same object as everything else, just the one
+ * that follows you.
  *
  * It waits for the hero rather than appearing at load, because a call to
  * action shown before the offer is a pop-up. It hides again over the footer,
- * where the same two actions are already sitting in full — a bar covering the
- * thing it duplicates is just an obstruction.
+ * where the same two actions are already sitting in full.
  */
 export default function StickyCta() {
   const [shown, setShown] = useState(false)
@@ -49,38 +49,34 @@ export default function StickyCta() {
       inert={!shown}
       aria-hidden={!shown}
       className={cx(
-        'fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity] duration-300 ease-out',
-        shown ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-full opacity-0',
+        'fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 transition-[transform,opacity] duration-300 ease-out',
+        shown ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-8 opacity-0',
       )}
     >
-      <div className="border-rule-shade bg-pit/95 border-t backdrop-blur-md">
-        <div className="rail">
-          <div className="rail-inner flex items-center gap-4 py-3">
-            <p className="text-glint-soft hidden flex-1 text-sm leading-snug sm:block">
-              Tell us what your bill looks like.{' '}
-              <span className="text-glint font-medium">We will tell you what it could look like instead.</span>
-            </p>
+      <div className="bg-glare/90 flex w-full max-w-2xl items-center gap-3 rounded-full border border-white p-2 shadow-[0_20px_50px_-20px_rgba(15,31,64,0.6)] backdrop-blur-xl sm:gap-4 sm:pl-6">
+        <p className="text-ink-soft hidden flex-1 text-sm leading-snug sm:block">
+          Tell us what your bill looks like.{' '}
+          <span className="text-navy-900 font-semibold">We will tell you what it could look like instead.</span>
+        </p>
 
-            <div className="flex flex-1 items-center gap-3 sm:flex-none">
-              <a
-                href={`tel:${phone.replace(/\s/g, '')}`}
-                className="text-glint border-glint-soft/40 hover:border-glint hover:bg-glint/[0.06] inline-flex h-11 flex-1 items-center justify-center gap-2.5 rounded-full border px-5 font-mono text-sm font-medium transition-colors duration-200 sm:flex-none"
-              >
-                <PhoneIcon className="text-solar-400 h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline">{phone}</span>
-                <span className="sm:hidden">Call</span>
-              </a>
+        <a
+          href={`tel:${phone.replace(/\s/g, '')}`}
+          className="text-navy-900 border-navy-900/15 hover:border-navy-900/50 hover:bg-sheet inline-flex h-11 flex-1 items-center justify-center gap-2.5 rounded-full border px-5 font-mono text-sm font-medium transition-colors duration-200 sm:flex-none"
+        >
+          <PhoneIcon className="text-solar-600 h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">{phone}</span>
+          <span className="sm:hidden">Call</span>
+        </a>
 
-              <a
-                href="/#footer"
-                className="bg-solar-500 text-navy-950 hover:bg-solar-400 inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold shadow-[0_0_0_0_rgba(245,158,11,0.5)] transition-[background-color,box-shadow] duration-300 hover:shadow-[0_0_20px_1px_rgba(245,158,11,0.5)] sm:flex-none"
-              >
-                Get a free quote
-                <ArrowUpRightIcon className="h-4 w-4 shrink-0" />
-              </a>
-            </div>
-          </div>
-        </div>
+        <a
+          href="/#footer"
+          className="group/cta bg-navy-900 text-glare hover:bg-navy-800 inline-flex h-11 flex-1 items-center justify-center gap-2.5 rounded-full pr-1.5 pl-5 text-sm font-semibold transition-colors duration-200 sm:flex-none"
+        >
+          Free quote
+          <span className="bg-solar-500 text-navy-950 grid h-8 w-8 shrink-0 place-items-center rounded-full transition-transform duration-200 group-hover/cta:translate-x-0.5">
+            <ArrowRightIcon className="h-3.5 w-3.5" />
+          </span>
+        </a>
       </div>
     </div>
   )

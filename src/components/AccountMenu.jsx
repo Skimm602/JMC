@@ -71,24 +71,24 @@ export default function AccountMenu({ user, isAdmin = false }) {
         aria-expanded={open}
         aria-controls="account-menu"
         onClick={() => setOpen((v) => !v)}
-        className="group/acct border-glint-soft/40 hover:border-glint flex h-11 items-center gap-2.5 rounded-full border py-1.5 pr-3 pl-1.5 transition-colors duration-200"
+        className="group/acct border-navy-900/15 bg-glare/70 hover:border-navy-900/50 flex h-11 items-center gap-2.5 rounded-full border py-1.5 pr-3 pl-1.5 transition-colors duration-200"
       >
         <span
           aria-hidden="true"
-          className="bg-glint text-pit font-display display-wide grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold"
+          className="bg-navy-900 text-glare font-display grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold"
         >
           {initialFor(user)}
         </span>
         <span className="sr-only">Your account — {user?.email}</span>
         <ChevronDownIcon
-          className={cx('text-glint h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180')}
+          className={cx('text-navy-900 h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180')}
         />
       </button>
 
       {open && (
         <div
           id="account-menu"
-          className="animate-reveal border-rule bg-glare absolute top-full right-0 z-10 mt-4 w-[17rem] overflow-hidden rounded-[1.25rem] border p-1.5"
+          className="animate-reveal rounded-bento bg-glare absolute top-full right-0 z-10 mt-4 w-[17rem] overflow-hidden border border-white p-1.5 shadow-[0_24px_60px_-30px_rgba(15,31,64,0.7)]"
         >
           <div className="border-rule border-b px-3.5 pt-2.5 pb-3">
             <p className="label text-ink-soft">Signed in as</p>
@@ -100,7 +100,7 @@ export default function AccountMenu({ user, isAdmin = false }) {
             <a
               href="/admin"
               onClick={() => setOpen(false)}
-              className="hover:bg-sheet group/item mt-1.5 flex items-center gap-3 rounded-[0.875rem] px-3.5 py-3 transition-colors"
+              className="hover:bg-sheet group/item mt-1.5 flex items-center gap-3 rounded-card px-3.5 py-3 transition-colors"
             >
               <ShieldIcon className="text-cool-600 h-4 w-4 shrink-0" />
               <span className="min-w-0">
@@ -113,7 +113,7 @@ export default function AccountMenu({ user, isAdmin = false }) {
           <a
             href="/account/orders"
             onClick={() => setOpen(false)}
-            className="hover:bg-sheet group/item mt-1.5 flex items-center gap-3 rounded-[0.875rem] px-3.5 py-3 transition-colors"
+            className="hover:bg-sheet group/item mt-1.5 flex items-center gap-3 rounded-card px-3.5 py-3 transition-colors"
           >
             <FileIcon className="text-cool-600 h-4 w-4 shrink-0" />
             <span className="min-w-0">

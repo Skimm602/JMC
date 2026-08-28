@@ -25,7 +25,7 @@ export default async function CartPage() {
 
   return (
     <main id="content" className="pt-nav">
-      <section className="band-sheet rail py-20 lg:py-28">
+      <section className="rail py-20 lg:py-28">
         <div className="rail-inner">
           <Eyebrow>Shop</Eyebrow>
           <SectionHeading className="mt-6">Your cart</SectionHeading>

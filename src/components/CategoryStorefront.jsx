@@ -3,7 +3,7 @@ import Catalogue from '@/components/Catalogue.jsx'
 import PricingNote from '@/components/PricingNote.jsx'
 import { isPriced } from '@/utils/pricing'
 import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
-import { ArrowLink, Eyebrow, Rule, SectionHeading } from '@/components/ui.jsx'
+import { ArrowLink, Eyebrow, SectionHeading } from '@/components/ui.jsx'
 import { AlertIcon } from '@/components/icons.jsx'
 
 /**
@@ -27,10 +27,10 @@ export default async function CategoryStorefront({ category }) {
 
   return (
     <main id="content" className="pt-nav">
-      <section className="band-sheet rail py-20 lg:py-28">
+      <section className="rail py-20 lg:py-28">
         <div className="rail-inner">
           <Eyebrow>Shop</Eyebrow>
-          <SectionHeading className="mt-6">{category.label}</SectionHeading>
+          <SectionHeading className="text-display-1 mt-5">{category.label}</SectionHeading>
           <p className="text-ink-soft max-w-measure mt-6 leading-relaxed">{category.lede}</p>
 
           {/* Sideways rather than back-and-in: someone comparing an inverter
@@ -44,7 +44,7 @@ export default async function CategoryStorefront({ category }) {
                 <span
                   key={c.key}
                   aria-current="page"
-                  className="rounded-row border-cool-600 bg-cool-600 text-glare border px-3 py-1.5 text-xs font-medium"
+                  className="border-navy-900 bg-navy-900 text-glare inline-flex h-9 items-center rounded-full border px-4 text-xs font-medium"
                 >
                   {c.label}
                 </span>
@@ -52,7 +52,7 @@ export default async function CategoryStorefront({ category }) {
                 <a
                   key={c.key}
                   href={categoryHref(c)}
-                  className="rounded-row border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink border px-3 py-1.5 text-xs font-medium transition-colors duration-200"
+                  className="border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900 inline-flex h-9 items-center rounded-full border px-4 text-xs font-medium transition-colors duration-200"
                 >
                   {c.label}
                 </a>
@@ -60,13 +60,11 @@ export default async function CategoryStorefront({ category }) {
             )}
             <a
               href="/products"
-              className="rounded-row border-rule-strong bg-glare text-ink-soft hover:border-ink-soft hover:text-ink border px-3 py-1.5 text-xs font-medium transition-colors duration-200"
+              className="border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900 inline-flex h-9 items-center rounded-full border px-4 text-xs font-medium transition-colors duration-200"
             >
               Everything
             </a>
           </nav>
-
-          <Rule className="mt-10" />
 
           <PricingNote anyPriced={anyPriced} isInstaller={isInstaller} signedIn={signedIn} />
 
@@ -83,7 +81,7 @@ export default async function CategoryStorefront({ category }) {
                is true of an empty accessories shelf but tells the person
                nothing they can act on, and a type we genuinely do stock
                off-site deserves to say so. */
-            <div className="border-rule bg-glare mt-12 flex flex-col items-center border border-dashed px-6 py-20 text-center">
+            <div className="tile mt-12 flex flex-col items-center px-6 py-20 text-center">
               <p className="text-ink-soft max-w-measure text-sm leading-relaxed">{category.empty}</p>
               <div className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-3">
                 <ArrowLink href="/#footer">Ask us for a quote</ArrowLink>
@@ -94,8 +92,7 @@ export default async function CategoryStorefront({ category }) {
             <Catalogue products={products} isInstaller={isInstaller} category={category.key} />
           )}
 
-          <Rule className="mt-16" />
-          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
+          <div className="mt-16 flex flex-wrap gap-x-8 gap-y-3">
             <ArrowLink href="/faqs">FAQs</ArrowLink>
             <ArrowLink href="/#footer">Talk to us</ArrowLink>
           </div>

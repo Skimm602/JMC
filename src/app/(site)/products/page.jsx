@@ -2,7 +2,7 @@ import { getStorefront } from '@/app/actions/catalogue'
 import Catalogue from '@/components/Catalogue.jsx'
 import PricingNote from '@/components/PricingNote.jsx'
 import { isPriced } from '@/utils/pricing'
-import { ArrowLink, Breadcrumb, Eyebrow, Rule, SectionHeading } from '@/components/ui.jsx'
+import { ArrowLink, Breadcrumb, Eyebrow, SectionHeading, TwoTone } from '@/components/ui.jsx'
 import { AlertIcon } from '@/components/icons.jsx'
 
 export const metadata = {
@@ -27,12 +27,14 @@ export default async function ProductsPage() {
 
   return (
     <main id="content" className="pt-nav">
-      <section className="band-sheet rail py-20 lg:py-28">
+      <section className="rail py-20 lg:py-28">
         <div className="rail-inner">
           <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Products' }]} />
 
           <Eyebrow className="mt-6">Shop</Eyebrow>
-          <SectionHeading className="mt-6">Products and pricing</SectionHeading>
+          <SectionHeading className="mt-5 text-display-1">
+            <TwoTone light="Everything" dark="we stock." />
+          </SectionHeading>
           <p className="text-ink-soft max-w-measure mt-6 leading-relaxed">
             {anyPriced ? (
               <>
@@ -48,8 +50,6 @@ export default async function ProductsPage() {
             )}
           </p>
 
-          <Rule className="mt-10" />
-
           <PricingNote anyPriced={anyPriced} isInstaller={isInstaller} signedIn={signedIn} />
 
           {error ? (
@@ -64,8 +64,7 @@ export default async function ProductsPage() {
             <Catalogue products={products} isInstaller={isInstaller} />
           )}
 
-          <Rule className="mt-16" />
-          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
+          <div className="mt-16 flex flex-wrap gap-x-8 gap-y-3">
             <ArrowLink href="/faqs">FAQs</ArrowLink>
             <ArrowLink href="/#footer">Talk to us</ArrowLink>
           </div>

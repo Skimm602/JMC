@@ -25,9 +25,9 @@
 @theme {
   /* Lit surfaces — brightest to most recessed */
   --color-glare: #ffffff;
-  --color-sheet: #e2edf9;
-  --color-sheet-deep: #cfe2f4;
-  --color-sheet-edge: #b3d1ea;
+  --color-sheet: #e9f0fc;
+  --color-sheet-deep: #dbe7fa;
+  --color-sheet-edge: #c6d9f3;
 
   /* Deep blue — the dark bands, deepest last */
   --color-shade: #0d2949;
@@ -84,7 +84,8 @@
   --color-hot-400: #ef7038;
 
   /* Type */
-  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-nameplate: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
@@ -105,10 +106,26 @@
   --color-navy-900: #0f1f40;
   --color-navy-950: #0a1428;
 
+  /* Sky ramp — the pale half of the two-tone display headline, and the wash
+     inside bento tiles. 500 is the lightest step that still clears 3:1 on
+     the page field, which is what a headline word set in it has to do; the
+     two above it are fills and washes only and never carry text. */
+  --color-sky-200: #dbe6fb;
+  --color-sky-300: #b9d0f4;
+  --color-sky-400: #8fb2e8;
+  --color-sky-500: #5285d0;
+
   /* Display scale. The two steps grow at different rates on purpose: the old
      pair both grew at 4.4vw, so between roughly 800px and 1350px the page
      heading and every section heading rendered at the same size and the
      hierarchy flattened exactly where most desktops sit. */
+  /* The hero word. It is not a heading at the top of the same ramp as the
+     section headings — it is the page's single graphic element, and it is
+     sized as one: two words filling a column, tracked in rather than out. */
+  --text-display-hero: clamp(3.4rem, 1.6rem + 7.2vw, 7.25rem);
+  --text-display-hero--line-height: 0.85;
+  --text-display-hero--letter-spacing: -0.045em;
+
   --text-display-1: clamp(2.6rem, 1.6rem + 3.6vw, 4.5rem);
   --text-display-1--line-height: 0.94;
   --text-display-1--letter-spacing: -0.025em;
@@ -151,9 +168,10 @@
      Named rather than literal so the scale can be re-tuned in one place; the
      old square geometry is still reachable as `rounded-none` where a shape
      genuinely wants a corner. */
+  --radius-bento: 2rem;
   --radius-panel: 1.75rem;
-  --radius-card: 1.25rem;
-  --radius-row: 0.875rem;
+  --radius-card: 1.5rem;
+  --radius-row: 1rem;
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -167,8 +185,19 @@
     scroll-padding-top: calc(var(--spacing-nav) + 1.25rem);
   }
 
+  /* The page's ground is a lit sky rather than a flat swatch: two soft
+     radial pools — one warm-white overhead on the right, one cooler and
+     lower on the left — laid over a vertical wash. Fixed attachment, so it
+     behaves like a sky the content scrolls against instead of a texture
+     that scrolls with it. Every band that wants an opaque surface paints
+     over it as before; the sections that want to float simply don't. */
   body {
     background-color: var(--color-sheet);
+    background-image:
+      radial-gradient(58rem 34rem at 88% -8%, rgba(255, 255, 255, 0.95), transparent 62%),
+      radial-gradient(48rem 30rem at 4% 4%, rgba(219, 230, 251, 0.9), transparent 58%),
+      linear-gradient(178deg, #f2f6fe 0%, #e6eefb 46%, #edf1fd 100%);
+    background-attachment: fixed;
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -182,8 +211,9 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    font-variation-settings: 'wdth' 112;
-    letter-spacing: -0.015em;
+    font-variation-settings: normal;
+    font-weight: 700;
+    letter-spacing: -0.025em;
   }
 
   /* The surfaces we did not draw still belong to the design: selection, the
@@ -274,6 +304,90 @@
 
   .band-pit {
     background-color: var(--color-pit);
+    color: var(--color-glint);
+  }
+
+  /* ----------------------------- the bento tile ----------------------------
+     The page is now built from tiles laid on the sky field rather than from
+     full-width bands stacked edge to edge. One class, so a photo tile, a
+     figure tile and a card of prose are unmistakably the same object at
+     three sizes: a white surface, a hairline that reads as an edge rather
+     than a border, and a single soft shadow cast down onto the field.
+
+     The shadow is one layer at low alpha, not a stack — a tile lifted 2px
+     off a pale blue ground needs contact, not depth. */
+  .tile {
+    background-color: var(--color-glare);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-bento);
+    box-shadow:
+      0 1px 2px rgba(15, 31, 64, 0.04),
+      0 18px 40px -28px rgba(15, 31, 64, 0.45);
+  }
+
+  /* The same object, tinted: used where a tile holds a figure or a quote
+     rather than reading matter, so the grid has two weights without needing
+     a second shape. */
+  .tile-sky {
+    background-image: linear-gradient(160deg, var(--color-sky-200), #eff4fe);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-bento);
+    box-shadow:
+      0 1px 2px rgba(15, 31, 64, 0.04),
+      0 18px 40px -28px rgba(15, 31, 64, 0.45);
+  }
+
+  /* The dark tile — one per screenful at most. It is what stops an all-light
+     page reading as unfinished, and it is where the amber has somewhere to
+     sit that isn't a button. */
+  .tile-navy {
+    background-image: linear-gradient(150deg, var(--color-navy-800), var(--color-navy-950));
+    border-radius: var(--radius-bento);
+    color: var(--color-glint);
+    box-shadow: 0 24px 50px -30px rgba(10, 20, 40, 0.8);
+  }
+
+  /* A photo, cropped to the tile geometry. Separate from `.tile` because a
+     photograph supplies its own surface — a white ground behind it would
+     only show as a rim where the image doesn't quite reach the corner. */
+  .tile-photo {
+    border-radius: var(--radius-bento);
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 1px 2px rgba(15, 31, 64, 0.06),
+      0 18px 40px -28px rgba(15, 31, 64, 0.5);
+  }
+
+  /* Section eyebrow. A capsule rather than the old rule-and-label, because
+     on a field with no band edges a floating hairline has nothing to belong
+     to and reads as a stray mark. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.4375rem 0.875rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    letter-spacing: var(--text-label--letter-spacing);
+    line-height: 1;
+    text-transform: uppercase;
+    background-color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    color: var(--color-navy-800);
+    box-shadow: 0 1px 2px rgba(15, 31, 64, 0.05);
+  }
+
+  .chip-solar {
+    background-color: rgba(245, 158, 11, 0.14);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: var(--color-solar-700);
+  }
+
+  .chip-shade {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
     color: var(--color-glint);
   }
 

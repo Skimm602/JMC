@@ -1,20 +1,14 @@
-import { Lede, Section, SectionHeading } from './ui.jsx'
+import { Eyebrow, Lede, Section, SectionHeading, TwoTone } from './ui.jsx'
 import { BoxIcon, ChartIcon, FileIcon, LayersIcon, TagIcon, TruckIcon } from './icons.jsx'
 import Reveal from './Reveal.jsx'
 
 /**
- * What it is like to actually buy and stock from VIP Solar, rather than the
- * engineering case for the hardware itself. Every point here is a real,
- * checkable feature of the site or the program already built elsewhere
- * (`Catalogue.jsx`'s live stock and published pricing, `InstallerProgram.jsx`'s
- * tiers, the real brands listed in `Products.jsx`) — nothing here is a number
- * invented for this section.
+ * Six tiles rather than six rows of icon-and-text.
  *
- * Icon beside text rather than the old rule-and-heading list — the pairing
- * entelechypower.com uses for its own "why choose us" band. Each icon reads
- * the point in one glance before the sentence explains it: a stack of layers
- * for a multi-brand range, a tag for a price shown rather than quoted, a
- * crate for stock that is real rather than a PDF.
+ * The old arrangement was a list wearing a grid: three columns of bare text,
+ * nothing bounding a point, so the eye read it as one paragraph in six
+ * pieces. On a field made of tiles each point gets its own surface, which is
+ * what makes it a claim you can take one at a time.
  */
 const POINTS = [
   {
@@ -44,37 +38,38 @@ const POINTS = [
   },
   {
     label: 'Bulk orders handled correctly',
-    copy: "Lines that are wholesale-only are flagged as such from the first click, so a large order is priced right from the start.",
+    copy: 'Lines that are wholesale-only are flagged as such from the first click, so a large order is priced right from the start.',
     icon: TruckIcon,
   },
 ]
 
 export default function WhyChooseVip() {
   return (
-    <Section id="why-choose" className="bg-glare">
-      <div className="grid gap-8 lg:grid-cols-12">
+    <Section id="why-choose">
+      <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
         <div className="lg:col-span-7">
-          <p className="label text-solar-600 flex items-center gap-3 font-medium">
-            <span aria-hidden="true" className="bg-solar-500 h-px w-6 shrink-0" />
-            Why choose us
-          </p>
-          <SectionHeading className="font-display-jmc mt-6">Why choose VIP Solar</SectionHeading>
+          <Eyebrow>Why choose us</Eyebrow>
+          <SectionHeading className="mt-5">
+            <TwoTone light="Six things" dark="you can go and check." />
+          </SectionHeading>
         </div>
-        <Lede className="lg:col-span-5 lg:self-end">
-          Not the pitch — the parts of buying from us you can actually go and check for yourself.
+        <Lede className="lg:col-span-5">
+          Not the pitch — the parts of buying from us that are verifiable before you spend anything.
         </Lede>
       </div>
 
-      <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {POINTS.map((point, i) => (
-          <Reveal key={point.label} delay={i * 80} className="group flex items-start gap-4">
-            <span className="bg-solar-500/10 text-solar-600 group-hover:bg-solar-500 group-hover:text-navy-950 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors duration-300">
+          <Reveal
+            key={point.label}
+            delay={i * 70}
+            className="tile group p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_1px_2px_rgba(15,31,64,0.04),0_28px_54px_-28px_rgba(15,31,64,0.55)]"
+          >
+            <span className="bg-sky-200 text-navy-900 group-hover:bg-solar-500 group-hover:text-navy-950 flex h-12 w-12 items-center justify-center rounded-2xl transition-colors duration-300">
               <point.icon className="h-6 w-6" />
             </span>
-            <div>
-              <h3 className="font-display-jmc text-navy-900 text-base font-bold">{point.label}</h3>
-              <p className="text-ink-soft mt-2 text-sm leading-relaxed">{point.copy}</p>
-            </div>
+            <h3 className="text-navy-900 mt-5 text-base font-bold">{point.label}</h3>
+            <p className="text-ink-soft mt-2.5 text-sm leading-relaxed">{point.copy}</p>
           </Reveal>
         ))}
       </div>
