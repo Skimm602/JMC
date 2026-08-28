@@ -28,8 +28,14 @@ export default function SupportButton({ email }) {
   return (
     <>
       {/* Bottom right, and below the header's z-50 so the mobile menu covers
-          it rather than fighting it for the corner. */}
-      <div className="fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2.5 sm:right-6 sm:bottom-6">
+          it rather than fighting it for the corner.
+
+          It clears the bottom of the window by five rem on a phone rather
+          than one: the home page's sticky quote capsule is full-width down
+          there, and the two were landing in the same forty pixels. From `sm`
+          the capsule is a centred pill with room either side, so the launcher
+          goes back to the corner. */}
+      <div className="fixed right-4 bottom-20 z-40 flex flex-col items-end gap-2.5 sm:right-6 sm:bottom-6">
         {menuOpen && (
           <div className="animate-reveal flex flex-col items-end gap-2">
             {/* Answers first, and a real page rather than another panel: an
@@ -63,10 +69,10 @@ export default function SupportButton({ email }) {
           aria-label={menuOpen ? 'Close' : 'Help'}
           title={menuOpen ? 'Close' : 'Help'}
           className={cx(
-            'group/support bg-cool-600 text-glare flex items-center justify-center',
-            'h-11 w-11 shrink-0',
-            'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.55)] transition-colors duration-200',
-            'hover:bg-cool-700 active:translate-y-px',
+            'group/support bg-navy-900 text-glare flex items-center justify-center rounded-full',
+            'h-12 w-12 shrink-0',
+            'shadow-[0_14px_30px_-12px_rgba(15,31,64,0.95)] transition-colors duration-200',
+            'hover:bg-navy-800 active:translate-y-px',
           )}
         >
           {menuOpen ? (
@@ -97,10 +103,10 @@ function LauncherOption({ as: Tag = 'button', icon, label, ...rest }) {
       {...(Tag === 'button' ? { type: 'button' } : null)}
       {...rest}
       className={cx(
-        'bg-glare text-ink border-cool-600 flex items-center gap-2.5 border',
-        'h-10 px-3.5 text-[0.8125rem] font-medium tracking-[0.01em]',
-        'shadow-[0_8px_28px_-8px_rgba(8,28,52,0.35)] transition-colors duration-200',
-        'hover:bg-cool-600 hover:text-glare active:translate-y-px',
+        'bg-glare text-navy-900 border-navy-900/15 flex items-center gap-2.5 rounded-full border',
+        'h-10 px-4 text-[0.8125rem] font-semibold tracking-[0.01em]',
+        'shadow-[0_10px_28px_-12px_rgba(15,31,64,0.7)] transition-colors duration-200',
+        'hover:bg-navy-900 hover:text-glare active:translate-y-px',
       )}
     >
       {icon}

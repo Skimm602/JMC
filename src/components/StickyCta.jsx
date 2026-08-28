@@ -49,11 +49,20 @@ export default function StickyCta() {
       inert={!shown}
       aria-hidden={!shown}
       className={cx(
-        'fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 transition-[transform,opacity] duration-300 ease-out',
-        shown ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-8 opacity-0',
+        // pointer-events-none on the strip at all times, not just when it is
+        // hidden: this box spans the full width of the window, and anything
+        // sitting in the bottom corners — the support launcher, most of all —
+        // is underneath it. Only the capsule takes clicks.
+        'pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 transition-[transform,opacity] duration-300 ease-out',
+        shown ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0',
       )}
     >
-      <div className="bg-glare/90 flex w-full max-w-2xl items-center gap-3 rounded-full border border-white p-2 shadow-[0_20px_50px_-20px_rgba(15,31,64,0.6)] backdrop-blur-xl sm:gap-4 sm:pl-6">
+      <div
+        className={cx(
+          'bg-glare/90 flex w-full max-w-2xl items-center gap-3 rounded-full border border-white p-2 shadow-[0_20px_50px_-20px_rgba(15,31,64,0.6)] backdrop-blur-xl sm:gap-4 sm:pl-6',
+          shown ? 'pointer-events-auto' : 'pointer-events-none',
+        )}
+      >
         <p className="text-ink-soft hidden flex-1 text-sm leading-snug sm:block">
           Tell us what your bill looks like.{' '}
           <span className="text-navy-900 font-semibold">We will tell you what it could look like instead.</span>
