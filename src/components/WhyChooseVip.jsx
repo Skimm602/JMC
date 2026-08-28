@@ -12,33 +12,33 @@ import Reveal from './Reveal.jsx'
  */
 const POINTS = [
   {
-    label: 'Multi-brand range',
-    copy: 'Our own HYXiPOWER platform, plus LuxpowerTek, Solis, GoodWe and SolaX — one supplier instead of five.',
+    label: 'Every brand on one invoice',
+    copy: 'HYXiPOWER, Solis, GoodWe, SolaX, Deye, Jinko, Trina and the rest. Order the whole system from one supplier instead of chasing five importers for four boxes.',
     icon: LayersIcon,
   },
   {
-    label: 'Three installer tiers',
-    copy: 'Registered, Certified and Master. Trade pricing, RMA turnaround and stock priority scale with the tier, not the invoice.',
-    icon: ChartIcon,
-  },
-  {
-    label: 'Published pricing',
-    copy: 'List and trade prices shown on every product page — no quote request needed just to find out what something costs.',
+    label: 'A price the same day',
+    copy: 'Ring, message or order online and the figure comes back the same day, VAT included. No enquiry form and no three-day wait for a quotation.',
     icon: TagIcon,
   },
   {
     label: 'Live stock, not a catalogue PDF',
-    copy: 'Every unit shows in stock, low stock or out, updated with every order rather than a figure someone remembers to revise.',
+    copy: 'Every unit shows in stock, low stock or out, updated with each order rather than a figure someone remembers to revise. You know what you are getting before you pay.',
     icon: BoxIcon,
   },
   {
+    label: 'Trade account for installers',
+    copy: 'Register once for trade pricing, RMA turnaround and stock priority. It scales with your tier, not with the size of the invoice you are placing today.',
+    icon: ChartIcon,
+  },
+  {
     label: "The manufacturer's own datasheet",
-    copy: 'Every spec on a product page is transcribed from it, with the PDF linked in full underneath.',
+    copy: 'Every spec on a product page is transcribed from it, with the PDF linked in full underneath. Check the unit against it before you buy, not after.',
     icon: FileIcon,
   },
   {
-    label: 'Bulk orders handled correctly',
-    copy: 'Lines that are wholesale-only are flagged as such from the first click, so a large order is priced right from the start.',
+    label: 'Bulk and wholesale priced properly',
+    copy: 'Lines that are wholesale-only are flagged from the first click, so a large order is priced right from the start rather than renegotiated at the end.',
     icon: TruckIcon,
   },
 ]
@@ -48,13 +48,13 @@ export default function WhyChooseVip() {
     <Section id="why-choose">
       <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
         <div className="lg:col-span-7">
-          <Eyebrow>Why choose us</Eyebrow>
+          <Eyebrow>Why buy here</Eyebrow>
           <SectionHeading className="mt-5">
-            <TwoTone light="Six things" dark="you can go and check." />
+            <TwoTone light="Six reasons" dark="to order it from us." />
           </SectionHeading>
         </div>
         <Lede className="lg:col-span-5">
-          Not the pitch — the parts of buying from us that are verifiable before you spend anything.
+          Not the pitch — the parts of buying from us you can check before you spend a peso.
         </Lede>
       </div>
 

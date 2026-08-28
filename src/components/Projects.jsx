@@ -33,14 +33,14 @@ export default function Projects() {
     <Section id="projects">
       <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
         <div className="lg:col-span-7">
-          <Eyebrow>Our work</Eyebrow>
+          <Eyebrow>Proof it works</Eyebrow>
           <SectionHeading className="mt-5">
-            <TwoTone light="Thirteen roofs" dark="already energised." />
+            <TwoTone light="The same gear," dark="on thirteen roofs." />
           </SectionHeading>
         </div>
         <Lede className="lg:col-span-5">
-          From residential rooftops to megawatt-scale industrial plant — completed installations across Eastern
-          Visayas.
+          Every job below was built out of the equipment on these shelves — household rooftops up to megawatt-scale
+          plant, across Eastern Visayas. Buy the same boxes.
         </Lede>
       </div>
 

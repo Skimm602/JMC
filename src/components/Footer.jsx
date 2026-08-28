@@ -16,9 +16,11 @@ import Reveal from './Reveal.jsx'
  * hours cannot drift from what the rest of the site says.
  */
 const EXPLORE = [
-  { label: 'Products by category', href: '/#products' },
-  { label: 'Products and pricing', href: '/products' },
-  { label: 'Our work', href: '/#projects' },
+  { label: 'Shop everything', href: '/products' },
+  { label: 'Inverters', href: '/products/inverters' },
+  { label: 'Batteries', href: '/products/batteries' },
+  { label: 'Brands we carry', href: '/#brands' },
+  { label: 'Your cart', href: '/cart' },
   { label: 'FAQs', href: '/faqs' },
 ]
 
@@ -42,17 +44,17 @@ export default function Footer() {
             <Reveal className="grid gap-8 lg:grid-cols-12 lg:items-end">
               <div className="lg:col-span-7">
                 <h2 className="text-glare text-[clamp(1.9rem,3.4vw,3rem)] leading-[1.02] font-bold text-balance">
-                  Tell us what your bill looks like.{' '}
-                  <span className="text-sky-400">We will tell you what it could look like instead.</span>
+                  Know what you need?{' '}
+                  <span className="text-sky-400">Order it in five minutes.</span>
                 </h2>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:col-span-5 lg:justify-end">
                 <a
-                  href={`mailto:${COMPANY.email}`}
+                  href="/products"
                   className="group/cta bg-solar-500 text-navy-950 hover:bg-solar-400 inline-flex h-13 items-center gap-3 rounded-full pr-2 pl-7 text-[0.9375rem] font-semibold transition-colors duration-200"
                 >
-                  Email us
+                  Shop the range
                   <span className="bg-navy-950 text-solar-400 grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform duration-200 group-hover/cta:translate-x-0.5">
                     <ArrowRightIcon className="h-4 w-4" />
                   </span>
@@ -74,8 +76,8 @@ export default function Footer() {
               <div>
                 <Logo tone="shade" />
                 <p className="text-glint-soft mt-6 max-w-xs text-sm leading-relaxed">
-                  {COMPANY.tagline}. Solar design, supply and installation across Leyte, Southern Leyte and Cebu,
-                  under a duly licensed electrical engineer.
+                  {COMPANY.tagline}. Multi-brand solar equipment supplied across Leyte, Southern Leyte and Cebu — and
+                  installed under a duly licensed electrical engineer when you want it installed.
                 </p>
                 <p className="text-glint-soft/80 mt-6 text-sm leading-relaxed">
                   {ADDRESS_LINE}
@@ -85,7 +87,7 @@ export default function Footer() {
               </div>
 
               <div>
-                <p className="label text-glint-soft">Trade desk</p>
+                <p className="label text-glint-soft">Order by phone</p>
                 <ul className="mt-4 space-y-2">
                   {COMPANY.phones.map((number) => (
                     <li key={number}>

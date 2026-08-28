@@ -70,16 +70,16 @@ export const STATS = [
  */
 export const CREDENTIALS = [
   {
+    title: 'Authorised multi-brand dealer',
+    body: 'A certified dealer for every manufacturer we carry, so you buy at the dealer’s price and a warranty claim goes through us rather than leaving you to argue with an importer.',
+  },
+  {
     title: 'DOE and ERC compliant',
     body: 'Installations meet Department of Energy and Energy Regulatory Commission requirements, which is what makes net metering possible at all.',
   },
   {
     title: 'Led by a licensed electrical engineer',
-    body: 'Every installation is carried out under a duly licensed electrical engineer with a professionally trained crew — not a subcontracted team you meet on the day.',
-  },
-  {
-    title: 'Authorised multi-brand dealer',
-    body: 'We are a certified dealer for the manufacturers we install, so warranty claims go through us rather than leaving you to argue with an importer.',
+    body: 'Where we install as well as supply, the work is carried out under a duly licensed electrical engineer with a professionally trained crew — not a subcontracted team you meet on the day.',
   },
 ]
 
@@ -218,7 +218,7 @@ export const PROJECTS = [
  * read. Replaces the PLACEHOLDER story that used to sit in About.jsx.
  */
 export const STORY = [
-  'Vip Solar — trading as JMC Solar PH, and known around Ormoc as JMC Power — is a renewable energy company working out of Lilia Avenue in Cogon, Ormoc City. We design, supply and install solar across Leyte, Southern Leyte and Cebu.',
-  'The work runs from a single 6 kW household roof up to megawatt-scale industrial plant, and every installation is carried out under a duly licensed electrical engineer to DOE and ERC standards. That is not a formality: it is what makes a system insurable, and what makes net metering possible.',
-  'We are an authorised dealer for the manufacturers we install, which means a warranty claim comes back to us rather than to an importer who has never seen your roof. The equipment on this site is the same equipment our own crews put up.',
+  'Vip Solar — trading as JMC Solar PH, and known around Ormoc as JMC Power — is a solar equipment supplier on Lilia Avenue in Cogon, Ormoc City. We sell inverters, batteries and the panels and balance of system that go with them, to homeowners, businesses and installers across Leyte, Southern Leyte and Cebu.',
+  'We are an authorised dealer for every manufacturer we carry, which means two things worth having: you buy at the dealer’s price rather than a reseller’s, and a warranty claim comes back to us rather than to an importer who has never seen your roof.',
+  'When you want the system put up as well as supplied, the same company does that too — under a duly licensed electrical engineer, to DOE and ERC standards, on jobs from a single 6 kW household roof up to megawatt-scale plant. The equipment on this site is the same equipment our own crews put up.',
 ]

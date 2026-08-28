@@ -17,14 +17,14 @@ export default function ProductCategories() {
     <Section id="products">
       <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
         <div className="lg:col-span-7">
-          <Eyebrow>Products</Eyebrow>
+          <Eyebrow>Shop by category</Eyebrow>
           <SectionHeading className="mt-5">
-            <TwoTone light="Everything" dark="in the box." />
+            <TwoTone light="Pick a shelf" dark="and buy from it." />
           </SectionHeading>
         </div>
         <Lede className="lg:col-span-5">
-          Inverters, storage and the accessories that go with them — priced and stocked, or quoted where they are
-          not.
+          Inverters, storage and the parts that join them. Stocked, specified against the manufacturer&apos;s own
+          datasheet, and out the door once the payment clears.
         </Lede>
       </div>
 
@@ -65,15 +65,15 @@ export default function ProductCategories() {
                 </span>
               </div>
 
-              <p className="text-ink-soft mt-auto pt-6 text-xs leading-relaxed">
+              <p className="mt-auto pt-6 text-xs leading-relaxed">
                 {photo ? (
-                  <>
-                    Shop {category.label.toLowerCase()} —{' '}
-                    <span className="text-solar-600 font-semibold">in stock, with datasheets.</span>
-                  </>
+                  <span className="text-solar-600 font-semibold">
+                    Shop {category.label.toLowerCase()} now →
+                  </span>
                 ) : (
                   <>
-                    Not listed online yet — <span className="text-solar-600 font-semibold">ask us on the way through.</span>
+                    <span className="text-solar-600 font-semibold">Ring for these →</span>{' '}
+                    <span className="text-ink-soft">we stock more than the site lists.</span>
                   </>
                 )}
               </p>

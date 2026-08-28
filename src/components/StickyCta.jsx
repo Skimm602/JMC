@@ -64,8 +64,8 @@ export default function StickyCta() {
         )}
       >
         <p className="text-ink-soft hidden flex-1 text-sm leading-snug sm:block">
-          Tell us what your bill looks like.{' '}
-          <span className="text-navy-900 font-semibold">We will tell you what it could look like instead.</span>
+          Everything on this page is boxed and counted.{' '}
+          <span className="text-navy-900 font-semibold">Order it today.</span>
         </p>
 
         <a
@@ -78,10 +78,10 @@ export default function StickyCta() {
         </a>
 
         <a
-          href="/#footer"
+          href="/products"
           className="group/cta bg-navy-900 text-glare hover:bg-navy-800 inline-flex h-11 flex-1 items-center justify-center gap-2.5 rounded-full pr-1.5 pl-5 text-sm font-semibold transition-colors duration-200 sm:flex-none"
         >
-          Free quote
+          Shop now
           <span className="bg-solar-500 text-navy-950 grid h-8 w-8 shrink-0 place-items-center rounded-full transition-transform duration-200 group-hover/cta:translate-x-0.5">
             <ArrowRightIcon className="h-3.5 w-3.5" />
           </span>

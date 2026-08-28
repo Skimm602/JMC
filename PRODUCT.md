@@ -31,15 +31,30 @@ and is where an installer applies for a trade account.
 Success is a visitor who either places an order, applies for an installer
 account, or rings the trade desk for a quote.
 
+**The site is a shop, not an installer's web presence.** On 28 August 2026 the
+owner reviewed the live site and said it read as an installer's site — "murag
+installer site mani" — when what the business wants is a "pure online selling
+website" carrying "multi brand products ranging from all kinds and brands of
+only solar materials". The instruction was to make it hard-selling: "focus jd
+syas selling". So the buying comes first on every page and the craftsmanship
+comes after it as proof. Installation, DOE/ERC compliance, service areas and
+the projects gallery are supporting evidence for a purchase, never the lead,
+and never the loudest button in a section.
+
 ## Positioning
 
-The claim the site makes, and the one the engineering copy is built around, is
-thermal honesty: datasheets are written at 25 °C ambient, and a Philippine roof
+The first position is **range**: seventeen manufacturers on one counter, so a
+buyer fills an entire order here rather than splitting it across five
+importers, and a warranty claim comes back to the dealer instead of to an
+importer who has never seen the roof.
+
+The second claim the site makes, and the one the engineering copy is built
+around, is thermal honesty: datasheets are written at 25 °C ambient, and a Philippine roof
 enclosure sits past 40 °C by mid-afternoon. Equipment is specified to hold its
 rated output at that temperature rather than at a laboratory figure nobody
 installs into.
 
-The second position is service: the company services what it sells, and the
+The third position is service: the company services what it sells, and the
 installer programme carries advance-replacement RMA so a customer is not left
 without power while a claim is assessed.
 
@@ -164,6 +179,10 @@ replaced by the record above and must never return.
    and no band exists purely to be admired. The constraint on this is
    principle 1, not politeness: the hard sell runs on the real numbers the
    customers themselves stated, never on invented ones.
+7. **Selling outranks describing.** Where a surface could either sell something
+   or explain the company, it sells: the primary action is buy, shop or order,
+   and "get a free quote" is a fallback for lines that genuinely have no price
+   rather than the site's default ask.
 
 ## Accessibility & Inclusion
 

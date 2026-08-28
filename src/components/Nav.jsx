@@ -26,9 +26,12 @@ const links = [
   // scrolls back to the hero instead of doing nothing at all.
   { label: 'Home', href: '/#top' },
   // One control rather than a label plus a separate chevron beside it — the
-  // whole thing is now the toggle. "Everything, with prices" inside the menu
-  // it opens is what carries a visitor to the full page instead.
-  { label: 'Products', dropdown: true },
+  // whole thing is now the toggle. "Shop everything" inside the menu it opens
+  // is what carries a visitor to the full catalogue instead.
+  { label: 'Shop', dropdown: true },
+  // The multi-brand range is the reason to buy here rather than from a
+  // single-manufacturer importer, so it gets a place in the bar of its own.
+  { label: 'Brands', href: '/#brands' },
   { label: 'Support', href: '/#footer' },
 ]
 
@@ -202,7 +205,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                   <div key={l.label} ref={productsRef} className="relative flex items-center">
                     {/* One control now, not a link plus a separate chevron
                         beside it — the press opens the menu, and the menu's
-                        own "Everything, with prices" is the way through to
+                        own "Shop everything" is the way through to
                         the full page. */}
                     <button
                       ref={triggerRef}
@@ -270,7 +273,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                           onClick={() => setProducts(false)}
                           className="border-rule text-ink-soft hover:text-ink mt-1.5 flex items-center justify-between border-t px-3.5 py-3 text-xs font-medium transition-colors"
                         >
-                          Everything, with prices
+                          Shop everything
                           <span aria-hidden="true">→</span>
                         </a>
                       </div>
@@ -335,12 +338,16 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                     Log in
                   </Button>
                   {/* The one amber thing in the bar, and the reference's only
-                      filled control up here. */}
+                      filled control up here — so it has to be the thing the
+                      business wants pressed. It used to say "Create account",
+                      which asks a first-time visitor to sign up before they
+                      have seen a single price. Signing up is still one click
+                      away inside the log-in dialog and the mobile sheet. */}
                   <a
-                    href="/register"
+                    href="/products"
                     className="group/cta bg-solar-500 text-navy-950 hover:bg-solar-400 relative flex h-11 items-center gap-2.5 rounded-full px-5 text-sm font-semibold shadow-[0_10px_24px_-12px_rgba(245,158,11,0.95)] transition-colors duration-200"
                   >
-                    Create account
+                    Shop now
                     <ArrowUpRightIcon className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                   </a>
                 </>
@@ -434,7 +441,7 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
                       }}
                       className="text-ink-soft hover:text-navy-900 block px-2 py-3 text-xs font-medium transition-colors"
                     >
-                      Everything, with prices →
+                      Shop everything →
                     </a>
                   </div>
                 )}
@@ -492,19 +499,31 @@ export default function Nav({ user = null, isAdmin = false, cartCount = 0 }) {
             </div>
           ) : (
             <>
+              {/* Same order of priority as the bar: buy, then join, then
+                  sign in. */}
               <Button
                 as="a"
                 variant="solar"
                 size="lg"
-                href="/register"
+                href="/products"
                 onClick={() => setOpen(false)}
                 className="mt-4 w-full"
               >
-                Create account
+                Shop now
                 <ArrowUpRightIcon className="h-4 w-4" />
               </Button>
               <Button
+                as="a"
                 variant="outline"
+                size="lg"
+                href="/register"
+                onClick={() => setOpen(false)}
+                className="mt-3 w-full"
+              >
+                Create account
+              </Button>
+              <Button
+                variant="ghost"
                 size="lg"
                 onClick={() => {
                   setOpen(false)

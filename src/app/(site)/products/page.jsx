@@ -43,9 +43,9 @@ export default async function ProductsPage() {
               </>
             ) : (
               <>
-                Everything below is in stock, with its full specification and the manufacturer&apos;s datasheet. What
-                it costs is settled on the phone — tell us the load, the roof and where it is going, and you get one
-                figure for the set rather than a line of list prices to add up.
+                Everything below is boxed, counted and ready to go out, with its full specification and the
+                manufacturer&apos;s datasheet. Send the models and quantities, or ring the desk, and the figure comes
+                back the same day — one price for the set, delivered, rather than a column of list prices to add up.
               </>
             )}
           </p>

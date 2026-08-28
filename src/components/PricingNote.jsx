@@ -26,15 +26,16 @@ export default function PricingNote({ anyPriced, isInstaller, signedIn }) {
       <p className="text-ink-soft max-w-measure text-sm leading-relaxed">
         {!anyPriced ? (
           <>
-            Pricing is quoted rather than listed. Ring the trade desk on{' '}
+            Prices are quoted, not listed — ring{' '}
             <a href={`tel:${TRADE_DESK.replace(/\s/g, '')}`} className="text-cool-600 font-medium">
               {TRADE_DESK}
             </a>{' '}
-            with what the job needs, or{' '}
+            with the models and quantities, or{' '}
             <a href="/#footer" className="text-ink underline underline-offset-2">
-              send us the details
-            </a>{' '}
-            — you get one figure for the set, delivered. Installers are quoted at trade rates.
+              send us the list
+            </a>
+            , and the figure comes back the same day: one price for the set, delivered. Installers are quoted at
+            trade rates.
           </>
         ) : isInstaller ? (
           <>

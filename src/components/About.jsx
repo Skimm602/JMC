@@ -38,7 +38,7 @@ export default function About() {
               <Eyebrow tone="shade">About us</Eyebrow>
 
               <h2 className="text-glare mt-6 text-[clamp(1.9rem,3.4vw,3rem)] leading-[1.02] font-bold text-balance">
-                Built by the people <span className="text-sky-400">who climb the roof.</span>
+                Buy from the dealer, <span className="text-sky-400">not the middleman.</span>
               </h2>
 
               <div className="mt-7 grid max-w-[52ch] gap-5">
@@ -68,10 +68,10 @@ export default function About() {
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
-                  href="/#footer"
+                  href="/products"
                   className="group/cta bg-solar-500 text-navy-950 hover:bg-solar-400 inline-flex h-13 items-center gap-3 rounded-full pr-2 pl-7 text-[0.9375rem] font-semibold transition-colors duration-200"
                 >
-                  Get a free quote
+                  Shop the range
                   <span className="bg-navy-950 text-solar-400 grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform duration-200 group-hover/cta:translate-x-0.5">
                     <ArrowRightIcon className="h-4 w-4" />
                   </span>
@@ -99,7 +99,7 @@ export default function About() {
               </figure>
 
               <div className="rounded-card mt-5 border border-white/10 bg-white/[0.04] p-6">
-                <p className="label text-glint-soft">Where the crews travel</p>
+                <p className="label text-glint-soft">Where we deliver and install</p>
                 <ul className="mt-4 grid gap-3.5">
                   {SERVICE_AREAS.map((area) => (
                     <li key={area.province}>
