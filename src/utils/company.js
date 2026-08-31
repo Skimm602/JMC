@@ -28,7 +28,7 @@ export const COMPANY = {
   phones: ['0917 508 8220', '0949 954 8439', '(053) 520-2459'],
   email: 'jmcsolarph@gmail.com',
   facebook: 'https://www.facebook.com/jmcsolarph',
-  hours: 'Monday to Friday, 8:00am – 5:00pm',
+  hours: 'Monday to Saturday, 8:00am – 5:00pm',
 }
 
 /** One line, for a footer or a schema block. */

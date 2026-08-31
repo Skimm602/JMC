@@ -104,7 +104,7 @@ create or replace function public.admin_set_order_status(p_order_id uuid, p_stat
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $fn$
 declare
   v_current text;
@@ -146,17 +146,23 @@ begin
     loop
       select stock_quantity into v_have from public.products where id = v_item.product_id for update;
 
-      if v_have is null then
+      -- A missing row and an untracked shelf are different things: not found
+      -- means the product itself is gone, while stock_quantity is null for a
+      -- product whose stock this catalogue was never asked to track (see
+      -- checkout.js's own stock check, which treats null the same way).
+      if not found then
         raise exception 'A product on this order no longer exists in the catalogue.'
           using errcode = 'check_violation';
       end if;
 
-      if v_have < v_item.qty then
-        raise exception 'Only % left in stock for one of the items on this order, which needs %.', v_have, v_item.qty
-          using errcode = 'check_violation';
-      end if;
+      if v_have is not null then
+        if v_have < v_item.qty then
+          raise exception 'Only % left in stock for one of the items on this order, which needs %.', v_have, v_item.qty
+            using errcode = 'check_violation';
+        end if;
 
-      update public.products set stock_quantity = stock_quantity - v_item.qty where id = v_item.product_id;
+        update public.products set stock_quantity = stock_quantity - v_item.qty where id = v_item.product_id;
+      end if;
     end loop;
   end if;
 

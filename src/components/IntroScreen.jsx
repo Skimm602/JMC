@@ -22,6 +22,8 @@
  * not a visitor arriving.
  */
 
+import { headers } from 'next/headers'
+
 /** Landscape, in roughly the proportion of a real module. Enough cells to
     read as a panel; few enough that the wave stays legible rather than
     dissolving into noise. */
@@ -40,7 +42,13 @@ const CELLS = Array.from({ length: COLUMNS * ROWS }, (_, i) => {
   return { key: i, delay: (row + column) * STEP }
 })
 
-export default function IntroScreen() {
+export default async function IntroScreen() {
+  // The site CSP's script-src is nonce-based (see middleware.js) — this is
+  // the one inline script the app itself renders, so it is the one place
+  // that has to carry the nonce explicitly rather than picking it up the way
+  // Next's own hydration scripts do automatically.
+  const nonce = (await headers()).get('x-nonce')
+
   return (
     <>
       {/*
@@ -54,6 +62,7 @@ export default function IntroScreen() {
         worth taking the page down for.
       */}
       <script
+        nonce={nonce}
         dangerouslySetInnerHTML={{
           __html:
             "try{if(sessionStorage.getItem('vip-intro'))document.documentElement.dataset.introSeen='1';else sessionStorage.setItem('vip-intro','1')}catch(e){}",

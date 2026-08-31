@@ -1,14 +1,18 @@
 import { timingSafeEqual } from 'node:crypto'
-import { createClient } from '@/utils/supabase/server'
+import { createServiceClient } from '@/utils/supabase/service'
 
 /**
  * Track A — gateway payment callback.
  *
  * Where a real PSP (Xendit, Maya, ...) POSTs when a gcash/qr_ph/pesonet
  * payment settles. There is no user session on a server-to-server callback,
- * so confirmation goes through mark_order_paid() — a SECURITY DEFINER
- * function granted to anon (see supabase-orders-checkout.sql) rather than
- * an authenticated update.
+ * so this calls mark_order_paid() with the service-role client rather than
+ * the anon one — the shared-secret check below is this route's only
+ * authorization, so the database call it makes has to be allowed to act on
+ * that rather than on what an anonymous visitor is normally allowed to touch.
+ * mark_order_paid() itself is granted to service_role only (see
+ * supabase-security-hardening.sql) — anon and authenticated cannot call it
+ * even directly against the REST API, only this secret-gated route can.
  *
  * Because that function's only other check is the payment reference, the
  * route is gated on a shared secret and is off unless one is configured:
@@ -40,7 +44,7 @@ export async function POST(request) {
     return Response.json({ error: 'orderId and reference are required' }, { status: 400 })
   }
 
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const { data: marked, error } = await supabase.rpc('mark_order_paid', {
     p_order_id: orderId,
     p_payment_reference: reference,
