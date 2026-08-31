@@ -157,7 +157,8 @@ export default function PaymentPanel({ order }) {
 
   const already = Boolean(order.payment_proof_uploaded_at)
   const methods = methodsFor(order.total)
-  const filtered = PAYMENT_METHODS.length - methods.length
+  const shownIds = new Set(methods.map((m) => m.id))
+  const excludedIds = PAYMENT_METHODS.filter((m) => !shownIds.has(m.id)).map((m) => m.id)
 
   const send = async (event) => {
     event.preventDefault()
@@ -268,12 +269,18 @@ export default function PaymentPanel({ order }) {
         ))}
       </div>
 
-      {/* GCash is filtered out above its ceiling rather than offered and then
-          refused by the app halfway through. Saying why beats a missing option
-          somebody goes looking for. */}
-      {filtered > 0 && (
+      {/* Each method is filtered out above its own ceiling rather than offered
+          and then refused (GCash) or left off the receipt as a fee nobody
+          agreed to (QR Ph). Saying why beats a missing option somebody goes
+          looking for. */}
+      {excludedIds.includes('gcash') && (
         <p className="text-ink-soft mt-3 text-xs leading-relaxed">
           GCash is not offered on this order — it is over the ₱50,000 a wallet can send in one go.
+        </p>
+      )}
+      {excludedIds.includes('qr_ph') && (
+        <p className="text-ink-soft mt-3 text-xs leading-relaxed">
+          QR Ph is not offered on this order — PesoNet bank transfer is fee-free at this amount and QR Ph is not.
         </p>
       )}
 

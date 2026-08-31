@@ -8,10 +8,14 @@ const VAT_PROOF_BUCKET = 'vat-exemption-proofs'
 /**
  * Orders, from the admin's side.
  *
- * These are the same rows Track A's gateway checkout creates (see
- * src/app/actions/checkout.js) — a customer pays via GCash/QR Ph/PesoNet,
- * the gateway webhook marks the row 'paid', and everything from there
- * (processing/shipped/completed, or cancelling) is the admin's call.
+ * These are the rows createOrder() creates (see src/app/actions/checkout.js):
+ * a customer orders, an admin confirms it on the phone (pending -> approved),
+ * the customer pays via GCash/QR Ph/PesoNet outside the site and attaches a
+ * screenshot as proof (attachPaymentProof()), and an admin reads that proof
+ * and marks the order paid themselves — nothing here confirms payment
+ * automatically. Everything from there (processing/shipped/completed, or
+ * cancelling) is the admin's call too. See NEXT_STATUSES in OrdersBoard.jsx
+ * for the exact status graph.
  *
  * Status only ever changes through admin_set_order_status() — never a bare
  * UPDATE — because it also has to move stock off the shelf exactly once, the
