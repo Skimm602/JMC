@@ -21,6 +21,18 @@ export const BRAND_RULES = [
   ['S6-EH1P', 'Solis'],
   ['HYX-', 'HYXiPOWER'],
   ['GW', 'GoodWe'],
+  // Schneider names its breaker families rather than numbering them, so the
+  // "series prefix" here is the family name itself. All five are Schneider's
+  // own registered range names, and none of them collide with an inverter or
+  // battery series.
+  ['COMPACT', 'Schneider Electric'],
+  ['EASYPACT', 'Schneider Electric'],
+  ['MASTERPACT', 'Schneider Electric'],
+  ['TESYS', 'Schneider Electric'],
+  // Square D is Schneider's load-centre brand; the shop sells it as Schneider
+  // because that is the name on the invoice and on the enquiry.
+  ['QO', 'Schneider Electric'],
+  ['HOMELINE', 'Schneider Electric'],
 ]
 
 /** The brand of one product, or null when the name matches no known series. */

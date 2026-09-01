@@ -40,8 +40,12 @@ export const PRODUCT_CATEGORIES = [
     lede: 'Meters, monitoring dongles, mounting hardware and cabling — the parts an install needs beyond the inverter and the battery.',
     empty:
       'Accessories are not listed online yet. Tell us what the job needs and we will quote it — we stock more than the site lists.',
-    // No accessory is stocked yet, so there is no real unit to show —
-    // consumers of this list render an icon instead when `photo` is null.
+    // The Schneider breaker photographs are already in /public/products and
+    // supabase-product-catalogue-breakers.sql is written, but the rows are not
+    // in the database yet. Pointing a home-page card at a shelf that is still
+    // empty promises a page that has nothing on it, so this stays null and the
+    // lede above stays as it is until that file has been run — then both move
+    // together.
     photo: null,
   },
 ]
