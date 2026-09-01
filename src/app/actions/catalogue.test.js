@@ -223,6 +223,57 @@ describe('createProduct', () => {
 
     expect(result).toEqual({ error: 'Product was created, but image upload failed: bucket quota exceeded' })
   })
+
+  it('refuses an image over 50MB before it ever reaches the public bucket', async () => {
+    const session = adminSessionFixtures({ isAdmin: true })
+    const stub = createSupabaseStub({
+      user: { id: 'admin-1' },
+      from: { ...session.from, products: { data: { id: 'new-prod-1' }, error: null } },
+      rpc: session.rpc,
+    })
+    createClient.mockResolvedValue(stub)
+
+    const result = await createProduct(
+      withGetAll(validForm({ image: fakeFile({ name: 'unit.jpg', size: 51 * 1024 * 1024 }) })),
+    )
+
+    expect(result).toEqual({ error: 'Product was created, but image is over 50 MB' })
+    expect(stub.storage.from).not.toHaveBeenCalled()
+  })
+
+  it('refuses an image of a type nothing here accepts — svg included, since it can carry a script', async () => {
+    const session = adminSessionFixtures({ isAdmin: true })
+    createClient.mockResolvedValue(
+      createSupabaseStub({
+        user: { id: 'admin-1' },
+        from: { ...session.from, products: { data: { id: 'new-prod-1' }, error: null } },
+        rpc: session.rpc,
+      }),
+    )
+
+    const result = await createProduct(
+      withGetAll(validForm({ image: fakeFile({ name: 'unit.svg', type: 'image/svg+xml' }) })),
+    )
+
+    expect(result).toEqual({ error: 'Product was created, but image has to be a JPEG, PNG or WEBP' })
+  })
+
+  it('refuses a datasheet that is not a PDF', async () => {
+    const session = adminSessionFixtures({ isAdmin: true })
+    createClient.mockResolvedValue(
+      createSupabaseStub({
+        user: { id: 'admin-1' },
+        from: { ...session.from, products: { data: { id: 'new-prod-1' }, error: null } },
+        rpc: session.rpc,
+      }),
+    )
+
+    const result = await createProduct(
+      withGetAll(validForm({ datasheet: fakeFile({ name: 'sheet.docx', type: 'application/msword' }) })),
+    )
+
+    expect(result).toEqual({ error: 'Product was created, but datasheet has to be a PDF' })
+  })
 })
 
 describe('updateProduct', () => {

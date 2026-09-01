@@ -6,6 +6,42 @@ import { notifyApplicantRejected } from '@/utils/support/notify'
 const BUCKET = 'verification-docs'
 const TABLE = 'installer_verifications'
 
+/** Generous relative to what these actually are — a scanned certificate
+    rarely exceeds a few MB — but set high enough that a large multi-page
+    scan or a high-resolution photo is never the reason a genuine document
+    gets rejected. */
+const MAX_DOC_BYTES = 50 * 1024 * 1024
+
+/** Matches what Registration.jsx's own dropzone already accepts (PDF, JPG,
+    PNG, WEBP, DOC, DOCX). Neither that allowlist nor a size cap was ever
+    mirrored server-side, so a request built by hand — skipping the form
+    entirely — could upload anything, of any size, into a bucket an admin
+    later opens during review. */
+const DOC_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
+
+/** Extension from the upload's own name rather than assumed, so a PDF
+    business-registration scan is no longer stored (and later opened by an
+    admin) mislabeled as a .jpg. */
+function extensionOf(file, fallback) {
+  const ext = file?.name?.split('.').pop()
+  return ext && ext.length <= 5 ? ext.toLowerCase() : fallback
+}
+
+/** Checked before either file reaches Storage. Returns an error string, or
+    null when the file is fine. */
+function docFileError(file, noun) {
+  if (file.size > MAX_DOC_BYTES) return `${noun} is over ${MAX_DOC_BYTES / (1024 * 1024)} MB.`
+  if (file.type && !DOC_TYPES.has(file.type)) return `${noun} has to be a PDF, an image, or a Word document.`
+  return null
+}
+
 /**
  * submitVerification(formData)
  *
@@ -14,10 +50,10 @@ const TABLE = 'installer_verifications'
  *   - years_installing              (string/number, required)
  *   - annual_install_volume         (string/number, optional)
  *   - primary_service_area          (string, optional)
- *   - business_registration         (File, image, required)
- *   - pv_certification              (File, image, optional)
+ *   - business_registration         (File: PDF, JPG, PNG, WEBP, DOC or DOCX, required)
+ *   - pv_certification              (File: same types, optional)
  *
- * Uploads both images to Storage, then upserts one row per installer
+ * Uploads both documents to Storage, then upserts one row per installer
  * profile in installer_verifications (unique_profile_id constraint makes
  * this an update-in-place on resubmission rather than a new row).
  *
@@ -54,25 +90,40 @@ export async function submitVerification(formData) {
   const businessRegFile = formData.get('business_registration')
   const pvCertFile = formData.get('pv_certification')
 
-  if (!businessRegNumber || !yearsInstalling || !businessRegFile) {
+  if (
+    !businessRegNumber ||
+    !yearsInstalling ||
+    !businessRegFile ||
+    typeof businessRegFile === 'string' ||
+    businessRegFile.size === 0
+  ) {
     return { error: 'Business registration number, years installing, and the business registration document are required.' }
   }
 
-  // Upload the document image(s) to Storage under the user's own folder.
-  // The PV certification is optional, so it's only uploaded when provided.
-  const businessRegPath = `${user.id}/business_registration_${Date.now()}.jpg`
+  const businessRegError = docFileError(businessRegFile, 'The business registration document')
+  if (businessRegError) return { error: businessRegError }
+
+  const hasPvCert = pvCertFile && typeof pvCertFile !== 'string' && pvCertFile.size > 0
+  if (hasPvCert) {
+    const pvCertError = docFileError(pvCertFile, 'The PV certification document')
+    if (pvCertError) return { error: pvCertError }
+  }
+
+  // Upload the document(s) to Storage under the user's own folder. The PV
+  // certification is optional, so it's only uploaded when provided.
+  const businessRegPath = `${user.id}/business_registration_${Date.now()}.${extensionOf(businessRegFile, 'jpg')}`
   const { error: uploadError1 } = await supabase.storage
     .from(BUCKET)
-    .upload(businessRegPath, businessRegFile, { upsert: true })
+    .upload(businessRegPath, businessRegFile, { upsert: true, contentType: businessRegFile.type || undefined })
 
   if (uploadError1) return { error: `Business registration upload failed: ${uploadError1.message}` }
 
   let pvCertPath = null
-  if (pvCertFile && pvCertFile.size > 0) {
-    pvCertPath = `${user.id}/pv_certification_${Date.now()}.jpg`
+  if (hasPvCert) {
+    pvCertPath = `${user.id}/pv_certification_${Date.now()}.${extensionOf(pvCertFile, 'jpg')}`
     const { error: uploadError2 } = await supabase.storage
       .from(BUCKET)
-      .upload(pvCertPath, pvCertFile, { upsert: true })
+      .upload(pvCertPath, pvCertFile, { upsert: true, contentType: pvCertFile.type || undefined })
 
     if (uploadError2) return { error: `PV certification upload failed: ${uploadError2.message}` }
   }

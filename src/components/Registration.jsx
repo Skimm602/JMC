@@ -42,7 +42,7 @@ const DOC_SLOTS = [
 ]
 
 const ACCEPT = '.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx'
-const MAX_FILE_BYTES = 10 * 1024 * 1024
+const MAX_FILE_BYTES = 50 * 1024 * 1024
 
 const EMPTY_FORM = {
   fullName: '',
@@ -91,7 +91,8 @@ function DocumentSlot({ slot, file, error, onPick, onRemove, disabled }) {
     const f = list?.[0]
     if (!f) return
     if (!fileTypeOk(f)) return onPick(slot.key, null, 'Unsupported format — use PDF, JPG, PNG or DOC.')
-    if (f.size > MAX_FILE_BYTES) return onPick(slot.key, null, `${formatBytes(f.size)} is over the 10 MB limit.`)
+    if (f.size > MAX_FILE_BYTES)
+      return onPick(slot.key, null, `${formatBytes(f.size)} is over the ${MAX_FILE_BYTES / (1024 * 1024)} MB limit.`)
     onPick(slot.key, f, null)
   }
 
@@ -666,7 +667,7 @@ export default function Registration() {
                     ))}
                   </div>
 
-                  <p className="text-ink-soft mt-3 text-xs">PDF, JPG, PNG or DOC — up to 10 MB per document.</p>
+                  <p className="text-ink-soft mt-3 text-xs">PDF, JPG, PNG or DOC — up to 50 MB per document.</p>
 
                   {errors.documents && (
                     <p role="alert" className="text-hot-600 mt-2 flex items-center gap-1.5 text-xs">

@@ -98,6 +98,65 @@ describe('submitVerification', () => {
     })
   })
 
+  it('refuses a business registration document over 50MB before it ever reaches Storage', async () => {
+    const stub = createSupabaseStub({ user: USER, from: { installer_verifications: { data: null, error: null } } })
+    createClient.mockResolvedValue(stub)
+
+    const result = await submitVerification(
+      validForm({ business_registration: fakeFile({ name: 'dti.jpg', size: 51 * 1024 * 1024 }) }),
+    )
+
+    expect(result).toEqual({ error: 'The business registration document is over 50 MB.' })
+    expect(stub.storage.from).not.toHaveBeenCalled()
+  })
+
+  it('refuses a business registration document of a type nothing here accepts', async () => {
+    createClient.mockResolvedValue(
+      createSupabaseStub({ user: USER, from: { installer_verifications: { data: null, error: null } } }),
+    )
+
+    const result = await submitVerification(
+      validForm({ business_registration: fakeFile({ name: 'clip.mp4', type: 'video/mp4' }) }),
+    )
+
+    expect(result).toEqual({ error: 'The business registration document has to be a PDF, an image, or a Word document.' })
+  })
+
+  it('accepts a Word document, matching what the dropzone itself allows', async () => {
+    const stub = createSupabaseStub({
+      user: USER,
+      from: {
+        installer_verifications: [{ data: null, error: null }, { error: null }],
+        profiles: { error: null },
+      },
+    })
+    createClient.mockResolvedValue(stub)
+
+    const result = await submitVerification(
+      validForm({
+        business_registration: fakeFile({
+          name: 'dti.docx',
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        }),
+      }),
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(calledWith(stub, 'installer_verifications', 1).business_registration_url).toMatch(/\.docx$/)
+  })
+
+  it('also validates an optional PV certification when one is provided', async () => {
+    createClient.mockResolvedValue(
+      createSupabaseStub({ user: USER, from: { installer_verifications: { data: null, error: null } } }),
+    )
+
+    const result = await submitVerification(
+      validForm({ pv_certification: fakeFile({ name: 'cert.exe', type: 'application/x-msdownload' }) }),
+    )
+
+    expect(result).toEqual({ error: 'The PV certification document has to be a PDF, an image, or a Word document.' })
+  })
+
   it('surfaces a storage error rather than writing a row with no document behind it', async () => {
     const stub = createSupabaseStub({
       user: USER,

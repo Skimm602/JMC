@@ -7,6 +7,19 @@ import { hasInstallerPricing } from '@/utils/pricing'
 const IMAGE_BUCKET = 'product-images'
 const DOCUMENT_BUCKET = 'product-documents'
 
+/** Generous relative to what these actually are — a product photo or a
+    manufacturer PDF rarely exceeds a few MB — but set high enough that a
+    large datasheet is never the reason an upload is rejected. */
+const MAX_PRODUCT_FILE_BYTES = 50 * 1024 * 1024
+
+/** Real photo formats only — never svg, which turns a public bucket into a
+    stored-XSS vector (an <img>-embeddable file that can also carry
+    <script>), reachable by anyone with no login required. */
+const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+
+/** What a manufacturer datasheet or manual actually arrives as. */
+const DOCUMENT_TYPES = new Set(['application/pdf'])
+
 /**
  * The catalogue, and the admin's full control over it.
  *
@@ -171,11 +184,18 @@ function extensionOf(file, fallback) {
   return ext && ext.length <= 5 ? ext.toLowerCase() : fallback
 }
 
-async function uploadProductFile(supabase, bucket, productId, kind, file, fallbackExt) {
+async function uploadProductFile(supabase, bucket, productId, kind, file, fallbackExt, allowedTypes, typesLabel) {
   if (!file || typeof file === 'string' || file.size === 0) return {}
 
+  if (file.size > MAX_PRODUCT_FILE_BYTES) {
+    return { error: `${kind} is over ${MAX_PRODUCT_FILE_BYTES / (1024 * 1024)} MB` }
+  }
+  if (file.type && !allowedTypes.has(file.type)) {
+    return { error: `${kind} has to be ${typesLabel}` }
+  }
+
   const path = `${productId}/${kind}_${Date.now()}.${extensionOf(file, fallbackExt)}`
-  const { error } = await supabase.storage.from(bucket).upload(path, file)
+  const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type || undefined })
   if (error) return { error: `${kind} upload failed: ${error.message}` }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path)
@@ -186,17 +206,26 @@ async function uploadProductFile(supabase, bucket, productId, kind, file, fallba
  * Uploads whatever files are present in formData under image/datasheet/manual
  * and returns the columns to write. A field the admin left empty is just
  * absent from the result, so it never overwrites an existing file with null.
+ *
+ * Both buckets are public — anyone can fetch what lands here, no session
+ * required — so the type allowlist below is not a courtesy the way it is on
+ * a private bucket: it is what stops this upload from becoming a place to
+ * host arbitrary public content under this site's own domain.
  */
 async function uploadProductFiles(supabase, productId, formData) {
-  const image = await uploadProductFile(supabase, IMAGE_BUCKET, productId, 'image', formData.get('image'), 'jpg')
+  const image = await uploadProductFile(
+    supabase, IMAGE_BUCKET, productId, 'image', formData.get('image'), 'jpg', IMAGE_TYPES, 'a JPEG, PNG or WEBP',
+  )
   if (image.error) return { error: image.error }
 
   const datasheet = await uploadProductFile(
-    supabase, DOCUMENT_BUCKET, productId, 'datasheet', formData.get('datasheet'), 'pdf',
+    supabase, DOCUMENT_BUCKET, productId, 'datasheet', formData.get('datasheet'), 'pdf', DOCUMENT_TYPES, 'a PDF',
   )
   if (datasheet.error) return { error: datasheet.error }
 
-  const manual = await uploadProductFile(supabase, DOCUMENT_BUCKET, productId, 'manual', formData.get('manual'), 'pdf')
+  const manual = await uploadProductFile(
+    supabase, DOCUMENT_BUCKET, productId, 'manual', formData.get('manual'), 'pdf', DOCUMENT_TYPES, 'a PDF',
+  )
   if (manual.error) return { error: manual.error }
 
   const urls = {}

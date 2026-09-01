@@ -226,13 +226,13 @@ describe('attachPaymentProof', () => {
     expect(result).toEqual({ error: 'Attach a photo or screenshot of the payment.' })
   })
 
-  it('refuses a file over 8MB', async () => {
+  it('refuses a file over 50MB', async () => {
     createClient.mockResolvedValue(createSupabaseStub({ user: USER }))
 
-    const proof = fakeFile({ size: 9 * 1024 * 1024 })
+    const proof = fakeFile({ size: 51 * 1024 * 1024 })
     const result = await attachPaymentProof(fakeFormData({ orderId: 'order-1', proof }))
 
-    expect(result).toEqual({ error: 'That file is over 8 MB. A screenshot or photo is enough.' })
+    expect(result).toEqual({ error: 'That file is over 50 MB. A screenshot or photo is enough.' })
   })
 
   it('refuses a file type that is not a photo or a PDF', async () => {

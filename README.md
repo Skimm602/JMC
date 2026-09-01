@@ -84,8 +84,10 @@ The form is the functional core of the page:
 - Ticking it reveals a **trade-verification panel**: business registration
   number, contractor licence number and expiry, years installing, install
   volume, service area, certifications, and a **supporting-documents upload**.
-- The dropzone accepts PDF/JPG/PNG/WEBP/DOC/DOCX, max 10 MB per file and 8 files
-  total, de-duplicates on name+size, and reports per-file rejection reasons.
+- The dropzone accepts PDF/JPG/PNG/WEBP/DOC/DOCX, max 50 MB per file and 8 files
+  total, de-duplicates on name+size, and reports per-file rejection reasons. The
+  server action re-checks both the type and the size — see MAX_DOC_BYTES and
+  DOC_TYPES in app/actions/verification.js.
 - Validation is submit-time, moves focus to the first invalid control, and the
   installer rules only apply when the box is ticked.
 

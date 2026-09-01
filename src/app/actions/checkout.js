@@ -27,9 +27,10 @@ const PROOF_BUCKET = 'payment-proofs'
 const DELIVERY_BUCKET = 'delivery-proofs'
 const VAT_PROOF_BUCKET = 'vat-exemption-proofs'
 
-/** Big enough for a phone screenshot at full resolution, small enough that a
-    mistaken video upload is refused rather than waited on. */
-const MAX_PROOF_BYTES = 8 * 1024 * 1024
+/** Generous relative to what these actually are — a phone screenshot rarely
+    exceeds a few MB — but set high enough that a large photo or a scanned
+    PDF is never the reason a genuine proof gets rejected. */
+const MAX_PROOF_BYTES = 50 * 1024 * 1024
 
 /** What a bank app or camera actually produces. A PDF is included because
     some banks email a receipt rather than showing one. */
@@ -251,7 +252,8 @@ export async function attachPaymentProof(formData) {
   if (!proof || typeof proof === 'string' || proof.size === 0) {
     return { error: 'Attach a photo or screenshot of the payment.' }
   }
-  if (proof.size > MAX_PROOF_BYTES) return { error: 'That file is over 8 MB. A screenshot or photo is enough.' }
+  if (proof.size > MAX_PROOF_BYTES)
+    return { error: `That file is over ${MAX_PROOF_BYTES / (1024 * 1024)} MB. A screenshot or photo is enough.` }
   if (proof.type && !PROOF_TYPES.has(proof.type)) return { error: 'Attach an image or a PDF.' }
 
   // Read the order first so the refusal can say which of the two reasons it
@@ -326,7 +328,8 @@ export async function attachVatExemptionProof(formData) {
   if (!proof || typeof proof === 'string' || proof.size === 0) {
     return { error: 'Attach a photo or scan of the ID or certificate.' }
   }
-  if (proof.size > MAX_PROOF_BYTES) return { error: 'That file is over 8 MB. A photo or scan is enough.' }
+  if (proof.size > MAX_PROOF_BYTES)
+    return { error: `That file is over ${MAX_PROOF_BYTES / (1024 * 1024)} MB. A photo or scan is enough.` }
   if (proof.type && !PROOF_TYPES.has(proof.type)) return { error: 'Attach an image or a PDF.' }
 
   const proofPath = `${user.id}/${orderId}_${Date.now()}.${extensionOf(proof)}`
@@ -379,7 +382,7 @@ export async function confirmDelivery(formData) {
   if (!proof || typeof proof === 'string' || proof.size === 0) {
     return { error: 'Attach a photo of what arrived.' }
   }
-  if (proof.size > MAX_PROOF_BYTES) return { error: 'That file is over 8 MB. A photo is enough.' }
+  if (proof.size > MAX_PROOF_BYTES) return { error: `That file is over ${MAX_PROOF_BYTES / (1024 * 1024)} MB. A photo is enough.` }
   if (proof.type && !PROOF_TYPES.has(proof.type)) return { error: 'Attach an image or a PDF.' }
 
   const proofPath = `${user.id}/${orderId}_${Date.now()}.${extensionOf(proof)}`
