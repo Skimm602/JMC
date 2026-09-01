@@ -49,7 +49,17 @@ export async function adminSignIn(formData) {
 
   if (!email || !password) return { error: 'Email and password are required.' }
 
+  // Same throttle signIn() applies, and for the same reason it matters more
+  // here: the flat REJECTED message below only protects against account
+  // enumeration if guessing against it is also slow. See
+  // is_login_rate_limited() in supabase-login-rate-limit.sql.
+  const { data: limited } = await supabase.rpc('is_login_rate_limited', { p_email: email })
+  if (limited) return { error: 'Too many attempts on this account. Try again in a few minutes.' }
+
   const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+  await supabase.rpc('record_login_attempt', { p_email: email, p_succeeded: !error })
+
   if (error) return { error: REJECTED }
 
   // Best-effort — see record_login() in signIn() and supabase-login-history.sql.

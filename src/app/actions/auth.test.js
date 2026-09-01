@@ -43,6 +43,14 @@ describe('signUp', () => {
     expect(result).toEqual({ error: 'Full name is required.' })
   })
 
+  it('requires an 8-character password', async () => {
+    createClient.mockResolvedValue(createSupabaseStub({}))
+
+    const result = await signUp(validForm({ password: 'short1' }))
+
+    expect(result).toEqual({ error: 'Use at least 8 characters for the password.' })
+  })
+
   it('surfaces an auth signUp error rather than proceeding to create a profile', async () => {
     createClient.mockResolvedValue(
       createSupabaseStub({ auth: { signUp: { data: null, error: { message: 'Email already registered' } } } }),
@@ -95,6 +103,9 @@ describe('signUp', () => {
 describe('signIn', () => {
   const validForm = () => fakeFormData({ email: 'buyer@example.com', password: 'hunter22' })
 
+  /** Every path past the empty-field check now hits the rate-limit gate first. */
+  const notLimited = { is_login_rate_limited: { data: false, error: null } }
+
   it('requires email and password', async () => {
     createClient.mockResolvedValue(createSupabaseStub({}))
 
@@ -103,21 +114,42 @@ describe('signIn', () => {
     expect(result).toEqual({ error: 'Email and password are required.' })
   })
 
-  it('surfaces the auth error on a wrong password', async () => {
-    createClient.mockResolvedValue(
-      createSupabaseStub({ auth: { signInWithPassword: { data: null, error: { message: 'Invalid login credentials' } } } }),
-    )
+  it('refuses to even attempt sign-in once this email has failed too many times', async () => {
+    const stub = createSupabaseStub({ rpc: { is_login_rate_limited: { data: true, error: null } } })
+    createClient.mockResolvedValue(stub)
+
+    const result = await signIn(validForm())
+
+    expect(result).toEqual({ error: 'Too many attempts on this account. Try again in a few minutes.' })
+    expect(stub.auth.signInWithPassword).not.toHaveBeenCalled()
+  })
+
+  it('surfaces the auth error on a wrong password, and records the failure', async () => {
+    const stub = createSupabaseStub({
+      rpc: { ...notLimited, record_login_attempt: { data: null, error: null } },
+      auth: { signInWithPassword: { data: null, error: { message: 'Invalid login credentials' } } },
+    })
+    createClient.mockResolvedValue(stub)
 
     const result = await signIn(validForm())
 
     expect(result).toEqual({ error: 'Invalid login credentials' })
+    expect(stub.rpc).toHaveBeenCalledWith('record_login_attempt', {
+      p_email: 'buyer@example.com',
+      p_succeeded: false,
+    })
   })
 
   it('routes an ordinary customer home', async () => {
     createClient.mockResolvedValue(
       createSupabaseStub({
         auth: { signInWithPassword: { data: { user: { id: 'user-1' } }, error: null } },
-        rpc: { record_login: { data: null, error: null }, is_admin: { data: false, error: null } },
+        rpc: {
+          ...notLimited,
+          record_login_attempt: { data: null, error: null },
+          record_login: { data: null, error: null },
+          is_admin: { data: false, error: null },
+        },
       }),
     )
 
@@ -130,7 +162,12 @@ describe('signIn', () => {
     createClient.mockResolvedValue(
       createSupabaseStub({
         auth: { signInWithPassword: { data: { user: { id: 'admin-1' } }, error: null } },
-        rpc: { record_login: { data: null, error: null }, is_admin: { data: true, error: null } },
+        rpc: {
+          ...notLimited,
+          record_login_attempt: { data: null, error: null },
+          record_login: { data: null, error: null },
+          is_admin: { data: true, error: null },
+        },
       }),
     )
 

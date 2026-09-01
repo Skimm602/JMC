@@ -27,6 +27,9 @@ function adminSessionFixtures({ isAdmin }) {
 }
 
 describe('adminSignIn', () => {
+  /** Every path past the empty-field check now hits the rate-limit gate first. */
+  const notLimited = { is_login_rate_limited: { data: false, error: null }, record_login_attempt: { data: null, error: null } }
+
   it('requires email and password', async () => {
     createClient.mockResolvedValue(createSupabaseStub({}))
 
@@ -35,9 +38,22 @@ describe('adminSignIn', () => {
     expect(result).toEqual({ error: 'Email and password are required.' })
   })
 
+  it('refuses to even attempt sign-in once this email has failed too many times', async () => {
+    const stub = createSupabaseStub({ rpc: { is_login_rate_limited: { data: true, error: null } } })
+    createClient.mockResolvedValue(stub)
+
+    const result = await adminSignIn(fakeFormData({ email: 'x@example.com', password: 'wrong' }))
+
+    expect(result).toEqual({ error: 'Too many attempts on this account. Try again in a few minutes.' })
+    expect(stub.auth.signInWithPassword).not.toHaveBeenCalled()
+  })
+
   it('gives one flat rejection message rather than confirming whether the account exists', async () => {
     createClient.mockResolvedValue(
-      createSupabaseStub({ auth: { signInWithPassword: { data: null, error: { message: 'Invalid login credentials' } } } }),
+      createSupabaseStub({
+        rpc: notLimited,
+        auth: { signInWithPassword: { data: null, error: { message: 'Invalid login credentials' } } },
+      }),
     )
 
     const result = await adminSignIn(fakeFormData({ email: 'x@example.com', password: 'wrong' }))
@@ -50,7 +66,7 @@ describe('adminSignIn', () => {
       createSupabaseStub({
         user: { id: 'user-1' },
         auth: { signInWithPassword: { data: { user: { id: 'user-1' } }, error: null } },
-        rpc: { record_login: { data: null, error: null }, ...adminSessionFixtures({ isAdmin: false }).rpc },
+        rpc: { ...notLimited, record_login: { data: null, error: null }, ...adminSessionFixtures({ isAdmin: false }).rpc },
         from: adminSessionFixtures({ isAdmin: false }).from,
       }),
     )
@@ -65,7 +81,7 @@ describe('adminSignIn', () => {
       createSupabaseStub({
         user: { id: 'admin-1' },
         auth: { signInWithPassword: { data: { user: { id: 'admin-1' } }, error: null } },
-        rpc: { record_login: { data: null, error: null }, ...adminSessionFixtures({ isAdmin: true }).rpc },
+        rpc: { ...notLimited, record_login: { data: null, error: null }, ...adminSessionFixtures({ isAdmin: true }).rpc },
         from: adminSessionFixtures({ isAdmin: true }).from,
       }),
     )

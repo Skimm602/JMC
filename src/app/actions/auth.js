@@ -42,6 +42,14 @@ export async function signUp(formData) {
     return { error: 'Please select an account type.' }
   }
 
+  // Matches the minimum Registration.jsx's own form already enforces
+  // client-side (see passwordScore) and the one adminSignUp() enforces.
+  // Client-side validation is not a substitute for this — nothing stops a
+  // request from reaching this action directly, skipping the form.
+  if (String(password).length < 8) {
+    return { error: 'Use at least 8 characters for the password.' }
+  }
+
   const fullName = formData.get('full_name')
   const companyName = formData.get('company_name') || null
   const phone = formData.get('phone') || null
@@ -127,10 +135,25 @@ export async function signIn(formData) {
     return { error: 'Email and password are required.' }
   }
 
+  // Failed attempts against this email are throttled before Supabase Auth
+  // ever sees them — see is_login_rate_limited() in
+  // supabase-login-rate-limit.sql. A blocked guess costs this account
+  // nothing rather than one more attempt piled onto however many already
+  // failed.
+  const { data: limited } = await supabase.rpc('is_login_rate_limited', { p_email: email })
+  if (limited) {
+    return { error: 'Too many attempts on this account. Try again in a few minutes.' }
+  }
+
   const { data, error: signInError } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
+
+  // Recorded either way — a wrong password counts toward the limit above; a
+  // right one does not. Best-effort, same reasoning as record_login() below:
+  // this must never turn a real sign-in into a rejected one.
+  await supabase.rpc('record_login_attempt', { p_email: email, p_succeeded: !signInError })
 
   if (signInError) {
     return { error: signInError.message }
