@@ -57,6 +57,51 @@ create unique index if not exists products_name_key on public.products (name);
 
 
 -- ---------------------------------------------------------------------------
+-- 0. LET THE CATEGORY COLUMN HOLD 'accessory'
+--
+--    products.category carries a check constraint that was added by hand in
+--    the Supabase dashboard rather than by any file in this repository, back
+--    when the shop sold nothing but inverters and batteries — so it permits
+--    those two and rejects everything else:
+--
+--      ERROR 23514: new row for relation "products" violates check
+--      constraint "products_category_check"
+--
+--    The application has allowed three categories for a while — see the
+--    validation in src/app/actions/catalogue.js — so this is the database
+--    catching up with the code rather than a new rule. The breakers are the
+--    first accessories the shop has ever listed, which is why nothing has hit
+--    it before now.
+--
+--    The old definition is printed to the Messages pane before it is replaced,
+--    so there is a record of what was there. Null stays legal: rows predating
+--    the category column have none, and failing them here would block every
+--    later edit to an old product for no gain.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  existing text;
+begin
+  select pg_get_constraintdef(oid) into existing
+    from pg_constraint
+   where conrelid = 'public.products'::regclass
+     and conname = 'products_category_check';
+
+  if existing is null then
+    raise notice 'products_category_check did not exist; adding it.';
+  else
+    raise notice 'Replacing products_category_check. Previous definition: %', existing;
+    alter table public.products drop constraint products_category_check;
+  end if;
+
+  alter table public.products
+    add constraint products_category_check
+    check (category is null or category in ('inverter', 'battery', 'accessory'));
+end
+$$;
+
+
+-- ---------------------------------------------------------------------------
 -- 1. MOULDED-CASE CIRCUIT BREAKERS (MCCB)
 --
 --    The working range for a commercial switchboard: everything from a 15 A
