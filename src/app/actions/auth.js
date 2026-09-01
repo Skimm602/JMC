@@ -1,6 +1,8 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
+import { clientIp } from '@/utils/client-ip'
 
 /**
  * signUp(formData)
@@ -36,6 +38,20 @@ export async function signUp(formData) {
 
   if (!email || !password) {
     return { error: 'Email and password are required.' }
+  }
+
+  // Keyed on the requesting IP rather than the email being tried — the
+  // abuse this stops is scripted mass account creation, which spreads
+  // across many different emails rather than repeating one. See
+  // is_signup_rate_limited() in supabase-signup-rate-limit.sql. No IP could
+  // be determined: fail open rather than bucket every such visitor together.
+  const ip = clientIp(await headers())
+  if (ip) {
+    const { data: limited } = await supabase.rpc('is_signup_rate_limited', { p_ip: ip })
+    if (limited) {
+      return { error: 'Too many accounts created from this connection recently. Try again in a while.' }
+    }
+    await supabase.rpc('record_signup_attempt', { p_ip: ip })
   }
 
   if (!['individual', 'installer'].includes(customerType)) {

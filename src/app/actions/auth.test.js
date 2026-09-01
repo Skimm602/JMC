@@ -2,11 +2,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { calledWith, createSupabaseStub, fakeFormData } from '@/test/supabaseMock.js'
 
 vi.mock('@/utils/supabase/server', () => ({ createClient: vi.fn() }))
+vi.mock('next/headers', () => ({ headers: vi.fn() }))
 const { createClient } = await import('@/utils/supabase/server')
+const { headers } = await import('next/headers')
 const { signIn, signOut, signUp } = await import('./auth.js')
+
+/** No IP determinable — the default for every test that isn't specifically
+    exercising the signup rate limiter, so clientIp() returns '' and that
+    whole check is skipped rather than needing its own RPC stubs everywhere. */
+const NO_IP_HEADERS = { get: () => null }
+
+const ipHeaders = (ip) => ({ get: (name) => (name === 'x-forwarded-for' ? ip : null) })
 
 beforeEach(() => {
   vi.mocked(createClient).mockReset()
+  vi.mocked(headers).mockReset().mockResolvedValue(NO_IP_HEADERS)
 })
 
 describe('signUp', () => {
@@ -97,6 +107,47 @@ describe('signUp', () => {
 
     expect(result).toEqual({ success: true, hasSession: false, redirectTo: '/installer-status/pending-verification' })
     expect(calledWith(stub, 'profiles').verification_status).toBe('pending')
+  })
+
+  it('refuses to create an account once this connection has made too many recently', async () => {
+    vi.mocked(headers).mockResolvedValue(ipHeaders('203.0.113.5'))
+    const stub = createSupabaseStub({ rpc: { is_signup_rate_limited: { data: true, error: null } } })
+    createClient.mockResolvedValue(stub)
+
+    const result = await signUp(validForm())
+
+    expect(result).toEqual({ error: 'Too many accounts created from this connection recently. Try again in a while.' })
+    expect(stub.auth.signUp).not.toHaveBeenCalled()
+  })
+
+  it('records the attempt by IP once it clears the rate limit', async () => {
+    vi.mocked(headers).mockResolvedValue(ipHeaders('203.0.113.5'))
+    const stub = createSupabaseStub({
+      rpc: { is_signup_rate_limited: { data: false, error: null }, record_signup_attempt: { data: null, error: null } },
+      auth: { signUp: { data: { user: { id: 'new-user-1' }, session: { access_token: 'tok' } }, error: null } },
+      from: { profiles: { error: null } },
+    })
+    createClient.mockResolvedValue(stub)
+
+    await signUp(validForm())
+
+    expect(stub.rpc).toHaveBeenCalledWith('record_signup_attempt', { p_ip: '203.0.113.5' })
+  })
+
+  it('skips the rate-limit check entirely when no IP can be determined, rather than blocking everyone', async () => {
+    // NO_IP_HEADERS is already the beforeEach default — this just asserts
+    // signUp() never calls the rate-limit RPCs in that case, since the
+    // shared createSupabaseStub would throw on an unstubbed rpc() call if
+    // it tried to.
+    const stub = createSupabaseStub({
+      auth: { signUp: { data: { user: { id: 'new-user-1' }, session: { access_token: 'tok' } }, error: null } },
+      from: { profiles: { error: null } },
+    })
+    createClient.mockResolvedValue(stub)
+
+    const result = await signUp(validForm())
+
+    expect(result.success).toBe(true)
   })
 })
 

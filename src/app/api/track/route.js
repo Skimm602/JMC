@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { createClient } from '@/utils/supabase/server'
+import { clientIp } from '@/utils/client-ip'
 
 /**
  * One visit, counted.
@@ -32,9 +33,7 @@ const manilaDay = () =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date())
 
 export async function POST(request) {
-  // x-forwarded-for is a list when proxies chain; the client is the first.
-  const forwarded = request.headers.get('x-forwarded-for') ?? ''
-  const address = forwarded.split(',')[0].trim() || request.headers.get('x-real-ip') || ''
+  const address = clientIp(request.headers)
   const agent = request.headers.get('user-agent') ?? ''
 
   // Nothing to tell one visitor from another. Counting this would merge every

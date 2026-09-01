@@ -1,7 +1,9 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 import { readAdminSession } from '@/utils/admin-session'
+import { clientIp } from '@/utils/client-ip'
 
 /**
  * Back-office authentication.
@@ -92,6 +94,23 @@ export async function adminSignUp(formData) {
   const fullName = formData.get('full_name')
 
   if (!email || !password) return { error: 'Email and password are required.' }
+
+  // Same throttle signUp() applies, and for the same reason: this door is
+  // open by design (see the note at the top of this file), so nothing else
+  // stands between a script and an unlimited number of admin accounts. See
+  // is_signup_rate_limited() in supabase-signup-rate-limit.sql. Recorded
+  // before the fields below are even checked, so a script probing this
+  // form with garbage still counts as one more request from that
+  // connection.
+  const ip = clientIp(await headers())
+  if (ip) {
+    const { data: limited } = await supabase.rpc('is_signup_rate_limited', { p_ip: ip })
+    if (limited) {
+      return { error: 'Too many accounts created from this connection recently. Try again in a while.' }
+    }
+    await supabase.rpc('record_signup_attempt', { p_ip: ip })
+  }
+
   if (!fullName) return { error: 'Full name is required.' }
   if (String(password).length < 8) return { error: 'Use at least 8 characters for the password.' }
 
