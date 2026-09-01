@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getStorefrontProduct } from '@/app/actions/catalogue'
 import { CATEGORY_LABEL, StockNote } from '@/components/Catalogue.jsx'
 import ProductCheckout from '@/components/ProductCheckout.jsx'
+import ProductStickyCta from '@/components/ProductStickyCta.jsx'
 import { ArrowLink, Breadcrumb, Eyebrow, Rule } from '@/components/ui.jsx'
 import { FileIcon } from '@/components/icons.jsx'
 import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
@@ -163,7 +164,17 @@ export default async function ProductPage({ params }) {
             </div>
 
             {/* -------------------------------- ordering ------------------------------ */}
-            <div className="lg:sticky lg:top-28 lg:self-start">
+            {/* A product with a long enough spec sheet can make this column
+                taller than the room left under top-28 once it sticks — its
+                own lower fields (city, province, phone) would then sit
+                permanently below the fold until the page scrolled past the
+                whole left column, which is the bug this was built to fix in
+                the first place. max-h + overflow-y-auto lets the form itself
+                scroll the rest of the way into view instead. */}
+            <div
+              id="order"
+              className="scroll-mt-nav lg:sticky lg:top-28 lg:max-h-[calc(100vh-9rem)] lg:self-start lg:overflow-y-auto"
+            >
               <ProductCheckout product={product} isInstaller={isInstaller} signedIn={signedIn} />
 
               <p className="text-ink-soft mt-5 text-xs leading-relaxed">
@@ -178,6 +189,8 @@ export default async function ProductPage({ params }) {
           </div>
         </div>
       </section>
+
+      <ProductStickyCta targetId="order" />
     </main>
   )
 }
