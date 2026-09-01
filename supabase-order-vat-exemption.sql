@@ -95,7 +95,7 @@ create or replace function public.attach_vat_exemption_proof(p_order_id uuid, p_
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $attach$
 declare
   v_owner  uuid;
@@ -134,7 +134,7 @@ create or replace function public.admin_set_order_vat_exempt(p_order_id uuid, p_
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $vat$
 declare
   v_current  text;

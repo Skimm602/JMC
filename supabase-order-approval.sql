@@ -195,7 +195,7 @@ create or replace function public.admin_set_order_total(p_order_id uuid, p_subto
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $price$
 declare
   v_current text;
@@ -301,7 +301,7 @@ create or replace function public.confirm_delivery(p_order_id uuid, p_proof_path
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $recv$
 declare
   v_status  text;

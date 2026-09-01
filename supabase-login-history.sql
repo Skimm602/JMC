@@ -60,7 +60,7 @@ create or replace function public.record_login()
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   insert into public.login_events (user_id) values (auth.uid());
@@ -81,7 +81,7 @@ create or replace function public.touch_login_session()
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   update public.login_events
@@ -108,7 +108,7 @@ create or replace function public.close_login_session()
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   update public.login_events
