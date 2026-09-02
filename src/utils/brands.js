@@ -23,9 +23,10 @@ export const BRAND_RULES = [
   ['LVTS-', 'LVTOPSUN'],
   ['GW', 'GoodWe'],
   // Schneider names its breaker families rather than numbering them, so the
-  // "series prefix" here is the family name itself. All five are Schneider's
+  // "series prefix" here is the family name itself. All six are Schneider's
   // own registered range names, and none of them collide with an inverter or
   // battery series.
+  ['ACTI9', 'Schneider Electric'],
   ['COMPACT', 'Schneider Electric'],
   ['EASY9', 'Schneider Electric'],
   ['EASYPACT', 'Schneider Electric'],
