@@ -16,7 +16,7 @@
 --    - Names: the model number, as LVTOPSUN prints it, because that is the
 --      unit a customer asks for and it is what the brand filter reads. See
 --      src/utils/brands.js, where LVTS- now resolves to LVTOPSUN.
---    - Photographs: LVTOPSUN''s own product photography, pulled at full
+--    - Photographs: LVTOPSUN's own product photography, pulled at full
 --      resolution from the four product pages, then converted to WebP into
 --      /public/products. Downloaded rather than hotlinked, same as every
 --      other product in this catalogue.
@@ -206,7 +206,7 @@ on conflict (name) do update set
 -- ---------------------------------------------------------------------------
 -- 3. TYPE AND VOLTAGE CLASS
 --
---    Same reasoning as every earlier catalogue file: the shop''s filter bar
+--    Same reasoning as every earlier catalogue file: the shop's filter bar
 --    runs entirely off these two columns, so a row left unset is invisible to
 --    every filter no matter how complete its specification is.
 --
