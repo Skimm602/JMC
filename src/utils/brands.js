@@ -20,6 +20,7 @@ export const BRAND_RULES = [
   ['T-BAT-SYS', 'SolaX'],
   ['S6-EH1P', 'Solis'],
   ['HYX-', 'HYXiPOWER'],
+  ['LVTS-', 'LVTOPSUN'],
   ['GW', 'GoodWe'],
   // Schneider names its breaker families rather than numbering them, so the
   // "series prefix" here is the family name itself. All five are Schneider's
