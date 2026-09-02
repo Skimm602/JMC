@@ -27,6 +27,7 @@ export const BRAND_RULES = [
   // own registered range names, and none of them collide with an inverter or
   // battery series.
   ['COMPACT', 'Schneider Electric'],
+  ['EASY9', 'Schneider Electric'],
   ['EASYPACT', 'Schneider Electric'],
   ['MASTERPACT', 'Schneider Electric'],
   ['TESYS', 'Schneider Electric'],

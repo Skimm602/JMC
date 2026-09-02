@@ -36,16 +36,13 @@ export const PRODUCT_CATEGORIES = [
     key: 'accessory',
     slug: 'accessories',
     label: 'Accessories',
-    menuBlurb: 'Meters, dongles, mounting and cabling',
-    lede: 'Meters, monitoring dongles, mounting hardware and cabling — the parts an install needs beyond the inverter and the battery.',
+    menuBlurb: 'Breakers, meters, mounting and cabling',
+    lede: 'Schneider Easy9 miniature circuit breakers, 16 A to 63 A, plus the meters, mounting hardware and cabling an install needs beyond the inverter and the battery.',
     empty:
       'Accessories are not listed online yet. Tell us what the job needs and we will quote it — we stock more than the site lists.',
-    // The Schneider breaker photographs are already in /public/products and
-    // supabase-product-catalogue-breakers.sql is written, but the rows are not
-    // in the database yet. Pointing a home-page card at a shelf that is still
-    // empty promises a page that has nothing on it, so this stays null and the
-    // lede above stays as it is until that file has been run — then both move
-    // together.
+    // Stays null until somebody decides the home page should carry an
+    // accessories card. The shelf itself is populated, so this is a
+    // presentation choice rather than a promise of an empty page.
     photo: null,
   },
 ]
