@@ -1,11 +1,13 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getStorefrontProduct } from '@/app/actions/catalogue'
-import { CATEGORY_LABEL, StockNote } from '@/components/Catalogue.jsx'
+import { StockNote } from '@/components/Catalogue.jsx'
 import ProductCheckout from '@/components/ProductCheckout.jsx'
 import ProductStickyCta from '@/components/ProductStickyCta.jsx'
-import { ArrowLink, Breadcrumb, Eyebrow, Rule } from '@/components/ui.jsx'
+import { ArrowLink, Breadcrumb, Eyebrow, Rule, cx } from '@/components/ui.jsx'
 import { FileIcon } from '@/components/icons.jsx'
-import { PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
+import { CATEGORY_LABEL, PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
+import { ratingLabel } from '@/utils/families'
 
 export async function generateMetadata({ params }) {
   const { id } = await params
@@ -34,7 +36,7 @@ export async function generateMetadata({ params }) {
  */
 export default async function ProductPage({ params }) {
   const { id } = await params
-  const { data: product, isInstaller, signedIn } = await getStorefrontProduct(id)
+  const { data: product, family = [], isInstaller, signedIn } = await getStorefrontProduct(id)
 
   // A malformed id, a discontinued product and one that never existed are the
   // same event to a customer: this page is not here.
@@ -73,6 +75,36 @@ export default async function ProductPage({ params }) {
                   </span>
                 )}
               </div>
+
+              {/* The other ratings of the same device. Links rather than a
+                  client-side switcher: each rating is its own product with its
+                  own price, stock and specification, so it deserves its own
+                  URL — one a customer can send to their electrician. */}
+              {family.length > 1 && (
+                <div className="mt-8">
+                  <span className="label text-ink-soft block">Rating</span>
+                  <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Other ratings of this device">
+                    {family.map((variant) => {
+                      const on = variant.id === product.id
+                      return (
+                        <Link
+                          key={variant.id}
+                          href={`/products/${variant.id}`}
+                          aria-current={on ? 'page' : undefined}
+                          className={cx(
+                            'inline-flex h-9 items-center rounded-full border px-4 font-mono text-xs font-medium tabular-nums transition-colors duration-200',
+                            on
+                              ? 'border-navy-900 bg-navy-900 text-glare'
+                              : 'border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900',
+                          )}
+                        >
+                          {ratingLabel(variant.amps)}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="border-rule bg-glare rounded-panel mt-8 flex items-center justify-center border p-8">
                 {product.image_url ? (

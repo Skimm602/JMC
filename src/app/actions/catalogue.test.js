@@ -96,7 +96,7 @@ describe('getStorefrontProduct', () => {
 
     const result = await getStorefrontProduct('prod-1')
 
-    expect(result).toEqual({ data: null, signedIn: false, isInstaller: false })
+    expect(result).toEqual({ data: null, family: [], signedIn: false, isInstaller: false })
   })
 
   it('returns the product for a real, active id', async () => {
@@ -106,6 +106,15 @@ describe('getStorefrontProduct', () => {
     const result = await getStorefrontProduct('prod-1')
 
     expect(result.data).toEqual(product)
+  })
+
+  it('offers no rating switcher for a product that is not one of several ratings', async () => {
+    const product = { id: 'prod-1', name: 'HYX-H6K-HS', category: 'inverter' }
+    createClient.mockResolvedValue(createSupabaseStub({ user: null, from: { products: { data: product, error: null } } }))
+
+    const result = await getStorefrontProduct('prod-1')
+
+    expect(result.family).toEqual([])
   })
 })
 

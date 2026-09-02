@@ -47,6 +47,20 @@ export const PRODUCT_CATEGORIES = [
   },
 ]
 
+/**
+ * A category in the singular, for a badge or a breadcrumb — as against the
+ * plural `label` above, which names a whole shelf.
+ *
+ * It lives here rather than beside the grid that draws it because the product
+ * page is a server component: a plain object imported out of a 'use client'
+ * module reaches the server as a client reference, and reading a key off that
+ * quietly yields undefined rather than failing. That is exactly what put an
+ * empty segment in the product breadcrumb — 'Products / / Easy9 MCB 2P 16 A'
+ * — and a React key warning underneath it. This module has no 'use client',
+ * so both sides get the real object.
+ */
+export const CATEGORY_LABEL = { inverter: 'Inverter', battery: 'Battery', accessory: 'Accessory' }
+
 /** The page a category lives at. One place, so no link has to spell it out. */
 export const categoryHref = (category) => `/products/${category.slug}`
 

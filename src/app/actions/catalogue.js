@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { readAdminSession } from '@/utils/admin-session'
 import { hasInstallerPricing } from '@/utils/pricing'
+import { groupIntoFamilies, ratingOf } from '@/utils/families'
 
 const IMAGE_BUCKET = 'product-images'
 const DOCUMENT_BUCKET = 'product-documents'
@@ -125,7 +126,42 @@ export async function getStorefrontProduct(id) {
   ])
 
   if (error) return { error: error.message, ...pricing }
-  return { data, ...pricing }
+  if (!data) return { data: null, family: [], ...pricing }
+
+  return { data, family: await readFamily(supabase, data), ...pricing }
+}
+
+/**
+ * The other ratings of the same device, for the switcher on a product page.
+ *
+ * A customer who arrives on the 32 A because that is the chip they pressed on
+ * the shop grid should not have to go back to the grid to look at the 63 A.
+ *
+ * The grouping is done here rather than in SQL because the rule for what
+ * counts as the same device lives in one place — utils/families.js — and a
+ * LIKE pattern reimplementing it in the query would be a second copy to keep
+ * in step. The read is one small category at a time, not the whole catalogue.
+ *
+ * Returns [] when the product is not part of a family, which the page reads as
+ * "no switcher".
+ */
+async function readFamily(supabase, product) {
+  if (!product.category || !ratingOf(product)) return []
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, category, stock_quantity')
+    .eq('is_active', true)
+    .eq('category', product.category)
+    .order('name', { ascending: true })
+
+  if (error || !data) return []
+
+  const card = groupIntoFamilies(data).find(
+    (entry) => entry.isFamily && entry.variants.some((variant) => variant.id === product.id),
+  )
+
+  return card?.variants ?? []
 }
 
 function readProductFields(formData) {
