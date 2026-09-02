@@ -4,8 +4,9 @@
 --
 --  REPLACES the circuit-breaker line. The fourteen Schneider MCCB and ACB
 --  ranges added by supabase-product-catalogue-breakers.sql come out, and the
---  Easy9 miniature circuit breaker goes in, 16 A to 63 A, from the reference
---  the shop was asked to work from:
+--  Easy9 miniature circuit breaker goes in — 16, 20, 32, 40 and 63 A, the
+--  five ratings the shop asked for — from the reference it was asked to work
+--  from:
 --
 --    se.com/ph/en/product/EZ9F56216/
 --      miniature-circuit-breaker-easy9-2p-16-a-c-curve-10000-a/
@@ -20,14 +21,20 @@
 --  ONE ROW PER RATING, not per range, which is the opposite of the file this
 --  replaces and deliberately so. A range card is right when the range holds
 --  hundreds of references and the rating is settled on the quote. Here the
---  rating IS the choice — 16, 20, 25, 32, 40, 50, 63 A — and there are only
---  seven of them, so each gets its own row, its own Schneider reference and
---  its own photograph with its own reference printed on the label.
+--  rating IS the choice — 16, 20, 32, 40, 63 A — and there are only five of
+--  them, so each gets its own row, its own Schneider reference and its own
+--  photograph with its own reference printed on the label.
 --
---  TWO POLE, C CURVE, 10 kA, as linked. Easy9 is also made in 1P and 3P and
---  in 6 A and 10 A; none of those are here, because the brief named the 2P
---  and named 16 A to 63 A. Adding a pole count later is another seven rows
---  in this same shape.
+--  FIVE RATINGS, NOT THE WHOLE LADDER. Schneider makes this breaker in 6, 10,
+--  16, 20, 25, 32, 40, 50 and 63 A. The shop carries five of those. 25 A and
+--  50 A are deliberately not stocked — they sit close enough to the 20/32 and
+--  40/63 either side of them that carrying them splits demand across two
+--  references for one circuit. Do not add them back by reading the ladder off
+--  se.com; the list here is the shop's, not Schneider's.
+--
+--  TWO POLE, C CURVE, 10 kA, as linked. Easy9 is also made in 1P and 3P;
+--  neither is here, because the brief named the 2P. Adding a pole count later
+--  is another five rows in this same shape.
 --
 --  WHERE THE CONTENT COMES FROM
 --    - Names: 'Easy9 MCB 2P <rating> A', so the shelf sorts by rating and the
@@ -61,7 +68,12 @@ create unique index if not exists products_name_key on public.products (name);
 
 
 -- ---------------------------------------------------------------------------
--- 1. TAKE THE FOURTEEN MCCB AND ACB RANGES OUT
+-- 1. TAKE OUT EVERYTHING THAT SHOULD NO LONGER BE LISTED
+--
+--    The fourteen MCCB and ACB ranges, plus the 25 A and 50 A Easy9 — those
+--    two were in an earlier draft of this file and are not stocked, so they
+--    are named here as well. If this file has never been run they simply match
+--    nothing; if an earlier draft of it was run, they come out.
 --
 --    Not a blind DELETE. `order_items` was created in the Supabase dashboard
 --    rather than by any file in this repository, so its foreign key onto
@@ -89,7 +101,8 @@ declare
     'EasyPact MVS', 'MasterPact NW', 'MasterPact MTZ X',
     'MasterPact MTZ Active', 'MasterPact NT/NW UL 489',
     'QO and QOB Circuit Breakers', 'HomeLine Circuit Breakers',
-    'TeSys GV2', 'Compact NS80H MA'
+    'TeSys GV2', 'Compact NS80H MA',
+    'Easy9 MCB 2P 25 A', 'Easy9 MCB 2P 50 A'
   ];
 begin
   if to_regclass('public.order_items') is null then
@@ -129,10 +142,10 @@ $$;
 
 
 -- ---------------------------------------------------------------------------
--- 2. THE EASY9 MINIATURE CIRCUIT BREAKER, 16 A TO 63 A
+-- 2. THE EASY9 MINIATURE CIRCUIT BREAKER: 16, 20, 32, 40, 63 A
 --
---    One device in seven ratings. Everything below the rated current is the
---    same across all seven: 2P, C curve, 10 kA at 220 V AC to IEC 60898-1,
+--    One device in five ratings. Everything below the rated current is the
+--    same across all five: 2P, C curve, 10 kA at 220 V AC to IEC 60898-1,
 --    36 mm wide on DIN rail.
 --
 --    The application note on each row is the circuit that rating is usually
@@ -202,48 +215,6 @@ values
     'Device type: Miniature circuit breaker (MCB)',
     '# Rating',
     'Rated current In: 20 A',
-    'Poles: 2P, 2 protected poles',
-    'Tripping curve: C',
-    'Rated short-circuit breaking capacity: 10000 A at 220 V AC (IEC 60898-1)',
-    'Operational voltage Ue: 220 V AC',
-    'Rated insulation voltage Ui: 500 V AC',
-    'Rated impulse withstand voltage Uimp: 4 kV',
-    'Operating frequency: 50 / 60 Hz',
-    '# Protection',
-    'Protection: Short circuit, and cable protection against overload',
-    'Fault indication: Handle position on the front panel (O-I engraved)',
-    'Application: Residential and small commercial buildings',
-    '# Endurance',
-    'Electrical endurance: 4000 cycles',
-    'Mechanical endurance: 10000 cycles',
-    '# Mechanical',
-    'Mounting: DIN rail',
-    'Width: 4 pitches of 9 mm',
-    'Dimensions (W x H x D): 36 x 81 x 66.5 mm',
-    'Colour: Light grey (RAL 7035)',
-    '# Environment',
-    'Degree of protection: IP20, IP40 in enclosure (IEC 60529)',
-    'Operating temperature: -5 to 60 C',
-    'Storage temperature: -40 to 85 C',
-    '# Standards',
-    'Standard: IEC 60898-1'
-  ]
-),
-
-(
-  'Easy9 MCB 2P 25 A',
-  'Schneider Easy9 two-pole miniature circuit breaker, 25 A, C curve. The rating a water heater or a window-type aircon usually lands on, and a common choice for the AC side of a small hybrid inverter. C curve rides the start-up surge without nuisance tripping.',
-  0, null, null, true,
-  '/products/schneider-easy9-mcb-2p-25a.webp',
-  'https://www.se.com/ph/en/product/EZ9F56225/miniature-circuit-breaker-easy9-2p-25-a-c-curve-10000-a/',
-  null,
-  array[
-    '# Reference',
-    'Schneider reference: EZ9F56225',
-    'Range: Easy9',
-    'Device type: Miniature circuit breaker (MCB)',
-    '# Rating',
-    'Rated current In: 25 A',
     'Poles: 2P, 2 protected poles',
     'Tripping curve: C',
     'Rated short-circuit breaking capacity: 10000 A at 220 V AC (IEC 60898-1)',
@@ -357,48 +328,6 @@ values
 ),
 
 (
-  'Easy9 MCB 2P 50 A',
-  'Schneider Easy9 two-pole miniature circuit breaker, 50 A, C curve. Sub-main rating: the breaker feeding a second panel, or the AC side of a 10 kW class hybrid inverter. Near the top of what a modular MCB is asked to carry before the job moves to a moulded case.',
-  0, null, null, true,
-  '/products/schneider-easy9-mcb-2p-50a.webp',
-  'https://www.se.com/ph/en/product/EZ9F56250/miniature-circuit-breaker-easy9-2p-50-a-c-curve-10000-a/',
-  null,
-  array[
-    '# Reference',
-    'Schneider reference: EZ9F56250',
-    'Range: Easy9',
-    'Device type: Miniature circuit breaker (MCB)',
-    '# Rating',
-    'Rated current In: 50 A',
-    'Poles: 2P, 2 protected poles',
-    'Tripping curve: C',
-    'Rated short-circuit breaking capacity: 10000 A at 220 V AC (IEC 60898-1)',
-    'Operational voltage Ue: 220 V AC',
-    'Rated insulation voltage Ui: 500 V AC',
-    'Rated impulse withstand voltage Uimp: 4 kV',
-    'Operating frequency: 50 / 60 Hz',
-    '# Protection',
-    'Protection: Short circuit, and cable protection against overload',
-    'Fault indication: Handle position on the front panel (O-I engraved)',
-    'Application: Residential and small commercial buildings',
-    '# Endurance',
-    'Electrical endurance: 4000 cycles',
-    'Mechanical endurance: 10000 cycles',
-    '# Mechanical',
-    'Mounting: DIN rail',
-    'Width: 4 pitches of 9 mm',
-    'Dimensions (W x H x D): 36 x 81 x 66.5 mm',
-    'Colour: Light grey (RAL 7035)',
-    '# Environment',
-    'Degree of protection: IP20, IP40 in enclosure (IEC 60529)',
-    'Operating temperature: -5 to 60 C',
-    'Storage temperature: -40 to 85 C',
-    '# Standards',
-    'Standard: IEC 60898-1'
-  ]
-),
-
-(
   'Easy9 MCB 2P 63 A',
   'Schneider Easy9 two-pole miniature circuit breaker, 63 A, C curve. The top of the Easy9 range and the usual main incomer for a small residential board — one device isolating the whole panel, with 10 kA of breaking capacity behind it.',
   0, null, null, true,
@@ -454,26 +383,26 @@ on conflict (name) do update set
 --
 --    The shop's filter bar runs entirely off these two columns, so a row left
 --    unset is invisible to every filter no matter how complete its
---    specification is. All seven are accessories in this shop's sense — the
+--    specification is. All five are accessories in this shop's sense — the
 --    parts an install needs beyond the inverter and the battery — and all
---    seven are low-voltage devices in the IEC sense.
+--    five are low-voltage devices in the IEC sense.
 -- ---------------------------------------------------------------------------
 update public.products set category = 'accessory', voltage_class = 'low'
  where name in (
-   'Easy9 MCB 2P 16 A', 'Easy9 MCB 2P 20 A', 'Easy9 MCB 2P 25 A',
-   'Easy9 MCB 2P 32 A', 'Easy9 MCB 2P 40 A', 'Easy9 MCB 2P 50 A',
-   'Easy9 MCB 2P 63 A'
+   'Easy9 MCB 2P 16 A', 'Easy9 MCB 2P 20 A', 'Easy9 MCB 2P 32 A',
+   'Easy9 MCB 2P 40 A', 'Easy9 MCB 2P 63 A'
  );
 
 commit;
 
 -- ---------------------------------------------------------------------------
--- Check. Seven rows, every one active, priced 0, filed under accessory / low,
--- each with a specification, a photograph and a link back to its own se.com
--- reference page — waiting on the back office for a real peso figure.
+-- Check. Five rows — 16, 20, 32, 40, 63 A — every one active, priced 0, filed
+-- under accessory / low, each with a specification, a photograph and a link
+-- back to its own se.com reference page, waiting on the back office for a real
+-- peso figure. No 25 A and no 50 A.
 --
 -- The second query should return NO rows: it looks for any of the fourteen
--- old ranges still listed for sale.
+-- old ranges, or the two dropped Easy9 ratings, still listed for sale.
 -- ---------------------------------------------------------------------------
 select name,
        category,
@@ -494,6 +423,7 @@ select name, is_active
    'EasyPact MVS', 'MasterPact NW', 'MasterPact MTZ X',
    'MasterPact MTZ Active', 'MasterPact NT/NW UL 489',
    'QO and QOB Circuit Breakers', 'HomeLine Circuit Breakers',
-   'TeSys GV2', 'Compact NS80H MA'
+   'TeSys GV2', 'Compact NS80H MA',
+   'Easy9 MCB 2P 25 A', 'Easy9 MCB 2P 50 A'
  )
  order by name;
