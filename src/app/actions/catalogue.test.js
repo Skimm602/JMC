@@ -96,7 +96,7 @@ describe('getStorefrontProduct', () => {
 
     const result = await getStorefrontProduct('prod-1')
 
-    expect(result).toEqual({ data: null, family: [], signedIn: false, isInstaller: false })
+    expect(result).toEqual({ data: null, family: [], familyAxis: 'Size', signedIn: false, isInstaller: false })
   })
 
   it('returns the product for a real, active id', async () => {

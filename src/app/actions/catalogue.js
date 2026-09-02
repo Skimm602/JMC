@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { readAdminSession } from '@/utils/admin-session'
 import { hasInstallerPricing } from '@/utils/pricing'
-import { groupIntoFamilies, ratingOf } from '@/utils/families'
+import { groupIntoFamilies } from '@/utils/families'
 
 const IMAGE_BUCKET = 'product-images'
 const DOCUMENT_BUCKET = 'product-documents'
@@ -126,13 +126,13 @@ export async function getStorefrontProduct(id) {
   ])
 
   if (error) return { error: error.message, ...pricing }
-  if (!data) return { data: null, family: [], ...pricing }
+  if (!data) return { data: null, family: [], familyAxis: 'Size', ...pricing }
 
-  return { data, family: await readFamily(supabase, data), ...pricing }
+  return { data, ...(await readFamily(supabase, data)), ...pricing }
 }
 
 /**
- * The other ratings of the same device, for the switcher on a product page.
+ * The other sizes of the same device, for the switcher on a product page.
  *
  * A customer who arrives on the 32 A because that is the chip they pressed on
  * the shop grid should not have to go back to the grid to look at the 63 A.
@@ -142,26 +142,30 @@ export async function getStorefrontProduct(id) {
  * LIKE pattern reimplementing it in the query would be a second copy to keep
  * in step. The read is one small category at a time, not the whole catalogue.
  *
- * Returns [] when the product is not part of a family, which the page reads as
- * "no switcher".
+ * `image_url` is selected because the family rule uses it: rows whose names
+ * differ at one unitless number are only siblings when the shop photographed
+ * them once.
+ *
+ * Returns an empty family when the product is not one of several sizes, which
+ * the page reads as "no switcher".
  */
 async function readFamily(supabase, product) {
-  if (!product.category || !ratingOf(product)) return []
+  if (!product.category) return { family: [], familyAxis: 'Size' }
 
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, category, stock_quantity')
+    .select('id, name, category, image_url, stock_quantity')
     .eq('is_active', true)
     .eq('category', product.category)
     .order('name', { ascending: true })
 
-  if (error || !data) return []
+  if (error || !Array.isArray(data)) return { family: [], familyAxis: 'Size' }
 
   const card = groupIntoFamilies(data).find(
     (entry) => entry.isFamily && entry.variants.some((variant) => variant.id === product.id),
   )
 
-  return card?.variants ?? []
+  return { family: card?.variants ?? [], familyAxis: card?.axisLabel ?? 'Size' }
 }
 
 function readProductFields(formData) {

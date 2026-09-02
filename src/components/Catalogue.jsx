@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { formatPeso, isPriced, unitPriceOf, withVat } from '@/utils/pricing'
 import { OTHER_BRAND, brandOf } from '@/utils/brands'
-import { groupIntoFamilies, ratingLabel } from '@/utils/families'
+import { groupIntoFamilies } from '@/utils/families'
 import { CATEGORY_LABEL } from '@/utils/product-categories'
 import { Rule, cx } from './ui.jsx'
 import { ArrowRightIcon, CheckIcon, ChevronDownIcon, FileIcon } from './icons.jsx'
@@ -259,7 +259,13 @@ function ProductCard({ card, isInstaller }) {
         {blurb}
       </div>
 
-      <RatingChips variants={variants} selectedId={product.id} onSelect={setSelectedId} label={label} />
+      <SizeChips
+        variants={variants}
+        selectedId={product.id}
+        onSelect={setSelectedId}
+        label={label}
+        axisLabel={card.axisLabel}
+      />
 
       <div className="pointer-events-none relative z-0 mt-auto">{foot}</div>
     </div>
@@ -267,17 +273,18 @@ function ProductCard({ card, isInstaller }) {
 }
 
 /**
- * The ratings on a family card.
+ * The sizes on a family card — ratings, outputs or capacities depending on
+ * what actually varies, which is what `axisLabel` carries.
  *
  * Chips rather than a select: there are rarely more than about eight of them,
- * they are two characters wide, and a customer scanning for "63" finds it
- * faster in a row than behind a closed menu.
+ * they are two or three characters wide, and a customer scanning for "63"
+ * finds it faster in a row than behind a closed menu.
  */
-function RatingChips({ variants, selectedId, onSelect, label }) {
+function SizeChips({ variants, selectedId, onSelect, label, axisLabel }) {
   return (
     <div className="relative z-10 mt-4">
-      <span className="label text-ink-soft block">Rating</span>
-      <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`Rating for ${label}`}>
+      <span className="label text-ink-soft block">{axisLabel}</span>
+      <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${axisLabel} for ${label}`}>
         {variants.map((variant) => {
           const on = variant.id === selectedId
           return (
@@ -293,7 +300,7 @@ function RatingChips({ variants, selectedId, onSelect, label }) {
                   : 'border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900',
               )}
             >
-              {ratingLabel(variant.amps)}
+              {variant.sizeLabel}
             </button>
           )
         })}

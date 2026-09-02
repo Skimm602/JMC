@@ -7,7 +7,6 @@ import ProductStickyCta from '@/components/ProductStickyCta.jsx'
 import { ArrowLink, Breadcrumb, Eyebrow, Rule, cx } from '@/components/ui.jsx'
 import { FileIcon } from '@/components/icons.jsx'
 import { CATEGORY_LABEL, PRODUCT_CATEGORIES, categoryHref } from '@/utils/product-categories'
-import { ratingLabel } from '@/utils/families'
 
 export async function generateMetadata({ params }) {
   const { id } = await params
@@ -36,7 +35,7 @@ export async function generateMetadata({ params }) {
  */
 export default async function ProductPage({ params }) {
   const { id } = await params
-  const { data: product, family = [], isInstaller, signedIn } = await getStorefrontProduct(id)
+  const { data: product, family = [], familyAxis = 'Size', isInstaller, signedIn } = await getStorefrontProduct(id)
 
   // A malformed id, a discontinued product and one that never existed are the
   // same event to a customer: this page is not here.
@@ -76,14 +75,18 @@ export default async function ProductPage({ params }) {
                 )}
               </div>
 
-              {/* The other ratings of the same device. Links rather than a
-                  client-side switcher: each rating is its own product with its
+              {/* The other sizes of the same device. Links rather than a
+                  client-side switcher: each size is its own product with its
                   own price, stock and specification, so it deserves its own
                   URL — one a customer can send to their electrician. */}
               {family.length > 1 && (
                 <div className="mt-8">
-                  <span className="label text-ink-soft block">Rating</span>
-                  <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Other ratings of this device">
+                  <span className="label text-ink-soft block">{familyAxis}</span>
+                  <div
+                    className="mt-3 flex flex-wrap gap-2"
+                    role="group"
+                    aria-label={`Other sizes of this device`}
+                  >
                     {family.map((variant) => {
                       const on = variant.id === product.id
                       return (
@@ -98,7 +101,7 @@ export default async function ProductPage({ params }) {
                               : 'border-navy-900/15 bg-glare text-ink-soft hover:border-navy-900/50 hover:text-navy-900',
                           )}
                         >
-                          {ratingLabel(variant.amps)}
+                          {variant.sizeLabel}
                         </Link>
                       )
                     })}
